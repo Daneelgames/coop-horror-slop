@@ -49,7 +49,6 @@ func _check_launch_args() -> void:
 func _spawn_player_scene(peer_id: int) -> Node:
 	var player := PLAYER_SCENE.instantiate()
 	player.name = "Player_%d" % peer_id
-	player.global_position = Vector3(randf_range(-10,10),1, randf_range(-10,10))
 	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
 	return player
 
@@ -142,6 +141,8 @@ func _spawn_player_for(peer_id: int) -> void:
 	var player := _player_spawner.spawn(peer_id) as Node
 	if player:
 		_player_nodes[peer_id] = player
+		await get_tree().process_frame
+		player.global_position = Vector3(randf_range(-10,10),1, randf_range(-10,10))
 		# Authority is set in character.gd _enter_tree() based on the character name
 
 func _setup_player_multiplayer_signals() -> void:

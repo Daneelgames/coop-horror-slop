@@ -30,6 +30,8 @@ extends CharacterBody3D
 @export var invert_camera_x_axis : bool = false
 ## Invert the Y axis input for the camera.
 @export var invert_camera_y_axis : bool = false
+@export var fov_sprint : float = 80
+@export var fov_idle : float = 50
 ## Whether the player can use movement inputs. Does not stop outside forces or jumping. See Jumping Enabled.
 @export var immobile : bool = false
 ## The reticle file to import at runtime. By default are in res://addons/fpc/reticles/. Set to an empty string to remove.
@@ -203,8 +205,8 @@ func _process(_delta):
 	_ensure_authority_state()
 	if !_has_input_authority:
 		visual_node_3d.top_level = true
-		visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 5 * _delta)
-		visual_node_3d.global_rotation.y = lerp_angle(visual_node_3d.global_rotation.y, global_rotation.y, 5 * _delta)
+		visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
+		visual_node_3d.global_rotation.y = lerp_angle(visual_node_3d.global_rotation.y, global_rotation.y, 10 * _delta)
 		_debug_report_input_block("_process")
 		return
 	visual_node_3d.top_level = false
@@ -587,9 +589,9 @@ func change_reticle(reticle): # Yup, this function is kinda strange
 
 func update_camera_fov():
 	if state == "sprinting":
-		CAMERA.fov = lerp(CAMERA.fov, 85.0, 0.3)
+		CAMERA.fov = lerp(CAMERA.fov, fov_sprint, 5 * get_process_delta_time())
 	else:
-		CAMERA.fov = lerp(CAMERA.fov, 75.0, 0.3)
+		CAMERA.fov = lerp(CAMERA.fov, fov_idle, 5 * get_process_delta_time())
 
 func handle_pausing():
 	if !_has_input_authority:
