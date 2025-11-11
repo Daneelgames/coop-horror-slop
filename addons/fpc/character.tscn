@@ -1,10 +1,13 @@
-[gd_scene load_steps=37 format=4 uid="uid://cc1m2a1obsyn4"]
+[gd_scene load_steps=41 format=4 uid="uid://cc1m2a1obsyn4"]
 
 [ext_resource type="Script" uid="uid://hutuis63hgev" path="res://addons/fpc/character.gd" id="1_0t4e8"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_gv6je"]
 [ext_resource type="Texture2D" uid="uid://8mo78r7i5pk3" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_normal.png" id="3_4fv23"]
 [ext_resource type="Script" uid="uid://u5u7xxlvmcxx" path="res://addons/fpc/debug.gd" id="3_x1wcc"]
 [ext_resource type="Texture2D" uid="uid://bjbg7bb722uhe" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_diffuse.png" id="4_q62an"]
+[ext_resource type="PackedScene" uid="uid://djonwsih4arvu" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe.fbx" id="5_q62an"]
+[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="6_q34qd"]
+[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="7_ex63h"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kp17n"]
 albedo_color = Color(0.909804, 0.596078, 0, 1)
@@ -267,6 +270,12 @@ bind/63/pose = Transform3D(-99.92396, -0.00015783646, 3.8993707, 3.899273, -0.71
 bind/64/name = &"mixamorig_LeftToe_End"
 bind/64/bone = -1
 bind/64/pose = Transform3D(-99.92396, -0.0001585168, 3.8993707, 3.899273, -0.7102333, 99.92143, 0.027536277, 99.9975, 0.7097078, 10.220509, -18.325436, -0.15309562)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go8lt"]
+albedo_texture = ExtResource("6_q34qd")
+normal_enabled = true
+normal_texture = ExtResource("7_ex63h")
+texture_filter = 2
 
 [sub_resource type="Animation" id="Animation_mnhhx"]
 length = 0.001
@@ -2570,6 +2579,18 @@ tracks/52/path = NodePath("Skeleton3D:mixamorig_LeftHandPinky3")
 tracks/52/interp = 1
 tracks/52/loop_wrap = true
 tracks/52/keys = PackedFloat32Array(-0.43333334, 1, 0.2958541, -0.018839987, 0.0057163993, 0.9550302, -0.3333333, 1, 0.2968191, -0.019963436, 0.005776011, 0.95470756, -0.3, 1, 0.29687405, -0.020317666, 0.0057890723, 0.95468295, -0.26666665, 1, 0.2954601, -0.020548543, 0.005805833, 0.9551164, -0.23333333, 1, 0.29177317, -0.020587321, 0.0058279335, 0.9562482, -0.19999999, 1, 0.2850013, -0.020363765, 0.005852785, 0.9582929, -0.16666666, 1, 0.2743186, -0.01980225, 0.005870338, 0.961417, -0.13333333, 1, 0.25789282, -0.018764652, 0.0058401776, 0.9659736, -0.099999994, 1, 0.23078422, -0.016936408, 0.0056169447, 0.9728413, -0.06666666, 1, 0.19589487, -0.014472415, 0.005126495, 0.9805047, -0.03333333, 1, 0.15743977, -0.011626641, 0.0043609077, 0.98745054, 0, 1, 0.11977564, -0.008694798, 0.0034042373, 0.9927571, 0.03333333, 1, 0.08735106, -0.0059989323, 0.0024446424, 0.9961565, 0.06666669, 1, 0.064637944, -0.0038759264, 0.0017560229, 0.9978997, 0.099999994, 1, 0.05608335, -0.0026625148, 0.0016520626, 0.9984212, 0.13333336, 1, 0.063711286, -0.0024248192, 0.0023365961, 0.9979627, 0.16666666, 1, 0.08451311, -0.0029099353, 0.0036850173, 0.9964113, 0.20000002, 1, 0.11532664, -0.0039684004, 0.0054761507, 0.9933046, 0.23333332, 1, 0.15295509, -0.0054402435, 0.0074767354, 0.9881899, 0.26666668, 1, 0.19418535, -0.007158123, 0.009472036, 0.980893, 0.29999998, 1, 0.23583966, -0.008953138, 0.011289959, 0.9716852, 0.33333334, 1, 0.27466488, -0.010654815, 0.012805569, 0.9613957, 0.36666664, 1, 0.30819872, -0.012131876, 0.013974436, 0.951142, 0.4, 1, 0.33313805, -0.013232, 0.014755167, 0.94266975, 0.4333333, 1, 0.34376502, -0.013719808, 0.015061194, 0.93883467, 0.46666667, 1, 0.3487773, -0.013962756, 0.015205114, 0.9369783, 0.49999997, 1, 0.3524105, -0.014015741, 0.015359436, 0.9356145, 0.5333333, 1, 0.35552594, -0.013999863, 0.015521426, 0.9344326, 0.5666666, 1, 0.3581871, -0.01397339, 0.015665896, 0.9334138, 0.6, 1, 0.36021602, -0.013957515, 0.015774311, 0.9326311, 0.6333333, 1, 0.36195257, -0.013943511, 0.015867393, 0.9319571, 0.6666666, 1, 0.36356032, -0.013930344, 0.015953086, 0.9313299, 0.6999999, 1, 0.3645838, -0.013922282, 0.01600448, 0.93092895, 0.76666665, 1, 0.36564407, -0.013910759, 0.016061269, 0.9305122, 0.9, 1, 0.36456293, -0.013903191, 0.016023919, 0.93093705, 0.9333333, 1, 0.36378118, -0.013903778, 0.015990414, 0.93124336, 0.9666666, 1, 0.36284766, -0.013904862, 0.015949823, 0.9316082, 1.0333333, 1, 0.36063227, -0.013909727, 0.01585158, 0.9324696, 1.0666666, 1, 0.3594037, -0.0139127495, 0.015796361, 0.9329448, 1.1666666, 1, 0.35555312, -0.013923258, 0.015622074, 0.9344218, 1.1999999, 1, 0.35430416, -0.01392675, 0.015565341, 0.93489695, 1.2333333, 1, 0.353117, -0.0139303785, 0.015511298, 0.93534684, 1.2666667, 1, 0.35204786, -0.013933523, 0.015462046, 0.93575054, 1.3, 1, 0.3510365, -0.0139364535, 0.015415311, 0.9361311, 1.3666667, 1, 0.34952816, -0.013940853, 0.015345079, 0.93669647, 1.5, 1, 0.3480055, -0.013993032, 0.015056003, 0.9372671, 1.5333333, 1, 0.34515268, -0.014237638, 0.014507892, 0.9383264, 1.5666666, 1, 0.33991686, -0.014764319, 0.013542701, 0.94024205, 1.5999999, 1, 0.33434057, -0.015317921, 0.012513425, 0.94224477, 1.6333332, 1, 0.32849804, -0.01588794, 0.011432644, 0.9443018, 1.6666667, 1, 0.32246402, -0.016464429, 0.010313286, 0.94638234, 1.7666667, 1, 0.30397218, -0.01814273, 0.0068586627, 0.9524834, 1.8, 1, 0.29793486, -0.018658524, 0.0057217786, 0.95438665)
+tracks/53/type = "value"
+tracks/53/imported = false
+tracks/53/enabled = true
+tracks/53/path = NodePath(".:position")
+tracks/53/interp = 1
+tracks/53/loop_wrap = true
+tracks/53/keys = {
+"times": PackedFloat32Array(0, 0.16333333, 0.3733333, 0.97333336),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0.9022469, 0), Vector3(-0.3062204, 0.9022469, -4.5474734e-15), Vector3(-0.3341651, 0.9022469, -4.8316907e-15), Vector3(0, 0.902, 0)]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_xtbqr"]
 _data = {
@@ -3431,6 +3452,17 @@ bones/64/scale = Vector3(1, 1, 0.99999994)
 mesh = SubResource("ArrayMesh_go8lt")
 skin = SubResource("Skin_hifgq")
 
+[node name="WeaponBoneAttachment3D" type="BoneAttachment3D" parent="VisualParent/soldier_low_poly/Armature/Skeleton3D"]
+transform = Transform3D(0.5566984, 0.6710308, -0.48969838, 0.48324892, -0.7410771, -0.4661274, -0.6756903, 0.022846296, -0.73683137, 4.7102537, 11.109831, 39.39882)
+bone_name = "mixamorig_RightHand"
+bone_idx = 10
+
+[node name="RustyPipe" parent="VisualParent/soldier_low_poly/Armature/Skeleton3D/WeaponBoneAttachment3D" instance=ExtResource("5_q62an")]
+transform = Transform3D(4.222196e-06, 100.00003, 1.1313344e-06, 96.59259, -4.3711398e-06, 25.881916, 25.881916, -1.1368684e-13, -96.59259, 3.6044812, 10.317633, 3.4101408)
+
+[node name="Rusty_Pipe" parent="VisualParent/soldier_low_poly/Armature/Skeleton3D/WeaponBoneAttachment3D/RustyPipe" index="0"]
+material_override = SubResource("StandardMaterial3D_go8lt")
+
 [node name="MeshAnimationPlayer" type="AnimationPlayer" parent="VisualParent/soldier_low_poly"]
 root_node = NodePath("../Armature")
 libraries = {
@@ -3448,7 +3480,7 @@ libraries = {
 }
 
 [node name="Head" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04068552, 1.5, -0.12687382)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
 
 [node name="Camera" type="Camera3D" parent="Head"]
 
@@ -3504,3 +3536,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9604645e-08, 1.2850549, -0
 visible = false
 omni_range = 10.0
 omni_attenuation = 0.0
+
+[editable path="VisualParent/soldier_low_poly/Armature/Skeleton3D/WeaponBoneAttachment3D/RustyPipe"]
