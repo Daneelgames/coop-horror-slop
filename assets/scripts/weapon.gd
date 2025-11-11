@@ -116,7 +116,7 @@ func _handle_melee_hit(hit_result: Dictionary):
 			return
 		# TODO: Apply damage or other effects to hit_unit
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
-		hit_unit.rpc_take_damage(randi_range(damage_min_max.x,damage_min_max.y))
+		hit_unit.rpc_take_damage.rpc(randi_range(damage_min_max.x,damage_min_max.y))
 	else:
 		# Hit a solid object
 		print("[MELEE HIT] Hit solid object: ", collider.name, " at position: ", hit_result.get("position"))
