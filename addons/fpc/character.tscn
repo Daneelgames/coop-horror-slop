@@ -2165,7 +2165,7 @@ properties/3/path = NodePath(".:state")
 properties/3/spawn = true
 properties/3/replication_mode = 2
 
-[node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("HEAD", "CAMERA", "mesh_animation_player", "HEADBOB_ANIMATION", "JUMP_ANIMATION", "CROUCH_ANIMATION", "COLLISION_MESH", "visual_node_3d")]
+[node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("HEAD", "CAMERA", "mesh_animation_player", "HEADBOB_ANIMATION", "JUMP_ANIMATION", "CROUCH_ANIMATION", "COLLISION_MESH", "visual_node_3d", "skeleton_3d")]
 collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_0t4e8")
@@ -2185,6 +2185,7 @@ JUMP_ANIMATION = NodePath("Head/JumpAnimation")
 CROUCH_ANIMATION = NodePath("CrouchAnimation")
 COLLISION_MESH = NodePath("Collision")
 visual_node_3d = NodePath("VisualParent")
+skeleton_3d = NodePath("VisualParent/soldier_low_poly/Armature/Skeleton3D")
 controls = {
 &"BACKWARD": "move_down",
 &"CROUCH": "crouch",
@@ -2241,7 +2242,7 @@ bones/3/rest = Transform3D(0.9999969, 0.0024411604, -0.0003148642, -0.0024442375
 bones/3/enabled = true
 bones/3/position = Vector3(-2.4811015e-08, 12.553324, 6.2500476e-09)
 bones/3/rotation = Quaternion(0.0035581698, -0.023502527, -0.01250062, 0.9996394)
-bones/3/scale = Vector3(0.9999999, 0.9999999, 1)
+bones/3/scale = Vector3(1, 1, 1)
 bones/4/name = "mixamorig_Neck"
 bones/4/parent = 3
 bones/4/rest = Transform3D(0.99999994, -1.3539111e-09, -2.9103837e-11, 1.3539111e-09, 0.99999994, 2.707818e-09, 2.910383e-11, -2.7078177e-09, 1, -0.034518983, 14.121704, -0.14367537)
@@ -2691,10 +2692,9 @@ libraries = {
 }
 
 [node name="Head" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7210882, 1.5, 0.2800728)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22152966, 1.5, 0)
 
 [node name="Camera" type="Camera3D" parent="Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.51090664)
 
 [node name="HeadbobAnimation" type="AnimationPlayer" parent="Head"]
 libraries = {

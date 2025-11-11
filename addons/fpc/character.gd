@@ -57,6 +57,7 @@ extends CharacterBody3D
 ## A reference to the the player's collision shape for use in the character script.
 @export var COLLISION_MESH : CollisionShape3D
 @export var visual_node_3d : Node3D
+@export var skeleton_3d : Skeleton3D
 #endregion
 
 #region Controls Export Group
@@ -638,6 +639,10 @@ func _refresh_authority_state(force : bool = false):
 		return
 
 	_has_input_authority = new_authority_state
+	if _has_input_authority:
+		#var bone_idx = skeleton_3d.find_bone('mixamorig_Spine2')
+		var bone_idx = skeleton_3d.find_bone('mixamorig_Neck')
+		skeleton_3d.set_bone_pose_scale(bone_idx, Vector3.ZERO)
 	_debug_last_has_input = _has_input_authority
 	if debug_authority:
 		var ctx := _debug_authority_context()
