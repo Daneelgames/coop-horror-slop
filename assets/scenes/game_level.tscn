@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://cjdhevlku23cr"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_61kjx"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_pphvb"]
+noise = SubResource("FastNoiseLite_61kjx")
+seamless = true
+in_3d_space = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8kkgg"]
+albedo_texture = SubResource("NoiseTexture2D_pphvb")
+uv1_scale = Vector3(0.1, 0.1, 0.1)
+uv1_triplanar = true
+texture_filter = 2
+
+[node name="GameLevel" type="Node3D"]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 0)
+material_override = SubResource("StandardMaterial3D_8kkgg")
+use_collision = true
+size = Vector3(50, 0.5, 50)

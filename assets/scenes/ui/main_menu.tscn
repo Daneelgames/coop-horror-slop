@@ -1,0 +1,661 @@
+[gd_scene load_steps=19 format=3 uid="uid://bd47uqypshvxf"]
+
+[ext_resource type="Script" uid="uid://yudg5k61uobo" path="res://assets/scripts/ui/main_menu.gd" id="1_5mr7l"]
+[ext_resource type="Script" uid="uid://couw105c3bde4" path="res://addons/godot_state_charts/state_chart.gd" id="2_7dfjg"]
+[ext_resource type="Theme" uid="uid://d23flwkfyegxj" path="res://assets/misc/main_menu.tres" id="2_uanxr"]
+[ext_resource type="PackedScene" uid="uid://bcwkugn6v3oy7" path="res://addons/godot_state_charts/utilities/state_chart_debugger.tscn" id="2_vxvjd"]
+[ext_resource type="Script" uid="uid://jk2jm1g6q853" path="res://addons/godot_state_charts/compound_state.gd" id="3_57pax"]
+[ext_resource type="Script" uid="uid://7sxxp5hfvnve" path="res://assets/scripts/ui/settings_controller.gd" id="3_vxvjd"]
+[ext_resource type="Script" uid="uid://cytafq8i1y8qm" path="res://addons/godot_state_charts/atomic_state.gd" id="4_vxvjd"]
+[ext_resource type="Script" uid="uid://cf1nsco3w0mf6" path="res://addons/godot_state_charts/transition.gd" id="5_57pax"]
+
+[sub_resource type="Animation" id="Animation_bsp0i"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/RichTextLabel4:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_wbb8u"]
+resource_name = "loop"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/RichTextLabel4:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.233333, 0.5, 0.733333),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [true, false, true, false]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_mct42"]
+_data = {
+&"RESET": SubResource("Animation_bsp0i"),
+&"loop": SubResource("Animation_wbb8u")
+}
+
+[sub_resource type="InputEventAction" id="InputEventAction_qwbi3"]
+action = &"back"
+
+[sub_resource type="InputEventAction" id="InputEventAction_iw55c"]
+action = &"start"
+
+[sub_resource type="InputEventAction" id="InputEventAction_vxb0v"]
+action = &"ui_select"
+
+[sub_resource type="Shortcut" id="Shortcut_nit6e"]
+events = [SubResource("InputEventAction_qwbi3"), SubResource("InputEventAction_iw55c"), SubResource("InputEventAction_vxb0v")]
+
+[sub_resource type="Animation" id="Animation_2geqd"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/RichTextLabel:text")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": ["[center]LOADING[/center]"]
+}
+
+[sub_resource type="Animation" id="Animation_vn3rx"]
+resource_name = "load"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/RichTextLabel:text")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": ["LOADING", "LOADING.", "LOADING..", "LOADING..."]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_3h0fr"]
+_data = {
+&"RESET": SubResource("Animation_2geqd"),
+&"load": SubResource("Animation_vn3rx")
+}
+
+[node name="MainMenu" type="CanvasLayer"]
+follow_viewport_enabled = true
+script = ExtResource("1_5mr7l")
+
+[node name="Title" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Title"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -229.0
+offset_right = 400.0
+offset_bottom = 307.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+alignment = 1
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Title/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_font_sizes/normal_font_size = 128
+bbcode_enabled = true
+text = "[center]TITLE[/center]"
+
+[node name="RichTextLabel4" type="RichTextLabel" parent="Title/VBoxContainer"]
+clip_contents = false
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+text = "
+
+
+
+
+
+
+[center]PRESS START[/center]"
+scroll_active = false
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Title"]
+libraries = {
+&"": SubResource("AnimationLibrary_mct42")
+}
+autoplay = "loop"
+
+[node name="start" type="Button" parent="Title"]
+layout_mode = 0
+offset_left = 439.0
+offset_top = 527.0
+offset_right = 708.0
+offset_bottom = 567.0
+shortcut = SubResource("Shortcut_nit6e")
+shortcut_in_tooltip = false
+
+[node name="Main" type="Panel" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+
+[node name="Title" type="RichTextLabel" parent="Main"]
+layout_mode = 1
+offset_top = 7.0
+offset_right = 1149.0
+offset_bottom = 167.0
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_colors/default_color = Color(0.262932, 0.262932, 0.262932, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_constants/shadow_offset_x = -2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/normal_font_size = 128
+bbcode_enabled = true
+text = "TITLE"
+
+[node name="Options" type="VBoxContainer" parent="Main"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 48.0
+offset_top = -26.0
+offset_right = 494.0
+offset_bottom = 244.0
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+alignment = 1
+
+[node name="Play" type="Button" parent="Main/Options"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../Quit")
+theme = ExtResource("2_uanxr")
+text = "PLAY"
+alignment = 0
+
+[node name="Settings" type="Button" parent="Main/Options"]
+layout_mode = 2
+theme = ExtResource("2_uanxr")
+text = "SETTINGS"
+alignment = 0
+
+[node name="Quit" type="Button" parent="Main/Options"]
+layout_mode = 2
+focus_neighbor_bottom = NodePath("../Play")
+theme = ExtResource("2_uanxr")
+text = "QUIT"
+alignment = 0
+
+[node name="LobbyType" type="Panel" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+
+[node name="Title" type="RichTextLabel" parent="LobbyType"]
+layout_mode = 1
+offset_top = 7.0
+offset_right = 1149.0
+offset_bottom = 167.0
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_colors/default_color = Color(0.262932, 0.262932, 0.262932, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_constants/shadow_offset_x = -2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/normal_font_size = 128
+bbcode_enabled = true
+text = "TITLE"
+
+[node name="Options" type="VBoxContainer" parent="LobbyType"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 48.0
+offset_top = -26.0
+offset_right = 494.0
+offset_bottom = 244.0
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+alignment = 1
+
+[node name="Steam" type="Button" parent="LobbyType/Options"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../LAN")
+theme = ExtResource("2_uanxr")
+text = "STEAM"
+alignment = 0
+
+[node name="LAN" type="Button" parent="LobbyType/Options"]
+layout_mode = 2
+focus_neighbor_bottom = NodePath("../Steam")
+theme = ExtResource("2_uanxr")
+text = "LAN"
+alignment = 0
+
+[node name="HostJoin" type="Panel" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+
+[node name="Title" type="RichTextLabel" parent="HostJoin"]
+layout_mode = 1
+offset_top = 7.0
+offset_right = 1149.0
+offset_bottom = 167.0
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_colors/default_color = Color(0.262932, 0.262932, 0.262932, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_constants/shadow_offset_x = -2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/normal_font_size = 128
+bbcode_enabled = true
+text = "TITLE"
+
+[node name="Options" type="VBoxContainer" parent="HostJoin"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 48.0
+offset_top = -26.0
+offset_right = 494.0
+offset_bottom = 244.0
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+alignment = 1
+
+[node name="Host" type="Button" parent="HostJoin/Options"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../Join")
+theme = ExtResource("2_uanxr")
+text = "HOST
+"
+alignment = 0
+
+[node name="Join" type="Button" parent="HostJoin/Options"]
+layout_mode = 2
+focus_neighbor_bottom = NodePath("../Host")
+theme = ExtResource("2_uanxr")
+text = "JOIN"
+alignment = 0
+
+[node name="Settings" type="Panel" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+
+[node name="SettingsController" type="Node" parent="Settings" node_paths=PackedStringArray("fps_button", "vsync_button", "window_button", "music_slider", "sfx_slider", "mouse_slider")]
+script = ExtResource("3_vxvjd")
+fps_button = NodePath("../Options/FPS")
+vsync_button = NodePath("../Options/VSync")
+window_button = NodePath("../Options/Fullscreen")
+music_slider = NodePath("../Options/Music/HSlider")
+sfx_slider = NodePath("../Options/SFX/HSlider")
+mouse_slider = NodePath("../Options/Mouse/HSlider")
+
+[node name="Title" type="RichTextLabel" parent="Settings"]
+layout_mode = 0
+offset_top = 7.0
+offset_right = 1149.0
+offset_bottom = 167.0
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_colors/default_color = Color(0.262932, 0.262932, 0.262932, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_outline_size = 6
+theme_override_constants/shadow_offset_x = -2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/normal_font_size = 128
+bbcode_enabled = true
+text = "TITLE"
+
+[node name="Options" type="VBoxContainer" parent="Settings"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 238.0
+offset_top = -199.0
+offset_right = 882.0
+offset_bottom = 185.0
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+alignment = 1
+
+[node name="Fullscreen" type="Button" parent="Settings/Options"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../../Apply")
+theme = ExtResource("2_uanxr")
+text = "WINDOW     :  WINDOWED
+"
+alignment = 0
+
+[node name="VSync" type="Button" parent="Settings/Options"]
+layout_mode = 2
+theme = ExtResource("2_uanxr")
+text = "VSYNC      :  ENABLED"
+alignment = 0
+
+[node name="FPS" type="Button" parent="Settings/Options"]
+layout_mode = 2
+theme = ExtResource("2_uanxr")
+text = "FPS TARGET :  UNLIMITED"
+alignment = 0
+
+[node name="Music" type="Control" parent="Settings/Options"]
+layout_mode = 2
+theme = ExtResource("2_uanxr")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Settings/Options/Music"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 0
+offset_right = 476.0
+offset_bottom = 30.0
+theme = ExtResource("2_uanxr")
+text = "MUSIC VOL  :"
+
+[node name="HSlider" type="HSlider" parent="Settings/Options/Music"]
+layout_mode = 0
+offset_left = 426.0
+offset_top = 7.0
+offset_right = 651.0
+offset_bottom = 23.0
+size_flags_horizontal = 4
+theme = ExtResource("2_uanxr")
+max_value = 1.0
+step = 0.05
+value = 0.5
+
+[node name="SFX" type="Control" parent="Settings/Options"]
+layout_mode = 2
+theme = ExtResource("2_uanxr")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Settings/Options/SFX"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 0
+offset_top = 30.0
+offset_right = 476.0
+offset_bottom = 60.0
+theme = ExtResource("2_uanxr")
+text = "SFX VOL    :"
+
+[node name="HSlider" type="HSlider" parent="Settings/Options/SFX"]
+custom_minimum_size = Vector2(225, 0)
+layout_mode = 0
+offset_left = 426.0
+offset_top = 37.0
+offset_right = 651.0
+offset_bottom = 53.0
+size_flags_horizontal = 4
+theme = ExtResource("2_uanxr")
+max_value = 1.0
+step = 0.05
+value = 0.5
+
+[node name="Mouse" type="Control" parent="Settings/Options"]
+layout_mode = 2
+theme = ExtResource("2_uanxr")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Settings/Options/Mouse"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 0
+offset_top = 60.0
+offset_right = 476.0
+offset_bottom = 90.0
+theme = ExtResource("2_uanxr")
+text = "MOUSE SENS :"
+
+[node name="HSlider" type="HSlider" parent="Settings/Options/Mouse"]
+custom_minimum_size = Vector2(225, 0)
+layout_mode = 0
+offset_left = 426.0
+offset_top = 67.0
+offset_right = 651.0
+offset_bottom = 83.0
+size_flags_horizontal = 4
+theme = ExtResource("2_uanxr")
+max_value = 1.0
+step = 0.05
+value = 0.5
+
+[node name="Apply" type="Button" parent="Settings"]
+layout_mode = 0
+offset_left = 499.0
+offset_top = 578.0
+offset_right = 667.0
+offset_bottom = 607.0
+focus_neighbor_bottom = NodePath("../Options/Fullscreen")
+theme = ExtResource("2_uanxr")
+text = "APPLY"
+alignment = 0
+
+[node name="Loading" type="Panel" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Loading"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -35.0
+offset_right = 400.0
+offset_bottom = 225.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+alignment = 1
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Loading/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_font_sizes/normal_font_size = 72
+bbcode_enabled = true
+text = "[center]LOADING[/center]"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Loading"]
+libraries = {
+&"": SubResource("AnimationLibrary_3h0fr")
+}
+autoplay = "load"
+
+[node name="Error" type="Panel" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_uanxr")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Error"]
+layout_mode = 0
+offset_left = 73.0
+offset_top = 71.0
+offset_right = 1073.0
+offset_bottom = 471.0
+size_flags_vertical = 3
+theme = ExtResource("2_uanxr")
+theme_override_font_sizes/normal_font_size = 52
+bbcode_enabled = true
+text = "[center]ERROR MSG HERE[/center]"
+
+[node name="Return" type="Button" parent="Error"]
+layout_mode = 0
+offset_left = 354.0
+offset_top = 533.0
+offset_right = 802.0
+offset_bottom = 562.0
+theme = ExtResource("2_uanxr")
+shortcut_in_tooltip = false
+text = "RETURN TO MENU "
+alignment = 0
+
+[node name="StateChart" type="Node" parent="."]
+script = ExtResource("2_7dfjg")
+metadata/_custom_type_script = "uid://couw105c3bde4"
+
+[node name="Root" type="Node" parent="StateChart"]
+script = ExtResource("3_57pax")
+initial_state = NodePath("Title")
+metadata/_custom_type_script = "uid://jk2jm1g6q853"
+
+[node name="Title" type="Node" parent="StateChart/Root"]
+script = ExtResource("4_vxvjd")
+
+[node name="onEnter" type="Node" parent="StateChart/Root/Title"]
+script = ExtResource("5_57pax")
+to = NodePath("../../Main")
+event = &"enter"
+delay_in_seconds = "0.0"
+
+[node name="Main" type="Node" parent="StateChart/Root"]
+script = ExtResource("3_57pax")
+initial_state = NodePath("Root")
+metadata/_custom_type_script = "uid://jk2jm1g6q853"
+
+[node name="Root" type="Node" parent="StateChart/Root/Main"]
+script = ExtResource("4_vxvjd")
+metadata/_custom_type_script = "uid://cytafq8i1y8qm"
+
+[node name="onStart" type="Node" parent="StateChart/Root/Main/Root"]
+script = ExtResource("5_57pax")
+to = NodePath("../../LobbyType")
+event = &"play"
+delay_in_seconds = "0.0"
+
+[node name="onSettings" type="Node" parent="StateChart/Root/Main/Root"]
+script = ExtResource("5_57pax")
+to = NodePath("../../../Settings")
+event = &"settings"
+delay_in_seconds = "0.0"
+
+[node name="LobbyType" type="Node" parent="StateChart/Root/Main"]
+script = ExtResource("4_vxvjd")
+metadata/_custom_type_script = "uid://cytafq8i1y8qm"
+
+[node name="onBack" type="Node" parent="StateChart/Root/Main/LobbyType"]
+script = ExtResource("5_57pax")
+to = NodePath("../../Root")
+event = &"back"
+delay_in_seconds = "0.0"
+
+[node name="onDecision" type="Node" parent="StateChart/Root/Main/LobbyType"]
+script = ExtResource("5_57pax")
+to = NodePath("../../HostJoin")
+event = &"decision"
+delay_in_seconds = "0.0"
+
+[node name="HostJoin" type="Node" parent="StateChart/Root/Main"]
+script = ExtResource("4_vxvjd")
+metadata/_custom_type_script = "uid://cytafq8i1y8qm"
+
+[node name="onBack" type="Node" parent="StateChart/Root/Main/HostJoin"]
+script = ExtResource("5_57pax")
+to = NodePath("../../LobbyType")
+event = &"back"
+delay_in_seconds = "0.0"
+
+[node name="onLoading" type="Node" parent="StateChart/Root/Main/HostJoin"]
+script = ExtResource("5_57pax")
+to = NodePath("../../../Loading")
+event = &"loading"
+delay_in_seconds = "0.0"
+
+[node name="Settings" type="Node" parent="StateChart/Root"]
+script = ExtResource("4_vxvjd")
+
+[node name="onBack" type="Node" parent="StateChart/Root/Settings"]
+script = ExtResource("5_57pax")
+to = NodePath("../../Main")
+event = &"back"
+delay_in_seconds = "0.0"
+
+[node name="Loading" type="Node" parent="StateChart/Root"]
+script = ExtResource("4_vxvjd")
+
+[node name="onError" type="Node" parent="StateChart/Root/Loading"]
+script = ExtResource("5_57pax")
+to = NodePath("../../Error")
+event = &"error"
+delay_in_seconds = "0.0"
+
+[node name="Error" type="Node" parent="StateChart/Root"]
+script = ExtResource("4_vxvjd")
+
+[node name="onBack" type="Node" parent="StateChart/Root/Error"]
+script = ExtResource("5_57pax")
+to = NodePath("../../Main")
+event = &"back"
+delay_in_seconds = "0.0"
+
+[node name="StateChartDebugger" parent="." instance=ExtResource("2_vxvjd")]
+offset_left = 811.0
+offset_right = 18.0
+offset_bottom = 50.0
+initial_node_to_watch = NodePath("../StateChart")
+
+[node name="SFX" type="AudioStreamPlayer" parent="."]
+max_polyphony = 20
+bus = &"SFX"
