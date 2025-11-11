@@ -9,6 +9,11 @@ extends CharacterBody3D
 #region Character Export Group
 
 ## The settings for the character's movement and feel.
+@export var carrying_items : Dictionary[StringName, StringName] = {}  # Dictionary[interactive_name, prefab_path]
+@export var inventory_slots_max : int = 5
+@onready var interaction_ray_cast_3d: RayCast3D = %InteractionRayCast3D
+
+@onready var inventory_slots_panel_container: PlayerInventorySlotsPanelContainer = %InventorySlotsPanelContainer
 @export_category("Character")
 ## The speed that the character moves at without crouching or sprinting.
 @export var base_speed : float = 3.0
@@ -66,14 +71,15 @@ extends CharacterBody3D
 @export_group("Controls")
 ## Use the Input Map to map a mouse/keyboard input to an action and add a reference to it to this dictionary to be used in the script.
 @export var controls : Dictionary = {
-	LEFT = "ui_left",
-	RIGHT = "ui_right",
-	FORWARD = "ui_up",
-	BACKWARD = "ui_down",
-	JUMP = "ui_accept",
+	LEFT = "move_left",
+	RIGHT = "move_right",
+	FORWARD = "move_up",
+	BACKWARD = "move_down",
+	JUMP = "jump",
 	CROUCH = "crouch",
 	SPRINT = "sprint",
-	PAUSE = "ui_cancel"
+	PAUSE = "ui_cancel",
+	INTERACTION = 'interaction'
 	}
 @export_subgroup("Controller Specific")
 ## This only affects how the camera is handled, the rest should be covered by adding controller inputs to the existing actions in the Input Map.
@@ -235,6 +241,7 @@ func _physics_process(delta): # Most things happen here.
 		velocity.y -= gravity * delta
 	handle_attacking()
 	handle_jumping()
+	handle_interaction()
 
 	input_dir = Vector2.ZERO
 
@@ -267,6 +274,137 @@ func _physics_process(delta): # Most things happen here.
 #endregion
 
 #region Input Handling
+
+@onready var interaction_feedback_label_3d: Label3D = %InteractionFeedbackLabel3D
+
+func handle_interaction():
+	if _has_input_authority and interaction_ray_cast_3d.is_colliding():
+		var col = interaction_ray_cast_3d.get_collider()
+		if col is Interactive:
+			interaction_feedback_label_3d.text = col.interactive_name
+			interaction_feedback_label_3d.visible = true
+			interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
+				
+			if Input.is_action_just_pressed(controls.INTERACTION):
+				# Client sends request to server
+				if col is Weapon:
+					var weapon_path = col.get_path()
+					if multiplayer.is_server():
+						# If we're the server, process directly
+						rpc_request_weapon_pickup(weapon_path, col.interactive_name, col.prefab_path)
+					else:
+						# Otherwise send RPC to server (peer ID 1)
+						rpc_request_weapon_pickup.rpc_id(1, weapon_path, col.interactive_name, col.prefab_path)
+				pass
+		else:
+			interaction_feedback_label_3d.visible = false
+	else:
+		interaction_feedback_label_3d.visible = false
+			
+
+@onready var items_bag: Node3D = %ItemsBag
+
+# Client requests weapon pickup from server
+@rpc("any_peer", "reliable")
+func rpc_request_weapon_pickup(weapon_path: NodePath, interactive_name: StringName, prefab_path: StringName):
+	# Only server processes this
+	if !multiplayer.is_server():
+		return
+	
+	# Get requesting peer ID - if called directly (server), use server's peer ID (1)
+	var requesting_peer_id = multiplayer.get_unique_id()
+	if multiplayer.get_remote_sender_id() != 0:
+		requesting_peer_id = multiplayer.get_remote_sender_id()
+	
+	# Find the weapon node
+	var weapon_node = get_node_or_null(weapon_path)
+	if weapon_node == null or not weapon_node is Weapon:
+		return
+	
+	var weapon = weapon_node as Weapon
+	
+	# Get the requesting player's character - find via scene tree path
+	# Path structure: Main/GameRoot/Players/PlayerSpawner/Player_{peer_id}
+	var root = get_tree().root
+	var player_path = root.get_node_or_null("Main/GameRoot/Players/PlayerSpawner/Player_%d" % requesting_peer_id)
+	var requesting_player = player_path
+	
+	if requesting_player == null:
+		# Try searching all nodes for the player
+		var all_players = get_tree().get_nodes_in_group("players")
+		for player in all_players:
+			if player.name == "Player_%d" % requesting_peer_id:
+				requesting_player = player
+				break
+	
+	if requesting_player == null:
+		return
+	
+	# Check if player can pick up (inventory not full)
+	if requesting_player.carrying_items.size() >= requesting_player.inventory_slots_max:
+		return
+	
+	# Process pickup on server
+	# Handle duplicate names by appending a counter
+	var final_name = interactive_name
+	var counter = 1
+	while requesting_player.carrying_items.has(final_name):
+		final_name = StringName("%s %d" % [interactive_name, counter+1])
+		counter += 1
+	
+	requesting_player.carrying_items[final_name] = prefab_path
+	
+	# Tell all clients to destroy the weapon
+	# Call from server's own character node (peer ID 1) to ensure proper authority
+	var server_player = root.get_node_or_null("Main/GameRoot/Players/PlayerSpawner/Player_1")
+	if server_player == null:
+		# Fallback: find server's player node
+		var all_players = get_tree().get_nodes_in_group("players")
+		for player in all_players:
+			if player.name == "Player_1":
+				server_player = player
+				break
+	
+	if server_player != null:
+		server_player.rpc_destroy_weapon.rpc(weapon_path)
+	else:
+		# Fallback: call  directly if we can't find server player
+		rpc_destroy_weapon.rpc(weapon_path)
+	
+	# Tell requesting client to update their inventory UI
+	# If requesting peer is the server, update directly (no RPC needed)
+	if requesting_peer_id == 1:
+		# Server picking up - update directly
+		if requesting_player.inventory_slots_panel_container:
+			requesting_player.inventory_slots_panel_container.update_inventory_items_ui(requesting_player.carrying_items)
+	else:
+		# Client picking up - send RPC to their character node
+		requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, requesting_player.carrying_items)
+
+# Server tells all clients to destroy the weapon
+# This RPC can be called by the server from any character node
+@rpc("any_peer", "call_local", "reliable")
+func rpc_destroy_weapon(weapon_path: NodePath):
+	# Only process if called from server
+	if !multiplayer.is_server() and multiplayer.get_remote_sender_id() != 1:
+		return
+	var weapon_node = get_node_or_null(weapon_path)
+	if weapon_node != null:
+		weapon_node.queue_free()
+
+# Server tells requesting client to update their inventory UI
+# This RPC can be called by the server from any character node
+@rpc("any_peer", "reliable")
+func rpc_update_inventory(inventory: Dictionary[StringName, StringName]):
+	# Only process if called from server (peer ID 1)
+	# When client receives this, remote_sender_id will be 1 (server)
+	if !multiplayer.is_server():
+		if multiplayer.get_remote_sender_id() != 1:
+			return
+	# Server can also process this locally if needed
+	carrying_items = inventory
+	if inventory_slots_panel_container:
+		inventory_slots_panel_container.update_inventory_items_ui(carrying_items)
 
 @export var is_attacking = false 
 func handle_attacking():

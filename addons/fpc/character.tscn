@@ -1,13 +1,11 @@
-[gd_scene load_steps=41 format=4 uid="uid://cc1m2a1obsyn4"]
+[gd_scene load_steps=38 format=4 uid="uid://cc1m2a1obsyn4"]
 
 [ext_resource type="Script" uid="uid://hutuis63hgev" path="res://addons/fpc/character.gd" id="1_0t4e8"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_gv6je"]
 [ext_resource type="Texture2D" uid="uid://8mo78r7i5pk3" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_normal.png" id="3_4fv23"]
 [ext_resource type="Script" uid="uid://u5u7xxlvmcxx" path="res://addons/fpc/debug.gd" id="3_x1wcc"]
 [ext_resource type="Texture2D" uid="uid://bjbg7bb722uhe" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_diffuse.png" id="4_q62an"]
-[ext_resource type="PackedScene" uid="uid://djonwsih4arvu" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe.fbx" id="5_q62an"]
-[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="6_q34qd"]
-[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="7_ex63h"]
+[ext_resource type="Script" uid="uid://c8h1pphcyugu3" path="res://assets/scripts/player_inventory_slots_panel_container.gd" id="7_4fv23"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kp17n"]
 albedo_color = Color(0.909804, 0.596078, 0, 1)
@@ -270,12 +268,6 @@ bind/63/pose = Transform3D(-99.92396, -0.00015783646, 3.8993707, 3.899273, -0.71
 bind/64/name = &"mixamorig_LeftToe_End"
 bind/64/bone = -1
 bind/64/pose = Transform3D(-99.92396, -0.0001585168, 3.8993707, 3.899273, -0.7102333, 99.92143, 0.027536277, 99.9975, 0.7097078, 10.220509, -18.325436, -0.15309562)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go8lt"]
-albedo_texture = ExtResource("6_q34qd")
-normal_enabled = true
-normal_texture = ExtResource("7_ex63h")
-texture_filter = 2
 
 [sub_resource type="Animation" id="Animation_mnhhx"]
 length = 0.001
@@ -2946,6 +2938,7 @@ collision_mask = 3
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_0t4e8")
+inventory_slots_max = 4
 base_speed = 2.0
 sprint_speed = 4.0
 acceleration = 4.0
@@ -2963,16 +2956,6 @@ CROUCH_ANIMATION = NodePath("CrouchAnimation")
 COLLISION_MESH = NodePath("Collision")
 visual_node_3d = NodePath("VisualParent")
 skeleton_3d = NodePath("VisualParent/soldier_low_poly/Armature/Skeleton3D")
-controls = {
-&"BACKWARD": "move_down",
-&"CROUCH": "crouch",
-&"FORWARD": "move_up",
-&"JUMP": "jump",
-&"LEFT": "move_left",
-&"PAUSE": "ui_cancel",
-&"RIGHT": "move_right",
-&"SPRINT": "sprint"
-}
 crouch_enabled = false
 debug_authority = false
 
@@ -3457,12 +3440,6 @@ transform = Transform3D(0.5566984, 0.6710308, -0.48969838, 0.48324892, -0.741077
 bone_name = "mixamorig_RightHand"
 bone_idx = 10
 
-[node name="RustyPipe" parent="VisualParent/soldier_low_poly/Armature/Skeleton3D/WeaponBoneAttachment3D" instance=ExtResource("5_q62an")]
-transform = Transform3D(4.222196e-06, 100.00003, 1.1313344e-06, 96.59259, -4.3711398e-06, 25.881916, 25.881916, -1.1368684e-13, -96.59259, 3.6044812, 10.317633, 3.4101408)
-
-[node name="Rusty_Pipe" parent="VisualParent/soldier_low_poly/Armature/Skeleton3D/WeaponBoneAttachment3D/RustyPipe" index="0"]
-material_override = SubResource("StandardMaterial3D_go8lt")
-
 [node name="MeshAnimationPlayer" type="AnimationPlayer" parent="VisualParent/soldier_low_poly"]
 root_node = NodePath("../Armature")
 libraries = {
@@ -3483,6 +3460,26 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
 
 [node name="Camera" type="Camera3D" parent="Head"]
+
+[node name="InteractionRayCast3D" type="RayCast3D" parent="Head/Camera"]
+unique_name_in_owner = true
+target_position = Vector3(0, 0, -2)
+collision_mask = 5
+
+[node name="InteractionFeedbackLabel3D" type="Label3D" parent="Head/Camera/InteractionRayCast3D"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3682684, -1.5, -0.064044535)
+visible = false
+pixel_size = 0.001
+offset = Vector2(20, 0)
+billboard = 1
+no_depth_test = true
+fixed_size = true
+texture_filter = 2
+text = "weapon"
+horizontal_alignment = 0
+uppercase = true
+width = 600.0
 
 [node name="HeadbobAnimation" type="AnimationPlayer" parent="Head"]
 libraries = {
@@ -3521,6 +3518,21 @@ layout_mode = 2
 [node name="VBoxContainer" type="VBoxContainer" parent="UserInterface/DebugPanel/MarginContainer"]
 layout_mode = 2
 
+[node name="InventorySlotsPanelContainer" type="PanelContainer" parent="UserInterface"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -122.0
+grow_horizontal = 0
+grow_vertical = 2
+script = ExtResource("7_4fv23")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UserInterface/InventorySlotsPanelContainer"]
+layout_mode = 2
+
 [node name="CrouchCeilingDetection" type="ShapeCast3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("SphereShape3D_k4wwl")
@@ -3537,4 +3549,5 @@ visible = false
 omni_range = 10.0
 omni_attenuation = 0.0
 
-[editable path="VisualParent/soldier_low_poly/Armature/Skeleton3D/WeaponBoneAttachment3D/RustyPipe"]
+[node name="ItemsBag" type="Node3D" parent="."]
+unique_name_in_owner = true
