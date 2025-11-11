@@ -280,7 +280,7 @@ func handle_attacking():
 @rpc("call_local")
 func rpc_melee_attack():
 	var attack_string = ''
-	if input_dir.y != 0 and input_dir.x == 0:
+	if input_dir.y != 0:
 		attack_string = 'attack_vertical'
 	elif input_dir.x != 0:
 		attack_string = 'attack_horizontal'
