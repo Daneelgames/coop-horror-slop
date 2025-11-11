@@ -275,18 +275,21 @@ func handle_attacking():
 	if is_attacking:
 		return
 	if Input.is_action_just_pressed("attack"):
-		var attack_string = ''
-		if input_dir.y != 0 and input_dir.x == 0:
-			attack_string = 'attack_vertical'
-		elif input_dir.x != 0:
-			attack_string = 'attack_horizontal'
-		else:
-			attack_string = ['attack_vertical', 'attack_horizontal'].pick_random()
-		mesh_animation_player.play(attack_string, 0.1)
-		is_attacking = true
-		await mesh_animation_player.animation_finished
-		is_attacking = false
-	pass
+		rpc_melee_attack.rpc()
+		
+@rpc("call_local")
+func rpc_melee_attack():
+	var attack_string = ''
+	if input_dir.y != 0 and input_dir.x == 0:
+		attack_string = 'attack_vertical'
+	elif input_dir.x != 0:
+		attack_string = 'attack_horizontal'
+	else:
+		attack_string = ['attack_vertical', 'attack_horizontal'].pick_random()
+	mesh_animation_player.play(attack_string, 0.1)
+	is_attacking = true
+	await mesh_animation_player.animation_finished
+	is_attacking = false
 
 func handle_jumping():
 	if !_has_input_authority:

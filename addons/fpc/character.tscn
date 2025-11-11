@@ -2923,6 +2923,8 @@ properties/4/replication_mode = 2
 [node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("HEAD", "CAMERA", "mesh_animation_player", "HEADBOB_ANIMATION", "JUMP_ANIMATION", "CROUCH_ANIMATION", "COLLISION_MESH", "visual_node_3d", "skeleton_3d")]
 collision_layer = 2
 collision_mask = 3
+platform_on_leave = 2
+platform_floor_layers = 4294965247
 script = ExtResource("1_0t4e8")
 base_speed = 2.0
 sprint_speed = 4.0
