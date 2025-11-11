@@ -115,6 +115,11 @@ jump={
 ]
 }
 
+[layer_names]
+
+3d_physics/layer_1="solids"
+3d_physics/layer_2="units"
+
 [steam]
 
 initialization/app_id=0

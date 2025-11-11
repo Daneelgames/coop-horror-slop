@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=5 format=3 uid="uid://cjdhevlku23cr"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_61kjx"]
 
@@ -13,6 +13,12 @@ uv1_scale = Vector3(0.1, 0.1, 0.1)
 uv1_triplanar = true
 texture_filter = 2
 
+[sub_resource type="Environment" id="Environment_61kjx"]
+ambient_light_source = 2
+ambient_light_color = Color(0.6542321, 0.6542321, 0.654232, 1)
+fog_enabled = true
+fog_light_color = Color(0, 0, 0, 1)
+
 [node name="GameLevel" type="Node3D"]
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
@@ -20,3 +26,42 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 0)
 material_override = SubResource("StandardMaterial3D_8kkgg")
 use_collision = true
 size = Vector3(50, 0.5, 50)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.278076, 2.7938843, -19.540771)
+material_override = SubResource("StandardMaterial3D_8kkgg")
+use_collision = true
+size = Vector3(17.443848, 16.087769, 10.918457)
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.278076, -2.0647192, -1.0902882)
+material_override = SubResource("StandardMaterial3D_8kkgg")
+use_collision = true
+size = Vector3(6.6376953, 16.087769, 8.228516)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.278076, -1.3432922, 20.41774)
+material_override = SubResource("StandardMaterial3D_8kkgg")
+use_collision = true
+size = Vector3(17.443848, 7.8134155, 17.168213)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.918915, -1.3432922, 20.41774)
+material_override = SubResource("StandardMaterial3D_8kkgg")
+use_collision = true
+size = Vector3(14.255066, 7.8134155, 17.168213)
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9279709, 1.9594269, 20.41774)
+material_override = SubResource("StandardMaterial3D_8kkgg")
+use_collision = true
+size = Vector3(18.855026, 1.2079773, 4.2783203)
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.94758457, 0.31950513, 0, -0.31950513, 0.94758457, 16.918915, -4.9729133, 1.7167027)
+material_override = SubResource("StandardMaterial3D_8kkgg")
+use_collision = true
+size = Vector3(14.255066, 7.8134155, 24.13684)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_61kjx")

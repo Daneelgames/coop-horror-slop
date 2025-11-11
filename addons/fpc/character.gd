@@ -23,6 +23,9 @@ extends CharacterBody3D
 @export var jump_velocity : float = 4.5
 ## How far the player turns when the mouse is moved.
 @export var mouse_sensitivity : float = 0.1
+@export var camera_clamp : Vector2 = Vector2(-80,80)
+## How fast the camera rotation smooths (higher = faster). Set to 0 to disable smoothing.
+@export var rotation_smoothing_speed : float = 20.0
 ## Invert the X axis input for the camera.
 @export var invert_camera_x_axis : bool = false
 ## Invert the Y axis input for the camera.
@@ -42,6 +45,8 @@ extends CharacterBody3D
 ## A reference to the camera for use in the character script.
 @export var CAMERA : Camera3D
 ## A reference to the headbob animation for use in the character script.
+@export var mesh_animation_player: AnimationPlayer
+
 @export var HEADBOB_ANIMATION : AnimationPlayer
 ## A reference to the jump animation for use in the character script.
 @export var JUMP_ANIMATION : AnimationPlayer
@@ -138,6 +143,10 @@ var gravity : float = ProjectSettings.get_setting("physics/3d/default_gravity") 
 # Stores mouse input for rotating the camera in the physics process
 var mouseInput : Vector2 = Vector2(0,0)
 
+# Target rotations for smoothing
+var target_head_rotation_x : float = 0.0
+var target_character_rotation_y : float = 0.0
+
 # Tracks whether this instance is allowed to process local player input.
 var _has_input_authority : bool = false
 var _debug_last_should_control : bool = false
@@ -169,6 +178,10 @@ func _ready():
 	# If the controller is rotated in a certain direction for game design purposes, redirect this rotation into the head.
 	HEAD.rotation.y = rotation.y
 	rotation.y = 0
+	
+	# Initialize target rotations to match current rotations
+	target_head_rotation_x = HEAD.rotation.x
+	target_character_rotation_y = rotation.y
 
 	initialize_animations()
 	check_controls()
@@ -183,6 +196,7 @@ func _process(_delta):
 	if !_has_input_authority:
 		visual_node_3d.top_level = true
 		visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 5 * _delta)
+		visual_node_3d.global_rotation.y = lerp_angle(visual_node_3d.global_rotation.y, global_rotation.y, 5 * _delta)
 		_debug_report_input_block("_process")
 		return
 	visual_node_3d.top_level = false
@@ -193,9 +207,14 @@ func _process(_delta):
 
 	update_debug_menu_per_frame()
 
+@export var input_dir = Vector2.ZERO
 
 func _physics_process(delta): # Most things happen here.
 	_ensure_authority_state()
+	#if mesh_animation_player and _has_input_authority:
+	if mesh_animation_player:
+		play_mesh_animation(input_dir)
+		
 	if !_has_input_authority:
 		return
 	# Gravity
@@ -206,7 +225,7 @@ func _physics_process(delta): # Most things happen here.
 
 	handle_jumping()
 
-	var input_dir = Vector2.ZERO
+	input_dir = Vector2.ZERO
 
 	if not immobile: # Immobility works by interrupting user input, so other forces can still be applied to the player
 		input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
@@ -214,6 +233,7 @@ func _physics_process(delta): # Most things happen here.
 	handle_movement(delta, input_dir)
 
 	handle_head_rotation()
+	apply_rotation_smoothing(delta)
 
 	# The player is not able to stand up if the ceiling is too low
 	low_ceiling = $CrouchCeilingDetection.is_colliding()
@@ -227,6 +247,7 @@ func _physics_process(delta): # Most things happen here.
 
 	if jump_animation and _has_input_authority:
 		play_jump_animation()
+
 
 	update_debug_menu_per_tick()
 
@@ -256,7 +277,7 @@ func handle_movement(delta, input_dir):
 	if !_has_input_authority:
 		return
 
-	var direction = input_dir.rotated(-HEAD.rotation.y)
+	var direction = input_dir.rotated(-rotation.y)
 	direction = Vector3(direction.x, 0, direction.y)
 	move_and_slide()
 
@@ -284,29 +305,47 @@ func handle_head_rotation():
 		if debug_authority:
 			_debug_print("Rotating camera: mouse=%s" % str(mouseInput))
 	if invert_camera_x_axis:
-		HEAD.rotation_degrees.y -= mouseInput.x * mouse_sensitivity * -1
+		target_character_rotation_y -= deg_to_rad(mouseInput.x * mouse_sensitivity * -1)
 	else:
-		HEAD.rotation_degrees.y -= mouseInput.x * mouse_sensitivity
+		target_character_rotation_y -= deg_to_rad(mouseInput.x * mouse_sensitivity)
 
 	if invert_camera_y_axis:
-		HEAD.rotation_degrees.x -= mouseInput.y * mouse_sensitivity * -1
+		target_head_rotation_x -= deg_to_rad(mouseInput.y * mouse_sensitivity * -1)
 	else:
-		HEAD.rotation_degrees.x -= mouseInput.y * mouse_sensitivity
+		target_head_rotation_x -= deg_to_rad(mouseInput.y * mouse_sensitivity)
 
 	if controller_support:
 		var controller_view_rotation = Input.get_vector(controller_controls.LOOK_DOWN, controller_controls.LOOK_UP, controller_controls.LOOK_RIGHT, controller_controls.LOOK_LEFT) * look_sensitivity # These are inverted because of the nature of 3D rotation.
+		# Vertical stick (y) controls pitch (head rotation X)
 		if invert_camera_x_axis:
-			HEAD.rotation.x += controller_view_rotation.x * -1
+			target_head_rotation_x += controller_view_rotation.y * -1
 		else:
-			HEAD.rotation.x += controller_view_rotation.x
-
+			target_head_rotation_x += controller_view_rotation.y
+		
+		# Horizontal stick (x) controls yaw (character rotation Y)
 		if invert_camera_y_axis:
-			HEAD.rotation.y += controller_view_rotation.y * -1
+			target_character_rotation_y += controller_view_rotation.x * -1
 		else:
-			HEAD.rotation.y += controller_view_rotation.y
+			target_character_rotation_y += controller_view_rotation.x
 
 	mouseInput = Vector2(0,0)
-	HEAD.rotation.x = clamp(HEAD.rotation.x, deg_to_rad(-90), deg_to_rad(90))
+	target_head_rotation_x = clamp(target_head_rotation_x, deg_to_rad(camera_clamp.x), deg_to_rad(camera_clamp.y))
+
+
+func apply_rotation_smoothing(delta):
+	if !_has_input_authority:
+		return
+	
+	if rotation_smoothing_speed > 0.0:
+		# Smooth head rotation X (pitch)
+		HEAD.rotation.x = lerp(HEAD.rotation.x, target_head_rotation_x, rotation_smoothing_speed * delta)
+		
+		# Smooth character rotation Y (yaw) - use lerp_angle for proper wrapping
+		rotation.y = lerp_angle(rotation.y, target_character_rotation_y, rotation_smoothing_speed * delta)
+	else:
+		# No smoothing - apply directly
+		HEAD.rotation.x = target_head_rotation_x
+		rotation.y = target_character_rotation_y
 
 
 func check_controls(): # If you add a control, you might want to add a check for it here.
@@ -461,6 +500,20 @@ func play_jump_animation():
 			JUMP_ANIMATION.play("land_left", 0.25)
 		else:
 			JUMP_ANIMATION.play("land_center", 0.25)
+
+func play_mesh_animation(moving):
+	# For remote instances, use synced input_dir directly
+	# For local instance, check if on floor to avoid playing walk animation while in air
+	var should_walk = moving != Vector2.ZERO
+	if _has_input_authority:
+		should_walk = should_walk and is_on_floor()
+	
+	if should_walk:
+		if mesh_animation_player.current_animation != "walk_forward":
+			mesh_animation_player.play("walk_forward", 0.2)
+	else:
+		if mesh_animation_player.current_animation != "idle":
+			mesh_animation_player.play("idle", 0.2)
 
 #endregion
 

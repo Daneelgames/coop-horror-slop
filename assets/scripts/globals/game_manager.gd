@@ -49,6 +49,7 @@ func _check_launch_args() -> void:
 func _spawn_player_scene(peer_id: int) -> Node:
 	var player := PLAYER_SCENE.instantiate()
 	player.name = "Player_%d" % peer_id
+	player.global_position = Vector3(randf_range(-10,10),1, randf_range(-10,10))
 	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
 	return player
 
