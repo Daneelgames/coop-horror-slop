@@ -233,7 +233,7 @@ func _physics_process(delta): # Most things happen here.
 		gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	if not is_on_floor() and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
-
+	handle_attacking()
 	handle_jumping()
 
 	input_dir = Vector2.ZERO
@@ -268,6 +268,26 @@ func _physics_process(delta): # Most things happen here.
 
 #region Input Handling
 
+@export var is_attacking = false 
+func handle_attacking():
+	if !_has_input_authority:
+		return
+	if is_attacking:
+		return
+	if Input.is_action_just_pressed("attack"):
+		var attack_string = ''
+		if input_dir.y != 0 and input_dir.x == 0:
+			attack_string = 'attack_vertical'
+		elif input_dir.x != 0:
+			attack_string = 'attack_horizontal'
+		else:
+			attack_string = ['attack_vertical', 'attack_horizontal'].pick_random()
+		mesh_animation_player.play(attack_string, 0.1)
+		is_attacking = true
+		await mesh_animation_player.animation_finished
+		is_attacking = false
+	pass
+
 func handle_jumping():
 	if !_has_input_authority:
 		return
@@ -289,7 +309,14 @@ func handle_movement(delta, input_dir):
 		return
 
 	var direction = input_dir.rotated(-rotation.y)
+	if is_attacking:
+		velocity.x = lerpf(velocity.x, velocity.x * 0.1, 5 * get_process_delta_time())
+		velocity.z = lerpf(velocity.z, velocity.z * 0.1, 5 * get_process_delta_time())
+		move_and_slide()
+		return
+		
 	direction = Vector3(direction.x, 0, direction.y)
+		
 	move_and_slide()
 
 	if in_air_momentum:
@@ -515,6 +542,8 @@ func play_jump_animation():
 			JUMP_ANIMATION.play("land_center", 0.25)
 
 func play_mesh_animation(moving):
+	if is_attacking:
+		return
 	# For remote instances, use synced input_dir directly
 	# For local instance, check if on floor to avoid playing walk animation while in air
 	var should_walk = moving != Vector2.ZERO
