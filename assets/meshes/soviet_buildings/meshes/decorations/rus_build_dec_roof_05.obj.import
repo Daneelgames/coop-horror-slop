@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://cxyyg814ylsth"
+path="res://.godot/imported/rus_build_dec_roof_05.obj-f95dc54d6c9e9428729fd1327fc3beaa.mesh"
+
+[deps]
+
+files=["res://.godot/imported/rus_build_dec_roof_05.obj-f95dc54d6c9e9428729fd1327fc3beaa.mesh"]
+
+source_file="res://assets/meshes/soviet_buildings/meshes/decorations/rus_build_dec_roof_05.obj"
+dest_files=["res://.godot/imported/rus_build_dec_roof_05.obj-f95dc54d6c9e9428729fd1327fc3beaa.mesh", "res://.godot/imported/rus_build_dec_roof_05.obj-f95dc54d6c9e9428729fd1327fc3beaa.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

@@ -467,6 +467,8 @@ func initialize_animations():
 	CROUCH_ANIMATION.play("RESET")
 
 func play_headbob_animation(moving):
+	if !_has_input_authority:
+		return
 	if moving and is_on_floor():
 		var use_headbob_animation : String
 		match state:

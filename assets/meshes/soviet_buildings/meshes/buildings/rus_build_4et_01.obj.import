@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://b48fcm0m8saxj"
+path="res://.godot/imported/rus_build_4et_01.obj-40241d91829d2cd7ec0ac189edbbf4e5.mesh"
+
+[deps]
+
+files=["res://.godot/imported/rus_build_4et_01.obj-40241d91829d2cd7ec0ac189edbbf4e5.mesh"]
+
+source_file="res://assets/meshes/soviet_buildings/meshes/buildings/rus_build_4et_01.obj"
+dest_files=["res://.godot/imported/rus_build_4et_01.obj-40241d91829d2cd7ec0ac189edbbf4e5.mesh", "res://.godot/imported/rus_build_4et_01.obj-40241d91829d2cd7ec0ac189edbbf4e5.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false
