@@ -130,7 +130,7 @@ extends CharacterBody3D
 var speed : float = base_speed
 var current_speed : float = 0.0
 # States: normal, crouching, sprinting
-var state : String = "normal"
+@export var state : String = "normal"
 var low_ceiling : bool = false # This is for when the ceiling is too low and the player needs to crouch.
 var was_on_floor : bool = true # Was the player on the floor last frame (for landing animation)
 
@@ -152,6 +152,10 @@ var _has_input_authority : bool = false
 var _debug_last_should_control : bool = false
 var _debug_last_has_input : bool = false
 var _debug_last_blocked_reason : String = ""
+# Cached peer ID to avoid parsing name every frame
+var _cached_peer_id : int = -1
+# Cached local peer ID to avoid calling get_unique_id() every frame
+var _cached_local_peer_id : int = -1
 
 #endregion
 
@@ -165,15 +169,19 @@ func _enter_tree():
 		# Extract peer ID from character name format: "Player_{peer_id}"
 		var name_parts = name.split("_")
 		if name_parts.size() >= 2:
-			var peer_id = name_parts[1].to_int()
-			set_multiplayer_authority(peer_id, true)
+			_cached_peer_id = name_parts[1].to_int()
+			set_multiplayer_authority(_cached_peer_id, true)
 			if debug_authority:
-				_debug_print("Set multiplayer authority to %d in _enter_tree" % peer_id)
+				_debug_print("Set multiplayer authority to %d in _enter_tree" % _cached_peer_id)
 	call_deferred("_refresh_authority_state", true)
 
 
 func _ready():
 	_debug_print("Character ready, name=%s, multiplayer_peer=%s, debug_authority=%s" % [name, str(multiplayer.has_multiplayer_peer()), str(debug_authority)])
+
+	# Cache local peer ID if in multiplayer
+	if multiplayer.has_multiplayer_peer():
+		_cached_local_peer_id = multiplayer.get_unique_id()
 
 	# If the controller is rotated in a certain direction for game design purposes, redirect this rotation into the head.
 	HEAD.rotation.y = rotation.y
@@ -509,8 +517,12 @@ func play_mesh_animation(moving):
 		should_walk = should_walk and is_on_floor()
 	
 	if should_walk:
-		if mesh_animation_player.current_animation != "walk_forward":
-			mesh_animation_player.play("walk_forward", 0.2)
+		if state == "sprinting":
+			if mesh_animation_player.current_animation != "run_forward":
+				mesh_animation_player.play("run_forward", 0.2)
+		else:
+			if mesh_animation_player.current_animation != "walk_forward":
+				mesh_animation_player.play("walk_forward", 0.2)
 	else:
 		if mesh_animation_player.current_animation != "idle":
 			mesh_animation_player.play("idle", 0.2)
@@ -601,16 +613,18 @@ func handle_pausing():
 func _has_local_control() -> bool:
 	if !multiplayer.has_multiplayer_peer():
 		return true
-	# Check if this character belongs to the local peer
-	# Character name format: "Player_{peer_id}"
+	# Use cached peer IDs to avoid parsing name and calling get_unique_id() every frame
+	if _cached_peer_id >= 0:
+		if _cached_local_peer_id < 0:
+			_cached_local_peer_id = multiplayer.get_unique_id()
+		return _cached_peer_id == _cached_local_peer_id
+	# Fallback: parse name if cache not set (shouldn't happen normally)
 	var name_parts = name.split("_")
 	if name_parts.size() >= 2:
-		var character_peer_id = name_parts[1].to_int()
-		var local_peer_id = multiplayer.get_unique_id()
-		var has_control = character_peer_id == local_peer_id
-		# if debug_authority:
-			# _debug_print("Authority check: char_peer=%d, local_peer=%d, has_control=%s" % [character_peer_id, local_peer_id, str(has_control)])
-		return has_control
+		_cached_peer_id = name_parts[1].to_int()
+		if _cached_local_peer_id < 0:
+			_cached_local_peer_id = multiplayer.get_unique_id()
+		return _cached_peer_id == _cached_local_peer_id
 	return is_multiplayer_authority()
 
 
