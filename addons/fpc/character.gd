@@ -4,7 +4,7 @@
 
 
 extends Unit
-
+class_name PlayerCharacter
 
 #region Character Export Group
 
@@ -53,7 +53,6 @@ extends Unit
 ## A reference to the camera for use in the character script.
 @export var CAMERA : Camera3D
 ## A reference to the headbob animation for use in the character script.
-@export var mesh_animation_player: AnimationPlayer
 
 @export var HEADBOB_ANIMATION : AnimationPlayer
 ## A reference to the jump animation for use in the character script.
@@ -65,11 +64,6 @@ extends Unit
 @export var visual_node_3d : Node3D
 @export var skeleton_3d : Skeleton3D
 #endregion
-
-@export var take_damage_anims : Array[StringName]= []
-@export var death_anims : Array[StringName]= []
-
-var is_taking_damage = false
 
 #region Controls Export Group
 
@@ -85,7 +79,8 @@ var is_taking_damage = false
 	CROUCH = "crouch",
 	SPRINT = "sprint",
 	PAUSE = "ui_cancel",
-	INTERACTION = 'interaction'
+	INTERACTION = 'interaction',
+	BLOCK = 'block'
 	}
 @export_subgroup("Controller Specific")
 ## This only affects how the camera is handled, the rest should be covered by adding controller inputs to the existing actions in the Input Map.
@@ -246,6 +241,7 @@ func _physics_process(delta): # Most things happen here.
 		velocity.y -= gravity * delta
 	if is_taking_damage == false and is_attacking == false and is_dead() == false:
 		handle_attacking()
+		handle_blocking()
 		handle_jumping()
 		handle_interaction()
 
@@ -280,6 +276,22 @@ func _physics_process(delta): # Most things happen here.
 #endregion
 
 #region Input Handling
+var is_blocking = false
+func handle_blocking():
+	if is_blocking:
+		return
+	if Input.is_action_just_pressed(controls.BLOCK):
+		rpc_block()
+
+@rpc("call_local")
+func rpc_block():
+	if is_blocking:
+		return
+	is_blocking = true
+	mesh_animation_player.play('block', 0.1)
+	await mesh_animation_player.animation_finished
+	is_blocking = false
+	
 
 @onready var interaction_feedback_label_3d: Label3D = %InteractionFeedbackLabel3D
 
@@ -479,7 +491,7 @@ func handle_movement(delta, input_dir):
 		return
 
 	var direction = input_dir.rotated(-rotation.y)
-	if is_attacking:
+	if is_attacking or is_blocking:
 		velocity.x = lerpf(velocity.x, velocity.x * 0.1, 10 * get_process_delta_time())
 		velocity.z = lerpf(velocity.z, velocity.z * 0.1, 10 * get_process_delta_time())
 		move_and_slide()
@@ -712,7 +724,7 @@ func play_jump_animation():
 			JUMP_ANIMATION.play("land_center", 0.25)
 
 func play_mesh_animation(moving):
-	if is_attacking or is_taking_damage or is_dead() :
+	if is_attacking or is_taking_damage or is_dead() or is_blocking:
 		return
 	# For remote instances, use synced input_dir directly
 	# For local instance, check if on floor to avoid playing walk animation while in air
@@ -1010,44 +1022,3 @@ func _debug_clear_block_reason(source : String) -> void:
 		_debug_print("Input restored after %s (%s)" % [source, ctx])
 
 #endregion
-@rpc("any_peer", "call_local", "reliable")
-func rpc_take_damage(dmg):
-	# Only allow server to call this RPC
-	# When server calls .rpc(), remote_sender_id is 0 on server, 1 on clients
-	# When client calls, remote_sender_id is the client's peer ID
-	var sender_id = multiplayer.get_remote_sender_id()
-	if !multiplayer.is_server():
-		# On clients, only accept from server (peer ID 1)
-		if sender_id != 1:
-			return
-	# On server, sender_id will be 0 (local call) which is fine
-	take_damage(dmg)
-
-func take_damage(dmg):
-	if is_dead():
-		return
-	super.take_damage(dmg)
-	if is_dead() == false:
-		play_damage_anim()
-	else:
-		play_death_anim()
-		
-func death():
-	play_death_anim()
-
-func play_damage_anim():
-	if is_taking_damage:
-		return
-	if take_damage_anims.is_empty():
-		return
-	is_taking_damage = true
-	mesh_animation_player.play(take_damage_anims.pick_random())
-	await mesh_animation_player.animation_finished
-	is_taking_damage = false
-	
-func play_death_anim():
-	if death_anims.is_empty():
-		return
-	mesh_animation_player.play(death_anims.pick_random())
-	pass
-	

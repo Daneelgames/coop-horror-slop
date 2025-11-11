@@ -3,7 +3,7 @@ class_name Weapon
 @export var damage_min_max : Vector2i = Vector2i(30,60)
 @export var attack_points : Array[Node3D]
 @export var weapon_slot_position : Vector3
-
+@export var weapon_blocking_angle = 160
 var attack_points_prev_positions : Array[Vector3]
 var is_dangerous = false
 var weapon_owner : Unit = null
@@ -108,6 +108,8 @@ func _handle_melee_hit(hit_result: Dictionary):
 		return
 	if hit_objects_this_attack.has(collider):
 		return
+	var hit_position = hit_result['position']
+	var owner_position = weapon_owner.global_position
 	# Check if we hit a Unit (player/enemy)
 	if collider is Unit:
 		var hit_unit = collider as Unit
@@ -116,9 +118,16 @@ func _handle_melee_hit(hit_result: Dictionary):
 			return
 		# TODO: Apply damage or other effects to hit_unit
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
-		hit_unit.rpc_take_damage.rpc(randi_range(damage_min_max.x,damage_min_max.y))
+		if attack_was_blocked(hit_unit, hit_position) == false:
+			hit_unit.rpc_take_damage.rpc(randi_range(damage_min_max.x,damage_min_max.y))
 	else:
 		# Hit a solid object
 		print("[MELEE HIT] Hit solid object: ", collider.name, " at position: ", hit_result.get("position"))
 		
 	hit_objects_this_attack.append(collider)
+
+func attack_was_blocked(attack_target, hit_pos):
+	if attack_target is PlayerCharacter:
+		if attack_target.item_in_hands and attack_target.is_blocking and rad_to_deg(-attack_target.basis.z.angle_to(hit_pos)) <= attack_target.item_in_hands.weapon_blocking_angle:
+			return true
+	return false
