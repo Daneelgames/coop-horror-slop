@@ -66,6 +66,11 @@ extends Unit
 @export var skeleton_3d : Skeleton3D
 #endregion
 
+@export var take_damage_anims : Array[StringName]= []
+@export var death_anims : Array[StringName]= []
+
+var is_taking_damage = false
+
 #region Controls Export Group
 
 # We are using UI controls because they are built into Godot Engine so they can be used right away
@@ -239,13 +244,14 @@ func _physics_process(delta): # Most things happen here.
 		gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	if not is_on_floor() and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
-	handle_attacking()
-	handle_jumping()
-	handle_interaction()
+	if is_taking_damage == false and is_attacking == false:
+		handle_attacking()
+		handle_jumping()
+		handle_interaction()
 
 	input_dir = Vector2.ZERO
 
-	if not immobile: # Immobility works by interrupting user input, so other forces can still be applied to the player
+	if not immobile and is_dead() == false: # Immobility works by interrupting user input, so other forces can still be applied to the player
 		input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
 
 	handle_movement(delta, input_dir)
@@ -706,7 +712,7 @@ func play_jump_animation():
 			JUMP_ANIMATION.play("land_center", 0.25)
 
 func play_mesh_animation(moving):
-	if is_attacking:
+	if is_attacking or is_taking_damage or is_dead():
 		return
 	# For remote instances, use synced input_dir directly
 	# For local instance, check if on floor to avoid playing walk animation while in air
@@ -1004,3 +1010,30 @@ func _debug_clear_block_reason(source : String) -> void:
 		_debug_print("Input restored after %s (%s)" % [source, ctx])
 
 #endregion
+@rpc("authority", "call_local", "reliable")
+func rpc_take_damage(dmg):
+
+	take_damage(dmg)
+
+func take_damage(dmg):
+	if is_dead():
+		return
+	super.take_damage(dmg)
+	if is_dead() == false:
+		play_damage_anim()
+		
+func death():
+	play_death_anim()
+
+func play_damage_anim():
+	if is_taking_damage:
+		return
+	is_taking_damage = true
+	mesh_animation_player.play(take_damage_anims.pick_random())
+	await mesh_animation_player.animation_finished
+	is_taking_damage = false
+	
+func play_death_anim():
+	mesh_animation_player.play(death_anims.pick_random())
+	pass
+	

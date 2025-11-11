@@ -1,15 +1,18 @@
 extends Node3D
 class_name Weapon
+@export var damage_min_max : Vector2i = Vector2i(30,60)
 @export var attack_points : Array[Node3D]
-var attack_points_prev_positions : Array[Vector3]
 @export var weapon_slot_position : Vector3
+
+var attack_points_prev_positions : Array[Vector3]
 var is_dangerous = false
 var weapon_owner : Unit = null
-
+var hit_objects_this_attack = []
 
 func set_dangerous(isdngrs, wpnownr):
 	if multiplayer.is_server() == false:
 		return
+	hit_objects_this_attack = []
 	weapon_owner = wpnownr
 	attack_points_prev_positions = []
 	for point in attack_points:
@@ -40,6 +43,9 @@ func _physics_process(_delta: float) -> void:
 		attack_points_prev_positions.append(point.global_position)
 
 func melee_raycast(point: Vector3, prev_point: Vector3):
+	if multiplayer.is_server() == false:
+		return
+		
 	if not is_dangerous:
 		return null
 	
@@ -100,16 +106,19 @@ func _handle_melee_hit(hit_result: Dictionary):
 	var collider = hit_result.get("collider")
 	if collider == null:
 		return
-	
+	if hit_objects_this_attack.has(collider):
+		return
 	# Check if we hit a Unit (player/enemy)
 	if collider is Unit:
 		var hit_unit = collider as Unit
 		# Don't hit the weapon owner
 		if hit_unit == weapon_owner:
 			return
-		
 		# TODO: Apply damage or other effects to hit_unit
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
+		hit_unit.rpc_take_damage(randi_range(damage_min_max.x,damage_min_max.y))
 	else:
 		# Hit a solid object
 		print("[MELEE HIT] Hit solid object: ", collider.name, " at position: ", hit_result.get("position"))
+		
+	hit_objects_this_attack.append(collider)
