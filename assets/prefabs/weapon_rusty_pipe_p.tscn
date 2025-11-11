@@ -1,16 +1,16 @@
 [gd_scene load_steps=10 format=4 uid="uid://8p21pj2xip4f"]
 
-[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="1_6fskg"]
-[ext_resource type="Script" uid="uid://cbpt8dfmd3loy" path="res://assets/scripts/weapon.gd" id="1_dgubb"]
-[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="2_dgubb"]
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive.gd" id="1_cwhif"]
+[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="2_5koyn"]
+[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="3_1ulnn"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dgubb"]
 size = Vector3(0.32006836, 0.6557617, 0.24316406)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go8lt"]
-albedo_texture = ExtResource("1_6fskg")
+albedo_texture = ExtResource("2_5koyn")
 normal_enabled = true
-normal_texture = ExtResource("2_dgubb")
+normal_texture = ExtResource("3_1ulnn")
 texture_filter = 2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hxx2q"]
@@ -60,7 +60,7 @@ properties/1/path = NodePath(".:rotation")
 properties/1/spawn = true
 properties/1/replication_mode = 2
 
-[node name="WeaponRustyPipe" type="RigidBody3D" node_paths=PackedStringArray("attack_points")]
+[node name="WeaponRustyPipe" type="RigidBody3D"]
 transform = Transform3D(0.9999999, 0, 0, 0, 1.0000002, 0, 0, 0, 0.99999994, 0, 0, 0)
 collision_layer = 4
 collision_mask = 3
@@ -68,17 +68,17 @@ freeze_mode = 1
 continuous_cd = true
 linear_damp = 1.0
 angular_damp = 1.0
-script = ExtResource("1_dgubb")
-attack_points = [NodePath("AttackPointNode3D"), NodePath("AttackPointNode3D2"), NodePath("AttackPointNode3D3"), NodePath("AttackPointNode3D4")]
-weapon_slot_position = Vector3(3.6044846, 10.317631, 3.410141)
-weapon_slot_rotation = Vector3(-0.26179948, 3.1415925, 1.5707964)
-prefab_path = &"res://assets/prefabs/weapon_rusty_pipe.tscn"
+script = ExtResource("1_cwhif")
+prefab_path_pickup = &"res://assets/prefabs/weapon_rusty_pipe_p.tscn"
+prefab_path_weapon = &"res://assets/prefabs/weapon_rusty_pipe_w.tscn"
+interactive_name = &"Pipe"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03182364, 0.2033693, 0)
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8.742278e-08, -1.1464114e-14, -1, 0.28330055, 0.020958137, 2.318427e-09)
 shape = SubResource("BoxShape3D_dgubb")
 
 [node name="VisualParent" type="Node3D" parent="."]
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8.742278e-08, -1.1464114e-14, -1, 0.07993118, -0.010865498, -4.6368423e-10)
 
 [node name="Rusty_Pipe" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -4.4703485e-09, 0.071912356, 2.2351743e-09)
@@ -86,19 +86,8 @@ material_override = SubResource("StandardMaterial3D_go8lt")
 mesh = SubResource("ArrayMesh_06hom")
 skeleton = NodePath("")
 
-[node name="AttackPointNode3D" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5879354e-09, -0.13908663, 0)
-
-[node name="AttackPointNode3D2" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
-
-[node name="AttackPointNode3D3" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
-
-[node name="AttackPointNode3D4" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.656613e-10, 0.54033375, 0)
-
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+unique_name_in_owner = true
 replication_interval = 0.1
 delta_interval = 0.1
 replication_config = SubResource("SceneReplicationConfig_dgubb")

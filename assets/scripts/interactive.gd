@@ -1,7 +1,8 @@
 extends RigidBody3D
 class_name Interactive
 
-@export var prefab_path : StringName
+@export var prefab_path_pickup : StringName
+@export var prefab_path_weapon : StringName
 @export var interactive_name := &"Weapon"
 
 func activate_rigidbody_collisions():

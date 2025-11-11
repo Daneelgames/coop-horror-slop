@@ -9,8 +9,9 @@ extends CharacterBody3D
 #region Character Export Group
 
 ## The settings for the character's movement and feel.
-@export var carrying_items : Dictionary[StringName, StringName] = {}  # Dictionary[interactive_name, prefab_path]
+@export var carrying_items : Dictionary[StringName, Array] = {}  # Dictionary[interactive_name, [prefab_path_pickup, prefab_weapon]]
 @export var inventory_slots_max : int = 5
+@export var current_selected_item_index : int = 0
 @onready var interaction_ray_cast_3d: RayCast3D = %InteractionRayCast3D
 
 @onready var inventory_slots_panel_container: PlayerInventorySlotsPanelContainer = %InventorySlotsPanelContainer
@@ -231,7 +232,6 @@ func _physics_process(delta): # Most things happen here.
 	#if mesh_animation_player and _has_input_authority:
 	if mesh_animation_player:
 		play_mesh_animation(input_dir)
-		
 	if !_has_input_authority:
 		return
 	# Gravity
@@ -278,27 +278,48 @@ func _physics_process(delta): # Most things happen here.
 @onready var interaction_feedback_label_3d: Label3D = %InteractionFeedbackLabel3D
 
 func handle_interaction():
-	if _has_input_authority and interaction_ray_cast_3d.is_colliding():
-		var col = interaction_ray_cast_3d.get_collider()
-		if col is Interactive:
-			interaction_feedback_label_3d.text = col.interactive_name
-			interaction_feedback_label_3d.visible = true
-			interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
-				
-			if Input.is_action_just_pressed(controls.INTERACTION):
-				# Client sends request to server
-				if col is Weapon:
-					var weapon_path = col.get_path()
-					if multiplayer.is_server():
-						# If we're the server, process directly
-						rpc_request_weapon_pickup(weapon_path, col.interactive_name, col.prefab_path)
-					else:
-						# Otherwise send RPC to server (peer ID 1)
-						rpc_request_weapon_pickup.rpc_id(1, weapon_path, col.interactive_name, col.prefab_path)
-				pass
-		else:
-			interaction_feedback_label_3d.visible = false
+	if !_has_input_authority:
+		print("[PICKUP DEBUG] handle_interaction: No input authority, skipping")
+		return
+		
+	if !interaction_ray_cast_3d.is_colliding():
+		interaction_feedback_label_3d.visible = false
+		return
+		
+	var col = interaction_ray_cast_3d.get_collider()
+	if is_instance_valid(col) == false:
+		return
+	print("[PICKUP DEBUG] handle_interaction: Raycast colliding with: ", col, " (type: ", col.get_class(), ")")
+	
+	if col is Interactive:
+		print("[PICKUP DEBUG] handle_interaction: Collider is Interactive")
+		print("[PICKUP DEBUG]   - interactive_name: ", col.interactive_name)
+		print("[PICKUP DEBUG]   - prefab_path_pickup: ", col.prefab_path_pickup)
+		print("[PICKUP DEBUG]   - prefab_path_weapon: ", col.prefab_path_weapon)
+		print("[PICKUP DEBUG]   - is Weapon?: ", col is Weapon)
+		
+		interaction_feedback_label_3d.text = col.interactive_name
+		interaction_feedback_label_3d.visible = true
+		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
+			
+		if Input.is_action_just_pressed(controls.INTERACTION):
+			print("[PICKUP DEBUG] handle_interaction: Interaction button pressed!")
+			var weapon_path = col.get_path()
+			print("[PICKUP DEBUG]   - weapon_path: ", weapon_path)
+			print("[PICKUP DEBUG]   - is_server: ", multiplayer.is_server())
+			print("[PICKUP DEBUG]   - local_peer_id: ", multiplayer.get_unique_id())
+			
+			# Client sends request to server
+			if multiplayer.is_server():
+				# If we're the server, process directly
+				print("[PICKUP DEBUG] handle_interaction: Calling rpc_request_weapon_pickup directly (server)")
+				rpc_request_weapon_pickup(weapon_path, col.interactive_name, col.prefab_path_pickup, col.prefab_path_weapon)
+			else:
+				# Otherwise send RPC to server (peer ID 1)
+				print("[PICKUP DEBUG] handle_interaction: Sending RPC to server (client)")
+				rpc_request_weapon_pickup.rpc_id(1, weapon_path, col.interactive_name, col.prefab_path_pickup, col.prefab_path_weapon)
 	else:
+		print("[PICKUP DEBUG] handle_interaction: Collider is NOT Interactive, hiding feedback")
 		interaction_feedback_label_3d.visible = false
 			
 
@@ -306,45 +327,74 @@ func handle_interaction():
 
 # Client requests weapon pickup from server
 @rpc("any_peer", "reliable")
-func rpc_request_weapon_pickup(weapon_path: NodePath, interactive_name: StringName, prefab_path: StringName):
+func rpc_request_weapon_pickup(pickup_node_path: NodePath, interactive_name: StringName, prefab_path: StringName, prefab_weapon_path : StringName):
+	print("[PICKUP DEBUG] rpc_request_weapon_pickup called")
+	print("[PICKUP DEBUG]   - pickup_node_path: ", pickup_node_path)
+	print("[PICKUP DEBUG]   - interactive_name: ", interactive_name)
+	print("[PICKUP DEBUG]   - prefab_path: ", prefab_path)
+	print("[PICKUP DEBUG]   - prefab_weapon_path: ", prefab_weapon_path)
+	print("[PICKUP DEBUG]   - is_server: ", multiplayer.is_server())
+	print("[PICKUP DEBUG]   - remote_sender_id: ", multiplayer.get_remote_sender_id())
+	
 	# Only server processes this
 	if !multiplayer.is_server():
+		print("[PICKUP DEBUG] rpc_request_weapon_pickup: Not server, returning early")
 		return
 	
 	# Get requesting peer ID - if called directly (server), use server's peer ID (1)
 	var requesting_peer_id = multiplayer.get_unique_id()
 	if multiplayer.get_remote_sender_id() != 0:
 		requesting_peer_id = multiplayer.get_remote_sender_id()
+	print("[PICKUP DEBUG]   - requesting_peer_id: ", requesting_peer_id)
 	
 	# Find the weapon node
-	var weapon_node = get_node_or_null(weapon_path)
-	if weapon_node == null or not weapon_node is Weapon:
+	var weapon_node = get_node_or_null(pickup_node_path)
+	if weapon_node == null:
+		print("[PICKUP DEBUG] rpc_request_weapon_pickup: ERROR - weapon_node is null for path: ", pickup_node_path)
+		return
+	if not weapon_node is Interactive:
+		print("[PICKUP DEBUG] rpc_request_weapon_pickup: ERROR - weapon_node is not Interactive, type: ", weapon_node.get_class())
 		return
 	
-	var weapon = weapon_node as Weapon
+	print("[PICKUP DEBUG]   - Found weapon_node: ", weapon_node.name)
+	var weapon = weapon_node as Interactive
 	
 	# Get the requesting player's character - find via scene tree path
 	# Path structure: Main/GameRoot/Players/PlayerSpawner/Player_{peer_id}
 	var root = get_tree().root
 	var player_path = root.get_node_or_null("Main/GameRoot/Players/PlayerSpawner/Player_%d" % requesting_peer_id)
 	var requesting_player = player_path
+	print("[PICKUP DEBUG]   - Tried path: Main/GameRoot/Players/PlayerSpawner/Player_%d" % requesting_peer_id)
+	print("[PICKUP DEBUG]   - Found via path: ", requesting_player != null)
 	
 	if requesting_player == null:
 		# Try searching all nodes for the player
+		print("[PICKUP DEBUG]   - Searching in 'players' group...")
 		var all_players = get_tree().get_nodes_in_group("players")
+		print("[PICKUP DEBUG]   - Found ", all_players.size(), " players in group")
 		for player in all_players:
+			print("[PICKUP DEBUG]     - Player: ", player.name)
 			if player.name == "Player_%d" % requesting_peer_id:
 				requesting_player = player
+				print("[PICKUP DEBUG]   - Found requesting player: ", player.name)
 				break
 	
 	if requesting_player == null:
+		print("[PICKUP DEBUG] rpc_request_weapon_pickup: ERROR - Could not find requesting player with peer_id: ", requesting_peer_id)
 		return
+	
+	print("[PICKUP DEBUG]   - Requesting player found: ", requesting_player.name)
+	print("[PICKUP DEBUG]   - Current inventory size: ", requesting_player.carrying_items.size())
+	print("[PICKUP DEBUG]   - Inventory max: ", requesting_player.inventory_slots_max)
 	
 	# Check if player can pick up (inventory not full)
 	if requesting_player.carrying_items.size() >= requesting_player.inventory_slots_max:
+		print("[PICKUP DEBUG] rpc_request_weapon_pickup: ERROR - Inventory is full!")
 		return
 	
 	# Process pickup on server
+	print("[PICKUP DEBUG] rpc_request_weapon_pickup: Processing pickup...")
+	
 	# Handle duplicate names by appending a counter
 	var final_name = interactive_name
 	var counter = 1
@@ -352,9 +402,18 @@ func rpc_request_weapon_pickup(weapon_path: NodePath, interactive_name: StringNa
 		final_name = StringName("%s %d" % [interactive_name, counter+1])
 		counter += 1
 	
-	requesting_player.carrying_items[final_name] = prefab_path
+	print("[PICKUP DEBUG]   - Final item name: ", final_name)
+	print("[PICKUP DEBUG]   - Adding to inventory: [", prefab_path, ", ", prefab_weapon_path, "]")
+	
+	requesting_player.carrying_items[final_name] = [prefab_path, prefab_weapon_path]
+	
+	print("[PICKUP DEBUG]   - New inventory size: ", requesting_player.carrying_items.size())
+	
+	# Clamp selected index if needed
+	requesting_player._clamp_selected_index()
 	
 	# Tell all clients to destroy the weapon
+	print("[PICKUP DEBUG]   - Destroying weapon node...")
 	# Call from server's own character node (peer ID 1) to ensure proper authority
 	var server_player = root.get_node_or_null("Main/GameRoot/Players/PlayerSpawner/Player_1")
 	if server_player == null:
@@ -366,45 +425,87 @@ func rpc_request_weapon_pickup(weapon_path: NodePath, interactive_name: StringNa
 				break
 	
 	if server_player != null:
-		server_player.rpc_destroy_weapon.rpc(weapon_path)
+		print("[PICKUP DEBUG]   - Calling rpc_destroy_weapon from server_player")
+		server_player.rpc_destroy_weapon.rpc(pickup_node_path)
 	else:
 		# Fallback: call  directly if we can't find server player
-		rpc_destroy_weapon.rpc(weapon_path)
+		print("[PICKUP DEBUG]   - Calling rpc_destroy_weapon directly (fallback)")
+		rpc_destroy_weapon.rpc(pickup_node_path)
 	
 	# Tell requesting client to update their inventory UI
+	print("[PICKUP DEBUG]   - Updating inventory UI...")
 	# If requesting peer is the server, update directly (no RPC needed)
 	if requesting_peer_id == 1:
 		# Server picking up - update directly
+		print("[PICKUP DEBUG]   - Server picking up, updating UI directly")
 		if requesting_player.inventory_slots_panel_container:
-			requesting_player.inventory_slots_panel_container.update_inventory_items_ui(requesting_player.carrying_items)
+			requesting_player.inventory_slots_panel_container.update_inventory_items_ui(requesting_player.carrying_items, requesting_player.current_selected_item_index)
+		else:
+			print("[PICKUP DEBUG]   - ERROR: inventory_slots_panel_container is null!")
 	else:
 		# Client picking up - send RPC to their character node
+		print("[PICKUP DEBUG]   - Client picking up, sending RPC to peer: ", requesting_peer_id)
 		requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, requesting_player.carrying_items)
-
+	
+	# Update item in hands for all clients
+	print("[PICKUP DEBUG]   - Updating item in hands...")
+	var item_keys = requesting_player.carrying_items.keys()
+	if item_keys.size() > requesting_player.current_selected_item_index:
+		var selected_item_path = requesting_player.carrying_items[item_keys[requesting_player.current_selected_item_index]][1]
+		print("[PICKUP DEBUG]   - Selected item path: ", selected_item_path)
+		requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_item_path)
+	else:
+		print("[PICKUP DEBUG]   - No item selected")
+		requesting_player.rpc_update_item_in_hands.rpc(-1, "")  # No item selected
+	
+	print("[PICKUP DEBUG] rpc_request_weapon_pickup: Pickup complete!")
+	
 # Server tells all clients to destroy the weapon
 # This RPC can be called by the server from any character node
 @rpc("any_peer", "call_local", "reliable")
 func rpc_destroy_weapon(weapon_path: NodePath):
+	print("[PICKUP DEBUG] rpc_destroy_weapon called")
+	print("[PICKUP DEBUG]   - weapon_path: ", weapon_path)
+	print("[PICKUP DEBUG]   - is_server: ", multiplayer.is_server())
+	print("[PICKUP DEBUG]   - remote_sender_id: ", multiplayer.get_remote_sender_id())
+	
 	# Only process if called from server
 	if !multiplayer.is_server() and multiplayer.get_remote_sender_id() != 1:
+		print("[PICKUP DEBUG] rpc_destroy_weapon: Not from server, ignoring")
 		return
+	
 	var weapon_node = get_node_or_null(weapon_path)
 	if weapon_node != null:
+		print("[PICKUP DEBUG] rpc_destroy_weapon: Destroying weapon node: ", weapon_node.name)
 		weapon_node.queue_free()
+	else:
+		print("[PICKUP DEBUG] rpc_destroy_weapon: ERROR - weapon_node is null for path: ", weapon_path)
 
 # Server tells requesting client to update their inventory UI
 # This RPC can be called by the server from any character node
 @rpc("any_peer", "reliable")
-func rpc_update_inventory(inventory: Dictionary[StringName, StringName]):
+func rpc_update_inventory(inventory: Dictionary[StringName, Array]):
+	print("[PICKUP DEBUG] rpc_update_inventory called")
+	print("[PICKUP DEBUG]   - inventory size: ", inventory.size())
+	print("[PICKUP DEBUG]   - is_server: ", multiplayer.is_server())
+	print("[PICKUP DEBUG]   - remote_sender_id: ", multiplayer.get_remote_sender_id())
+	
 	# Only process if called from server (peer ID 1)
 	# When client receives this, remote_sender_id will be 1 (server)
 	if !multiplayer.is_server():
 		if multiplayer.get_remote_sender_id() != 1:
+			print("[PICKUP DEBUG] rpc_update_inventory: Not from server, ignoring")
 			return
+	
+	print("[PICKUP DEBUG]   - Updating local inventory...")
 	# Server can also process this locally if needed
 	carrying_items = inventory
+	_clamp_selected_index()
 	if inventory_slots_panel_container:
-		inventory_slots_panel_container.update_inventory_items_ui(carrying_items)
+		print("[PICKUP DEBUG]   - Updating UI...")
+		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+	else:
+		print("[PICKUP DEBUG]   - ERROR: inventory_slots_panel_container is null!")
 
 @export var is_attacking = false 
 func handle_attacking():
@@ -451,8 +552,8 @@ func handle_movement(delta, input_dir):
 
 	var direction = input_dir.rotated(-rotation.y)
 	if is_attacking:
-		velocity.x = lerpf(velocity.x, velocity.x * 0.1, 5 * get_process_delta_time())
-		velocity.z = lerpf(velocity.z, velocity.z * 0.1, 5 * get_process_delta_time())
+		velocity.x = lerpf(velocity.x, velocity.x * 0.1, 10 * get_process_delta_time())
+		velocity.z = lerpf(velocity.z, velocity.z * 0.1, 10 * get_process_delta_time())
 		move_and_slide()
 		return
 		
@@ -736,6 +837,12 @@ func _unhandled_input(event : InputEvent):
 		mouseInput = event.relative
 		if debug_authority:
 			_debug_print("Mouse input: %s" % str(mouseInput))
+	# Handle mouse wheel for inventory selection
+	elif event is InputEventMouseButton and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+			change_selected_item_index(-1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+			change_selected_item_index(1)
 	# Toggle debug menu
 	elif event is InputEventKey:
 		if event.is_released():
@@ -776,6 +883,74 @@ func handle_pausing():
 			Input.MOUSE_MODE_VISIBLE:
 				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 				#get_tree().paused = false
+				
+var on_change_item_cooldown = false
+func change_selected_item_index(delta: int):
+	if !_has_input_authority:
+		return
+	if on_change_item_cooldown:
+		return
+	var item_count = carrying_items.size()
+	if item_count == 0:
+		current_selected_item_index = 0
+		return
+	
+	on_change_item_cooldown = true
+	await get_tree().create_timer(0.15).timeout
+	on_change_item_cooldown = false
+	current_selected_item_index += delta
+	
+	# Wrap around
+	if current_selected_item_index < 0:
+		current_selected_item_index = item_count - 1
+	elif current_selected_item_index >= item_count:
+		current_selected_item_index = 0
+	
+	# Update UI
+	if inventory_slots_panel_container:
+		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+	# Get the item path before calling RPC
+	var item_keys = carrying_items.keys()
+	if item_keys.size() > current_selected_item_index:
+		var selected_item_path = carrying_items[item_keys[current_selected_item_index]][1]
+		rpc_update_item_in_hands.rpc(current_selected_item_index, selected_item_path)
+	else:
+		rpc_update_item_in_hands.rpc(-1, "")  # No item selected
+	
+var item_in_hands : Weapon = null
+
+@onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
+
+@rpc("authority", "call_local", "reliable")
+func rpc_update_item_in_hands(item_index: int, item_path: String):
+	if item_in_hands != null:
+		item_in_hands.queue_free()
+		item_in_hands = null
+	
+	# If no item selected (item_index < 0 or empty path), don't spawn anything
+	if item_index < 0 or item_path == "":
+		return
+	
+	# Use the provided item_path instead of relying on carrying_items
+	item_in_hands = load(item_path).instantiate()
+	if item_in_hands == null:
+		push_error("Failed to load item: " + item_path)
+		return
+	
+	weapon_bone_attachment_3d.add_child(item_in_hands)
+	item_in_hands.position = item_in_hands.weapon_slot_position
+	item_in_hands.scale = Vector3.ONE * 100
+
+	
+func _clamp_selected_index():
+	# Ensure selected index is within valid range
+	var item_count = carrying_items.size()
+	if item_count == 0:
+		current_selected_item_index = 0
+	elif current_selected_item_index >= item_count:
+		current_selected_item_index = item_count - 1
+	elif current_selected_item_index < 0:
+		current_selected_item_index = 0
 
 #endregion
 
