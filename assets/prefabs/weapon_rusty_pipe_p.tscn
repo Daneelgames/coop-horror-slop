@@ -78,7 +78,9 @@ transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8
 shape = SubResource("BoxShape3D_dgubb")
 
 [node name="VisualParent" type="Node3D" parent="."]
-transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8.742278e-08, -1.1464114e-14, -1, 0.07993118, -0.010865498, -4.6368423e-10)
+unique_name_in_owner = true
+transform = Transform3D(1.3113416e-07, 0.9999999, 0, 1.0000002, -1.311342e-07, 8.7422805e-08, 8.742277e-08, -1.1464113e-14, -0.99999994, 0.07993117, -0.010865501, -4.636842e-10)
+top_level = true
 
 [node name="Rusty_Pipe" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -4.4703485e-09, 0.071912356, 2.2351743e-09)
