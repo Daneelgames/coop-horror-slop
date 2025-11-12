@@ -851,8 +851,11 @@ func change_selected_item_index(delta: int):
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
 
-@rpc("authority", "call_local", "reliable")
+@rpc("any_peer", "call_local", "reliable")
 func rpc_update_item_in_hands(item_index: int, item_path: String):
+	# Only allow server to call this RPC for security
+	if not multiplayer.is_server() and multiplayer.get_remote_sender_id() != 1:
+		return
 	if item_in_hands != null:
 		item_in_hands.queue_free()
 		item_in_hands = null

@@ -318,4 +318,6 @@ func death():
 	super.death()
 	if resurrect_after_death_seconds > 0:
 		await get_tree().create_timer(resurrect_after_death_seconds).timeout
-		rpc_full_heal_and_resurrect.rpc()
+		# Only server can call this RPC since AI has server authority
+		if multiplayer.is_server():
+			rpc_full_heal_and_resurrect.rpc()

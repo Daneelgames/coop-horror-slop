@@ -21,6 +21,8 @@ func set_dangerous(isdngrs, wpnownr):
 	attack_points_prev_positions = []
 	for point in attack_points:
 		attack_points_prev_positions.append(point.global_position)
+	if isdngrs:
+		await get_tree().create_timer(0.1).timeout
 	is_dangerous = isdngrs
 	
 
