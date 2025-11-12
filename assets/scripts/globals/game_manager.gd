@@ -18,6 +18,8 @@ var _player_spawner : MultiplayerSpawner
 var _player_nodes : Dictionary = {}
 var _player_signals_connected : bool = false
 var particles_manager : ParticlesManager
+var ai_visibility_manager : AiVisibilityManager
+var ai_hearing_manager : AiHearingManager
 
 func _ready() -> void:
 	_check_launch_args()

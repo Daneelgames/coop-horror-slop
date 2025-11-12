@@ -231,7 +231,7 @@ func _physics_process(delta): # Most things happen here.
 	_ensure_authority_state()
 	#if mesh_animation_player and _has_input_authority:
 	if mesh_animation_player:
-		play_mesh_animation(input_dir)
+		play_mesh_animation(input_dir, _has_input_authority, state)
 	if !_has_input_authority:
 		return
 	# Gravity
@@ -239,7 +239,7 @@ func _physics_process(delta): # Most things happen here.
 		gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	if not is_on_floor() and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
-	if is_taking_damage == false and is_attacking == false and is_dead() == false:
+	if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false:
 		handle_attacking()
 		handle_blocking()
 		handle_jumping()
@@ -276,7 +276,6 @@ func _physics_process(delta): # Most things happen here.
 #endregion
 
 #region Input Handling
-var is_blocking = false
 func handle_blocking():
 	if is_blocking:
 		return
@@ -450,7 +449,6 @@ func rpc_update_inventory(inventory: Dictionary[StringName, Array]):
 	else:
 		rpc_update_item_in_hands(-1, "")  # No item selected
 
-@export var is_attacking = false 
 func handle_attacking():
 	if !_has_input_authority:
 		return
@@ -732,26 +730,6 @@ func play_jump_animation():
 		else:
 			JUMP_ANIMATION.play("land_center", 0.25)
 
-func play_mesh_animation(moving):
-	if is_attacking or is_taking_damage or is_dead() or is_blocking:
-		return
-	# For remote instances, use synced input_dir directly
-	# For local instance, check if on floor to avoid playing walk animation while in air
-	var should_walk = moving != Vector2.ZERO
-	if _has_input_authority:
-		should_walk = should_walk and is_on_floor()
-	
-	if should_walk:
-		if state == "sprinting":
-			if mesh_animation_player.current_animation != "run_forward":
-				mesh_animation_player.play("run_forward", 0.2)
-		else:
-			if mesh_animation_player.current_animation != "walk_forward":
-				mesh_animation_player.play("walk_forward", 0.2)
-	else:
-		if mesh_animation_player.current_animation != "idle":
-			mesh_animation_player.play("idle", 0.2)
-
 #endregion
 
 #region Debug Menu
@@ -786,14 +764,16 @@ func _unhandled_input(event : InputEvent):
 		mouseInput = event.relative
 		if debug_authority:
 			_debug_print("Mouse input: %s" % str(mouseInput))
-	# Handle mouse wheel for inventory selection
+	elif Input.is_action_just_pressed('switch_inventory_item'):
+		change_selected_item_index(1)
 	elif event is InputEventMouseButton and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# Handle mouse wheel for inventory selection
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			change_selected_item_index(-1)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			change_selected_item_index(1)
-	# Toggle debug menu
 	elif event is InputEventKey:
+		# Toggle debug menu
 		if event.is_released():
 			# Where we're going, we don't need InputMap
 			if event.keycode == 4194338: # F7
@@ -1030,37 +1010,6 @@ func _debug_clear_block_reason(source : String) -> void:
 		var ctx := _debug_authority_context()
 		_debug_print("Input restored after %s (%s)" % [source, ctx])
 
-#endregion
-@onready var steps_audio_stream_player_3d: AudioStreamPlayer3D = %StepsAudioStreamPlayer3D
-
-func play_foot_step():
-	steps_audio_stream_player_3d.play()
-	pass
-@onready var attack_woosh_audio_stream_player_3d: AudioStreamPlayer3D = %AttackWooshAudioStreamPlayer3D
-
-func play_attack_woosh():
-	attack_woosh_audio_stream_player_3d.play()
-	pass
-	
-@onready var hit_solid_audio_stream_player_3d: AudioStreamPlayer3D = %HitSolidAudioStreamPlayer3D
-func play_hit_solid():
-	hit_solid_audio_stream_player_3d.play()
-	pass
-	
-@onready var take_damage_audio_stream_player_3d: AudioStreamPlayer3D = %TakeDamageAudioStreamPlayer3D
-func play_take_damage():
-	take_damage_audio_stream_player_3d.play()
-	pass
-	
-@onready var death_audio_stream_player_3d: AudioStreamPlayer3D = %DeathAudioStreamPlayer3D
-func play_death():
-	death_audio_stream_player_3d.play()
-
-
-func take_damage(dmg):
-	super.take_damage(dmg)
-	play_take_damage()
-
 func death():
 	super.death()
-	play_death()
+	enter_crouch_state()

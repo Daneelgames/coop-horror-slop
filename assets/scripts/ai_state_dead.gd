@@ -1,0 +1,2 @@
+extends AiState
+class_name AiStateDead

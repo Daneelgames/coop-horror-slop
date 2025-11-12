@@ -8,6 +8,8 @@ class_name Unit
 @export var take_damage_anims : Array[StringName]= []
 @export var death_anims : Array[StringName]= []
 
+@export var is_attacking = false 
+@export var is_blocking = false
 @export var is_taking_damage = false
 
 @rpc("any_peer", "call_local", "reliable")
@@ -24,6 +26,7 @@ func rpc_take_damage(dmg):
 	take_damage(dmg)
 
 func take_damage(dmg):
+	play_take_damage()
 	if is_dead():
 		return
 	health_current -= dmg
@@ -33,6 +36,7 @@ func take_damage(dmg):
 		play_damage_anim()
 		
 func death():
+	play_death()
 	play_death_anim()
 
 func play_damage_anim():
@@ -53,3 +57,50 @@ func play_death_anim():
 
 func is_dead():
 	return health_current <= 0
+
+
+#endregion
+@onready var steps_audio_stream_player_3d: AudioStreamPlayer3D = %StepsAudioStreamPlayer3D
+
+func play_foot_step():
+	steps_audio_stream_player_3d.play()
+	pass
+@onready var attack_woosh_audio_stream_player_3d: AudioStreamPlayer3D = %AttackWooshAudioStreamPlayer3D
+
+func play_attack_woosh():
+	attack_woosh_audio_stream_player_3d.play()
+	pass
+	
+@onready var hit_solid_audio_stream_player_3d: AudioStreamPlayer3D = %HitSolidAudioStreamPlayer3D
+func play_hit_solid():
+	hit_solid_audio_stream_player_3d.play()
+	pass
+	
+@onready var take_damage_audio_stream_player_3d: AudioStreamPlayer3D = %TakeDamageAudioStreamPlayer3D
+func play_take_damage():
+	take_damage_audio_stream_player_3d.play()
+	pass
+	
+@onready var death_audio_stream_player_3d: AudioStreamPlayer3D = %DeathAudioStreamPlayer3D
+func play_death():
+	death_audio_stream_player_3d.play()
+
+func play_mesh_animation(moving_vector, auth, state):
+	if is_attacking or is_taking_damage or is_dead() or is_blocking:
+		return
+	# For remote instances, use synced input_dir directly
+	# For local instance, check if on floor to avoid playing walk animation while in air
+	var should_walk = moving_vector != Vector2.ZERO
+	if auth:
+		should_walk = should_walk and is_on_floor()
+	
+	if should_walk:
+		if state == "sprinting":
+			if mesh_animation_player.current_animation != "run_forward":
+				mesh_animation_player.play("run_forward", 0.2)
+		else:
+			if mesh_animation_player.current_animation != "walk_forward":
+				mesh_animation_player.play("walk_forward", 0.2)
+	else:
+		if mesh_animation_player.current_animation != "idle":
+			mesh_animation_player.play("idle", 0.2)
