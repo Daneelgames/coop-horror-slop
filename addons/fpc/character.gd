@@ -1031,3 +1031,36 @@ func _debug_clear_block_reason(source : String) -> void:
 		_debug_print("Input restored after %s (%s)" % [source, ctx])
 
 #endregion
+@onready var steps_audio_stream_player_3d: AudioStreamPlayer3D = %StepsAudioStreamPlayer3D
+
+func play_foot_step():
+	steps_audio_stream_player_3d.play()
+	pass
+@onready var attack_woosh_audio_stream_player_3d: AudioStreamPlayer3D = %AttackWooshAudioStreamPlayer3D
+
+func play_attack_woosh():
+	attack_woosh_audio_stream_player_3d.play()
+	pass
+	
+@onready var hit_solid_audio_stream_player_3d: AudioStreamPlayer3D = %HitSolidWooshAudioStreamPlayer3D
+func play_hit_solid():
+	hit_solid_audio_stream_player_3d.play()
+	pass
+	
+@onready var take_damage_audio_stream_player_3d: AudioStreamPlayer3D = %TakeDamageAudioStreamPlayer3D
+func play_take_damage():
+	take_damage_audio_stream_player_3d.play()
+	pass
+	
+@onready var death_audio_stream_player_3d: AudioStreamPlayer3D = %DeathAudioStreamPlayer3D
+func play_death():
+	death_audio_stream_player_3d.play()
+
+
+func take_damage(dmg):
+	super.take_damage(dmg)
+	play_take_damage()
+
+func death():
+	super.death()
+	play_death()
