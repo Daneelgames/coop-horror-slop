@@ -846,7 +846,6 @@ func change_selected_item_index(delta: int):
 	else:
 		rpc_update_item_in_hands.rpc(-1, "")  # No item selected
 	
-var item_in_hands : Weapon = null
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
 

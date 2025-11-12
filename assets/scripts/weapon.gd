@@ -118,7 +118,8 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 			return
 		# TODO: Apply damage or other effects to hit_unit
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
-		if attack_was_blocked(hit_unit, hit_position) == false:
+		# if attack_was_blocked(hit_unit, hit_position) == false:
+		if attack_was_blocked(hit_unit, owner_position) == false:
 			hit_unit.rpc_take_damage.rpc(randi_range(damage_min_max.x,damage_min_max.y))
 			var danger_direction = point.direction_to(prev_point)
 			GameManager.particles_manager.spawn_blood_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2, danger_direction)
@@ -134,7 +135,28 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 	hit_objects_this_attack.append(collider)
 
 func attack_was_blocked(attack_target, hit_pos):
-	if attack_target is PlayerCharacter:
-		if attack_target.item_in_hands and attack_target.is_blocking and rad_to_deg(-attack_target.basis.z.angle_to(hit_pos)) <= attack_target.item_in_hands.weapon_blocking_angle:
-			return true
+	if attack_target is Unit and attack_target.is_blocking:
+		# Calculate direction from target to hit position
+		var target_pos = attack_target.global_position
+		var attack_direction = (hit_pos - target_pos).normalized()
+		
+		# Target's forward direction (negative Z is forward in Godot)
+		var target_forward = -attack_target.basis.z.normalized()
+		
+		# Calculate angle between forward direction and attack direction
+		var angle_rad = target_forward.angle_to(attack_direction)
+		var angle_deg = rad_to_deg(angle_rad)
+		
+		# If target has a weapon (PlayerCharacter), check blocking angle
+		if attack_target.item_in_hands != null:
+			var item_in_hands = attack_target.item_in_hands
+			# weapon_blocking_angle is the total arc (e.g., 160 = 80 degrees on each side)
+			if angle_deg <= item_in_hands.weapon_blocking_angle / 2.0:
+				return true
+		else:
+			# For units without weapons (like AI), allow blocking from front hemisphere
+			# Default blocking angle: 180 degrees total (90 degrees on each side)
+			var blocking_angle = 180.0
+			if angle_deg <= blocking_angle / 2.0:
+				return true
 	return false

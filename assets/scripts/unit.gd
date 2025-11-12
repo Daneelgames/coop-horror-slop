@@ -1,6 +1,7 @@
 extends CharacterBody3D
 class_name Unit
 
+var item_in_hands : Weapon = null
 @export var mesh_animation_player: AnimationPlayer
 @export var health_current : float = 100
 @export var health_max : float = 100
