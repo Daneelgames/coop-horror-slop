@@ -57,7 +57,9 @@ func melee_raycast(point: Vector3, prev_point: Vector3):
 	
 	if weapon_owner == null:
 		return null
-	
+	if weapon_owner.is_dead():
+		is_dangerous = false
+		return
 	# Calculate direction and distance
 	var direction = point - prev_point
 	var distance_squared = direction.length_squared()

@@ -9,9 +9,18 @@ var state = 'normal'
 @export var debug_ai_combat : bool = true  # Enable debug prints for AI combat
 @export var attack_range_multiplier : float = 2.5  # Multiplier for weapon_active_distance to account for character reach
 @export var blocking_range_multiplier : float = 3.5  # Multiplier for enemy weapon range when checking if should block (larger than attack range)
-@onready var navigation_agent_3d: NavigationAgent3D = %NavigationAgent3D
+@export var base_speed: float = 3.0  # Base movement speed for AI
+@export var home_position: Vector3  # Home/spawn position for patrol
+@export var patrol_from_home_distance_min_max: Vector2 = Vector2(5.0, 15.0)  # Min and max distance from home for patrol points
+@export var combat_from_home_distance_max: float = 30
+@export var navigation_agent_3d: NavigationAgent3D
+
+# Movement control
+var movement_target: Vector3 = Vector3.ZERO
+var should_move: bool = false
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
+@onready var ai_state_machine: AiStateMachine = %AiStateMachine
 
 func _enter_tree():
 	# Set multiplayer authority to server (peer ID 1) for AI characters
@@ -22,6 +31,10 @@ func _ready():
 	# Wait a frame to ensure node is fully ready and synced across all clients
 	await get_tree().process_frame
 	spawn_random_weapon_to_hands()
+	
+	# Set home position to current position if not already set
+	if home_position == Vector3.ZERO:
+		home_position = global_position
 	
 	# Register this AI character with the visibility manager
 	if GameManager.ai_visibility_manager:
@@ -37,10 +50,10 @@ func _physics_process(_delta): # Most things happen here.
 	visual_node_3d.global_rotation = slerped_basis.get_euler()
 	if mesh_animation_player:
 		play_mesh_animation(input_dir, true, state)
-	if is_dead() == false and is_attacking == false and is_taking_damage == false and is_stun_lock == false and is_blocking_react == false and is_blocking == false:
-		handle_attacking()
-		handle_blocking()
-	handle_rotation_towards_enemy(_delta)
+	
+	# Handle movement using NavigationAgent3D (only on server)
+	if multiplayer.is_server() and should_move and not is_dead():
+		_handle_movement(_delta)
 
 func _exit_tree():
 	# Unregister this AI character from the visibility manager when removed
@@ -105,55 +118,8 @@ func _spawn_weapon(weapon_path: String):
 	item_in_hands.position = item_in_hands.weapon_slot_position
 	item_in_hands.scale = Vector3.ONE * 100
 
-#region Input Handling
-func handle_attacking():
-	if debug_ai_combat:
-		print("[AI_ATTACK] %s: handle_attacking called" % name)
-	
-	if is_attacking or is_blocking or is_dead() or is_taking_damage:
-		if debug_ai_combat:
-			print("[AI_ATTACK] %s: Blocked - is_attacking=%s, is_blocking=%s, is_dead=%s, is_taking_damage=%s" % [name, is_attacking, is_blocking, is_dead(), is_taking_damage])
-		return
-	
-	# Only attack on server
-	if not multiplayer.is_server():
-		if debug_ai_combat:
-			print("[AI_ATTACK] %s: Not server, skipping" % name)
-		return
-	
-	# Need a weapon to attack
-	if item_in_hands == null:
-		if debug_ai_combat:
-			print("[AI_ATTACK] %s: No weapon in hands" % name)
-		return
-	
-	if debug_ai_combat:
-		print("[AI_ATTACK] %s: Has weapon, weapon_active_distance=%s" % [name, item_in_hands.weapon_active_distance])
-	
-	# Find closest visible enemy
-	var closest_enemy = _get_closest_visible_enemy()
-	if closest_enemy == null:
-		if debug_ai_combat:
-			print("[AI_ATTACK] %s: No closest visible enemy (visible_enemies.size=%s)" % [name, visible_enemies.size()])
-		return
-	
-	if debug_ai_combat:
-		print("[AI_ATTACK] %s: Found closest enemy: %s" % [name, closest_enemy.name])
-	
-	# Check if enemy is within weapon attack range
-	var distance = global_position.distance_to(closest_enemy.global_position)
-	var effective_attack_range = item_in_hands.weapon_active_distance * attack_range_multiplier
-	if debug_ai_combat:
-		print("[AI_ATTACK] %s: Distance to enemy=%s, weapon_range=%s, effective_range=%s" % [name, distance, item_in_hands.weapon_active_distance, effective_attack_range])
-	
-	if distance <= effective_attack_range:
-		if debug_ai_combat:
-			print("[AI_ATTACK] %s: ATTACKING! Distance %s <= effective_range %s" % [name, distance, effective_attack_range])
-		rpc_start_attacking.rpc()
-	else:
-		if debug_ai_combat:
-			print("[AI_ATTACK] %s: Too far - Distance %s > effective_range %s" % [name, distance, effective_attack_range])
-
+#region RPC Methods for Combat
+# These RPC methods are called by the combat state to sync animations across clients
 @rpc("call_local", "reliable")
 func rpc_start_attacking():
 	if is_attacking:
@@ -189,60 +155,6 @@ func rpc_start_attacking():
 	if debug_ai_combat:
 		print("[AI_ATTACK] %s: Attack finished" % name)
 
-func handle_blocking():
-	if debug_ai_combat:
-		print("[AI_BLOCK] %s: handle_blocking called" % name)
-	
-	if is_blocking or is_attacking or is_dead() or is_taking_damage:
-		if debug_ai_combat:
-			print("[AI_BLOCK] %s: Blocked - is_blocking=%s, is_attacking=%s, is_dead=%s, is_taking_damage=%s" % [name, is_blocking, is_attacking, is_dead(), is_taking_damage])
-		return
-	
-	# Only block on server
-	if not multiplayer.is_server():
-		if debug_ai_combat:
-			print("[AI_BLOCK] %s: Not server, skipping" % name)
-		return
-	
-	# Find closest visible enemy
-	var closest_enemy = _get_closest_visible_enemy()
-	if closest_enemy == null:
-		if debug_ai_combat:
-			print("[AI_BLOCK] %s: No closest visible enemy" % name)
-		return
-	
-	if debug_ai_combat:
-		print("[AI_BLOCK] %s: Found closest enemy: %s, is_attacking=%s" % [name, closest_enemy.name, closest_enemy.is_attacking])
-	
-	# Only block if enemy is attacking and within their weapon range
-	if not closest_enemy.is_attacking:
-		if debug_ai_combat:
-			print("[AI_BLOCK] %s: Enemy not attacking" % name)
-		return
-	
-	# Check if enemy has a weapon
-	if closest_enemy.item_in_hands == null:
-		if debug_ai_combat:
-			print("[AI_BLOCK] %s: Enemy has no weapon" % name)
-		return
-	
-	# Check if distance is around enemy's weapon active distance
-	var distance = global_position.distance_to(closest_enemy.global_position)
-	var enemy_weapon_range = closest_enemy.item_in_hands.weapon_active_distance
-	var enemy_effective_blocking_range = enemy_weapon_range * blocking_range_multiplier
-	
-	if debug_ai_combat:
-		print("[AI_BLOCK] %s: Distance to enemy=%s, enemy_weapon_range=%s, enemy_effective_blocking_range=%s" % [name, distance, enemy_weapon_range, enemy_effective_blocking_range])
-	
-	if distance <= enemy_effective_blocking_range:
-		if debug_ai_combat:
-			print("[AI_BLOCK] %s: BLOCKING! Distance %s <= enemy effective_blocking_range %s" % [name, distance, enemy_effective_blocking_range])
-		# Use RPC to sync animation across all clients
-		rpc_start_blocking.rpc()
-	else:
-		if debug_ai_combat:
-			print("[AI_BLOCK] %s: Too far - Distance %s > enemy effective_blocking_range %s" % [name, distance, enemy_effective_blocking_range])
-
 @rpc("call_local", "reliable")
 func rpc_start_blocking():
 	if is_blocking:
@@ -260,39 +172,76 @@ func rpc_start_blocking():
 	
 	if debug_ai_combat:
 		print("[AI_BLOCK] %s: Block finished" % name)
+#endregion
 
-func handle_rotation_towards_enemy(delta: float) -> void:
-	# Only rotate on server
-	if not multiplayer.is_server():
+#region Movement
+## Set a movement target for the AI. States should call this to set where the AI should move.
+func set_movement_target(target: Vector3):
+	movement_target = target
+	navigation_agent_3d.target_position = target
+	should_move = true
+
+## Stop movement. States can call this to stop the AI from moving.
+func stop_movement():
+	should_move = false
+	velocity.x = 0
+	velocity.z = 0
+	input_dir = Vector2.ZERO
+
+## Internal movement handler using NavigationAgent3D
+func _handle_movement(delta: float):
+	if navigation_agent_3d == null:
 		return
 	
-	# Don't rotate if dead, attacking, or taking damage
-	if is_dead() or is_attacking or is_taking_damage:
+	# Don't move if attacking, blocking, taking damage, or in stun lock
+	if is_attacking or is_blocking or is_taking_damage or is_stun_lock or is_blocking_react:
 		return
 	
-	# Find closest visible enemy
-	var closest_enemy = _get_closest_visible_enemy()
-	if closest_enemy == null:
+	# Check if navigation is finished
+	if navigation_agent_3d.is_navigation_finished():
+		# Reached target, stop moving
+		velocity.x = 0
+		velocity.z = 0
+		input_dir = Vector2.ZERO
 		return
 	
-	# Calculate direction to enemy
-	var enemy_pos = closest_enemy.global_position
-	var my_pos = global_position
+	# Get next path position from navigation agent
+	var next_path_position = navigation_agent_3d.get_next_path_position()
+	var current_agent_position = global_position
 	
-	# Calculate direction vector (ignore Y for horizontal rotation)
-	var direction = Vector3(my_pos.x - enemy_pos.x, 0, my_pos.z - enemy_pos.z)
-	if direction.length_squared() < 0.0001:
-		return  # Too close or same position
+	# Calculate direction to next path position
+	var direction = (next_path_position - current_agent_position).normalized()
 	
-	direction = direction.normalized()
+	# Set velocity for movement
+	velocity.x = direction.x * base_speed
+	velocity.z = direction.z * base_speed
 	
-	# Calculate target rotation angle
-	var target_angle = atan2(direction.x, direction.z)
+	# Apply gravity
+	var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	else:
+		velocity.y = 0
 	
-	# Smoothly rotate towards target angle
-	var current_angle = rotation.y
-	var new_angle = lerp_angle(current_angle, target_angle, rotation_speed * delta)
-	rotation.y = new_angle
+	# Move the character
+	move_and_slide()
+	
+	# Update input_dir for animation
+	input_dir = Vector2(direction.x, direction.z)
+	
+	# Rotate towards movement direction (but not if in combat - combat state handles rotation)
+	# Check if we have visible enemies to determine if we're in combat
+	var has_visible_enemies = false
+	for enemy in visible_enemies:
+		if is_instance_valid(enemy) and not enemy.is_dead():
+			has_visible_enemies = true
+			break
+	
+	# Only rotate towards movement if not in combat
+	if not has_visible_enemies and direction.length_squared() > 0.0001:
+		var target_angle = atan2(direction.x, direction.z)
+		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+#endregion
 
 func _get_closest_visible_enemy() -> Unit:
 	if visible_enemies.is_empty():

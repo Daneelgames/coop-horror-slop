@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=4 uid="uid://b1wtst1i1aqdl"]
+[gd_scene load_steps=49 format=4 uid="uid://b1wtst1i1aqdl"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_q1sc8"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_pjyar"]
@@ -7,9 +7,12 @@
 [ext_resource type="Script" uid="uid://b0eohos8rbidu" path="res://assets/scripts/ai_state_machine.gd" id="5_i4cim"]
 [ext_resource type="AnimationLibrary" uid="uid://dh0c63nv708ei" path="res://assets/animations/unit_anims.res" id="5_m2jqq"]
 [ext_resource type="AudioStream" uid="uid://b7ys0ad0k7jx5" path="res://assets/audio/FootStepRun_1.wav" id="6_ay662"]
+[ext_resource type="Script" uid="uid://da5x2814yek6y" path="res://assets/scripts/ai_state_patrol.gd" id="7_6g6u1"]
 [ext_resource type="AudioStream" uid="uid://bwkgkhr2wv6xn" path="res://assets/audio/FootStepRun_2.wav" id="7_m2jqq"]
+[ext_resource type="Script" uid="uid://jtkn6iklin45" path="res://assets/scripts/ai_state_combat.gd" id="8_3emgj"]
 [ext_resource type="AudioStream" uid="uid://bne603ivdekwc" path="res://assets/audio/FootStepRun_3.wav" id="8_xyrid"]
 [ext_resource type="AudioStream" uid="uid://bivv20wktglii" path="res://assets/audio/FootStepRun_4.wav" id="9_4lhb8"]
+[ext_resource type="Script" uid="uid://cwvfv0f6chws0" path="res://assets/scripts/ai_state_investigate.gd" id="9_s55pi"]
 [ext_resource type="AudioStream" uid="uid://h1oyim2hlk1x" path="res://assets/audio/FootStepRun_5.wav" id="10_6g6u1"]
 [ext_resource type="AudioStream" uid="uid://bp2qfvsnyvymj" path="res://assets/audio/FootStepRun_6.wav" id="11_3emgj"]
 [ext_resource type="AudioStream" uid="uid://c1mondumgl5km" path="res://assets/audio/FootStepRun_7.wav" id="12_s55pi"]
@@ -449,7 +452,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("28_rivgy")
 
-[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "mesh_animation_player")]
+[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player")]
 collision_layer = 2
 collision_mask = 3
 platform_on_leave = 2
@@ -458,6 +461,7 @@ script = ExtResource("1_q1sc8")
 visual_node_3d = NodePath("VisualParent")
 random_weapons_paths = Array[StringName]([&"res://assets/prefabs/weapon_axe_w.tscn", &"res://assets/prefabs/weapon_rusty_pipe_w.tscn"])
 debug_ai_combat = false
+navigation_agent_3d = NodePath("NavigationAgent3D")
 resurrect_after_death_seconds = 5.0
 team = 1
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
@@ -973,9 +977,20 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
 
 [node name="AiStateMachine" type="Node3D" parent="."]
+unique_name_in_owner = true
 script = ExtResource("5_i4cim")
 
-[node name="AiIdleState" type="Node3D" parent="AiStateMachine"]
+[node name="PatrolState" type="Node3D" parent="AiStateMachine"]
+unique_name_in_owner = true
+script = ExtResource("7_6g6u1")
+
+[node name="CombatState" type="Node3D" parent="AiStateMachine"]
+unique_name_in_owner = true
+script = ExtResource("8_3emgj")
+
+[node name="InvestigateState" type="Node3D" parent="AiStateMachine"]
+unique_name_in_owner = true
+script = ExtResource("9_s55pi")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_interval = 0.05
