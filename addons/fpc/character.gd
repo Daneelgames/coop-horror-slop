@@ -441,6 +441,14 @@ func rpc_update_inventory(inventory: Dictionary[StringName, Array]):
 	_clamp_selected_index()
 	if inventory_slots_panel_container:
 		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+	
+	# Equip the currently selected item to ensure it shows up in hands
+	var item_keys = carrying_items.keys()
+	if item_keys.size() > current_selected_item_index and current_selected_item_index >= 0:
+		var selected_item_path = carrying_items[item_keys[current_selected_item_index]][1]
+		rpc_update_item_in_hands(current_selected_item_index, selected_item_path)
+	else:
+		rpc_update_item_in_hands(-1, "")  # No item selected
 
 @export var is_attacking = false 
 func handle_attacking():
@@ -559,13 +567,14 @@ func apply_rotation_smoothing(delta):
 	if rotation_smoothing_speed > 0.0:
 		# Smooth head rotation X (pitch)
 		HEAD.rotation.x = lerp(HEAD.rotation.x, target_head_rotation_x, rotation_smoothing_speed * delta)
-		
-		# Smooth character rotation Y (yaw) - use lerp_angle for proper wrapping
-		rotation.y = lerp_angle(rotation.y, target_character_rotation_y, rotation_smoothing_speed * delta)
+		if is_dead() == false:
+			# Smooth character rotation Y (yaw) - use lerp_angle for proper wrapping
+			rotation.y = lerp_angle(rotation.y, target_character_rotation_y, rotation_smoothing_speed * delta)
 	else:
 		# No smoothing - apply directly
 		HEAD.rotation.x = target_head_rotation_x
-		rotation.y = target_character_rotation_y
+		if is_dead() == false:
+			rotation.y = target_character_rotation_y
 
 
 func check_controls(): # If you add a control, you might want to add a check for it here.

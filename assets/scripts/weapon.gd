@@ -120,9 +120,13 @@ func _handle_melee_hit(hit_result: Dictionary):
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
 		if attack_was_blocked(hit_unit, hit_position) == false:
 			hit_unit.rpc_take_damage.rpc(randi_range(damage_min_max.x,damage_min_max.y))
+			GameManager.particles_manager.spawn_blood_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
+		else:
+			GameManager.particles_manager.spawn_solid_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
 	else:
 		# Hit a solid object
 		print("[MELEE HIT] Hit solid object: ", collider.name, " at position: ", hit_result.get("position"))
+		GameManager.particles_manager.spawn_solid_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
 		
 	hit_objects_this_attack.append(collider)
 

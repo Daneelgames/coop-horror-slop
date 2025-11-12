@@ -1,7 +1,8 @@
-[gd_scene load_steps=19 format=3 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=20 format=3 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Texture2D" uid="uid://cuntax0t0syy7" path="res://assets/meshes/soviet_buildings/textures/rus_build_17.png" id="1_8kkgg"]
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
+[ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
 [ext_resource type="ArrayMesh" uid="uid://buxbiku32t4q2" path="res://assets/meshes/soviet_buildings/meshes/buildings/rus_build_9et_02.obj" id="2_vcb5n"]
 [ext_resource type="PackedScene" uid="uid://8p21pj2xip4f" path="res://assets/prefabs/weapon_rusty_pipe_p.tscn" id="3_vcb5n"]
 [ext_resource type="PackedScene" uid="uid://ddvcpahdpbvc" path="res://assets/prefabs/weapon_axe_p.tscn" id="4_h4wow"]
@@ -79,6 +80,9 @@ data = PackedVector3Array(-55.000298, 88, 9.9997, -53.000797, 86.999596, 11.9995
 
 [node name="GameLevel" type="Node3D"]
 script = ExtResource("1_nbe18")
+
+[node name="ParticlesManager" type="Node3D" parent="."]
+script = ExtResource("2_slvmx")
 
 [node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
 material_override = SubResource("StandardMaterial3D_slvmx")
