@@ -207,9 +207,11 @@ func _ready():
 
 	if OS.get_name() == "Web":
 		Input.set_use_accumulated_input(false)
+	super._ready()
 		
 
 func _process(_delta):
+	cheat_codes()
 	_ensure_authority_state()
 	if !_has_input_authority:
 		visual_node_3d.top_level = true
@@ -1012,3 +1014,8 @@ func _debug_clear_block_reason(source : String) -> void:
 func death():
 	super.death()
 	enter_crouch_state()
+
+func cheat_codes():
+	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):
+		rpc_full_heal_and_resurrect.rpc()
+	pass

@@ -17,6 +17,13 @@ var item_in_hands : Weapon = null
 @export var is_taking_damage = false
 @onready var eyes: BoneAttachment3D = %Eyes
 
+func _ready():
+	is_stun_lock = false
+	is_blocking = false
+	is_attacking = false
+	is_taking_damage = false
+	is_blocking_react = false
+	
 @rpc("any_peer", "call_local", "reliable")
 func rpc_stun_lock_on_blocked_attack():
 	if is_stun_lock:
@@ -127,3 +134,7 @@ func play_mesh_animation(moving_vector, auth, state):
 	else:
 		if mesh_animation_player.current_animation != "idle":
 			mesh_animation_player.play("idle", 0.2)
+			
+@rpc("any_peer", "call_local")
+func rpc_full_heal_and_resurrect():
+	health_current = health_max

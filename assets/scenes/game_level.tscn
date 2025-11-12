@@ -187,11 +187,5 @@ transform = Transform3D(0.76211476, 0.647442, 0, -0.64744174, 0.76211506, 0, 0, 
 transform = Transform3D(1.0000005, 0, 0, 0, 1, 0, 0, 0, 1.0000005, 2.152295, -5.6179733, -2.733758)
 size = Vector3(37.347656, 2, 29.935547)
 
-[node name="AiCharacter" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.53875685, 2.5634153, 19.292416)
-
 [node name="AiCharacter3" parent="." instance=ExtResource("7_0aogx")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.53875685, -4.75, 4.6504173)
-
-[node name="AiCharacter2" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.683264, 2.5634153, 14.633747)

@@ -4,10 +4,14 @@ class_name Weapon
 @export var attack_points : Array[Node3D]
 @export var weapon_slot_position : Vector3
 @export var weapon_blocking_angle = 160
+var weapon_active_distance : float = 0
 var attack_points_prev_positions : Array[Vector3]
 var is_dangerous = false
 var weapon_owner : Unit = null
 var hit_objects_this_attack = []
+
+func _ready() -> void:
+	weapon_active_distance = attack_points[0].global_position.distance_to(attack_points.back().global_position) * 100
 
 func set_dangerous(isdngrs, wpnownr):
 	if multiplayer.is_server() == false:

@@ -6,6 +6,8 @@ class_name AiCharacter
 @export var random_weapons_paths : Array[StringName]
 var state = 'normal'
 @export var rotation_speed: float = 5.0  # How fast the AI rotates towards enemies
+@export var debug_ai_combat : bool = true  # Enable debug prints for AI combat
+@export var attack_range_multiplier : float = 2.5  # Multiplier for weapon_active_distance to account for character reach
 @onready var navigation_agent_3d: NavigationAgent3D = %NavigationAgent3D
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
@@ -16,9 +18,6 @@ func _enter_tree():
 		set_multiplayer_authority(1, true)
 
 func _ready():
-	is_blocking = false
-	is_attacking = false
-	is_taking_damage = false
 	# Wait a frame to ensure node is fully ready and synced across all clients
 	await get_tree().process_frame
 	spawn_random_weapon_to_hands()
@@ -26,6 +25,7 @@ func _ready():
 	# Register this AI character with the visibility manager
 	if GameManager.ai_visibility_manager:
 		GameManager.ai_visibility_manager.register_ai_character(self)
+	super._ready()
 
 func _physics_process(_delta): # Most things happen here. 
 	visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
@@ -37,6 +37,7 @@ func _physics_process(_delta): # Most things happen here.
 	if mesh_animation_player:
 		play_mesh_animation(input_dir, true, state)
 	if is_dead() == false and is_attacking == false and is_taking_damage == false:
+		handle_attacking()
 		handle_blocking()
 		handle_rotation_towards_enemy(_delta)
 
@@ -104,20 +105,159 @@ func _spawn_weapon(weapon_path: String):
 	item_in_hands.scale = Vector3.ONE * 100
 
 #region Input Handling
-func handle_blocking():
-	if is_blocking or is_attacking or is_dead() or is_taking_damage:
+func handle_attacking():
+	if debug_ai_combat:
+		print("[AI_ATTACK] %s: handle_attacking called" % name)
+	
+	if is_attacking or is_blocking or is_dead() or is_taking_damage:
+		if debug_ai_combat:
+			print("[AI_ATTACK] %s: Blocked - is_attacking=%s, is_blocking=%s, is_dead=%s, is_taking_damage=%s" % [name, is_attacking, is_blocking, is_dead(), is_taking_damage])
 		return
-	# AI characters are server-controlled, so call blocking directly (no RPC needed)
-	# The is_blocking variable will be synced via MultiplayerSynchronizer
-	_start_blocking()
+	
+	# Only attack on server
+	if not multiplayer.is_server():
+		if debug_ai_combat:
+			print("[AI_ATTACK] %s: Not server, skipping" % name)
+		return
+	
+	# Need a weapon to attack
+	if item_in_hands == null:
+		if debug_ai_combat:
+			print("[AI_ATTACK] %s: No weapon in hands" % name)
+		return
+	
+	if debug_ai_combat:
+		print("[AI_ATTACK] %s: Has weapon, weapon_active_distance=%s" % [name, item_in_hands.weapon_active_distance])
+	
+	# Find closest visible enemy
+	var closest_enemy = _get_closest_visible_enemy()
+	if closest_enemy == null:
+		if debug_ai_combat:
+			print("[AI_ATTACK] %s: No closest visible enemy (visible_enemies.size=%s)" % [name, visible_enemies.size()])
+		return
+	
+	if debug_ai_combat:
+		print("[AI_ATTACK] %s: Found closest enemy: %s" % [name, closest_enemy.name])
+	
+	# Check if enemy is within weapon attack range
+	var distance = global_position.distance_to(closest_enemy.global_position)
+	var effective_attack_range = item_in_hands.weapon_active_distance * attack_range_multiplier
+	if debug_ai_combat:
+		print("[AI_ATTACK] %s: Distance to enemy=%s, weapon_range=%s, effective_range=%s" % [name, distance, item_in_hands.weapon_active_distance, effective_attack_range])
+	
+	if distance <= effective_attack_range:
+		if debug_ai_combat:
+			print("[AI_ATTACK] %s: ATTACKING! Distance %s <= effective_range %s" % [name, distance, effective_attack_range])
+		_start_attacking()
+	else:
+		if debug_ai_combat:
+			print("[AI_ATTACK] %s: Too far - Distance %s > effective_range %s" % [name, distance, effective_attack_range])
+
+func _start_attacking():
+	if is_attacking:
+		if debug_ai_combat:
+			print("[AI_ATTACK] %s: Already attacking, skipping" % name)
+		return
+	
+	if debug_ai_combat:
+		print("[AI_ATTACK] %s: Starting attack!" % name)
+	
+	is_attacking = true
+	
+	# Choose attack animation similar to character.gd
+	var attack_string = ''
+	if input_dir.y != 0:
+		attack_string = 'attack_vertical'
+	elif input_dir.x != 0:
+		attack_string = 'attack_horizontal'
+	else:
+		attack_string = ['attack_vertical', 'attack_horizontal'].pick_random()
+	
+	if debug_ai_combat:
+		print("[AI_ATTACK] %s: Playing attack animation: %s" % [name, attack_string])
+	
+	mesh_animation_player.play(attack_string, 0.1)
+	if item_in_hands:
+		item_in_hands.set_dangerous(true, self)
+	await mesh_animation_player.animation_finished
+	if item_in_hands:
+		item_in_hands.set_dangerous(false, self)
+	is_attacking = false
+	
+	if debug_ai_combat:
+		print("[AI_ATTACK] %s: Attack finished" % name)
+
+func handle_blocking():
+	if debug_ai_combat:
+		print("[AI_BLOCK] %s: handle_blocking called" % name)
+	
+	if is_blocking or is_attacking or is_dead() or is_taking_damage:
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: Blocked - is_blocking=%s, is_attacking=%s, is_dead=%s, is_taking_damage=%s" % [name, is_blocking, is_attacking, is_dead(), is_taking_damage])
+		return
+	
+	# Only block on server
+	if not multiplayer.is_server():
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: Not server, skipping" % name)
+		return
+	
+	# Find closest visible enemy
+	var closest_enemy = _get_closest_visible_enemy()
+	if closest_enemy == null:
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: No closest visible enemy" % name)
+		return
+	
+	if debug_ai_combat:
+		print("[AI_BLOCK] %s: Found closest enemy: %s, is_attacking=%s" % [name, closest_enemy.name, closest_enemy.is_attacking])
+	
+	# Only block if enemy is attacking and within their weapon range
+	if not closest_enemy.is_attacking:
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: Enemy not attacking" % name)
+		return
+	
+	# Check if enemy has a weapon
+	if closest_enemy.item_in_hands == null:
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: Enemy has no weapon" % name)
+		return
+	
+	# Check if distance is around enemy's weapon active distance
+	var distance = global_position.distance_to(closest_enemy.global_position)
+	var enemy_weapon_range = closest_enemy.item_in_hands.weapon_active_distance
+	var enemy_effective_range = enemy_weapon_range * attack_range_multiplier
+	
+	if debug_ai_combat:
+		print("[AI_BLOCK] %s: Distance to enemy=%s, enemy_weapon_range=%s, enemy_effective_range=%s" % [name, distance, enemy_weapon_range, enemy_effective_range])
+	
+	if distance <= enemy_effective_range:
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: BLOCKING! Distance %s <= enemy effective_range %s" % [name, distance, enemy_effective_range])
+		# AI characters are server-controlled, so call blocking directly (no RPC needed)
+		# The is_blocking variable will be synced via MultiplayerSynchronizer
+		_start_blocking()
+	else:
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: Too far - Distance %s > enemy effective_range %s" % [name, distance, enemy_effective_range])
 
 func _start_blocking():
 	if is_blocking:
+		if debug_ai_combat:
+			print("[AI_BLOCK] %s: Already blocking, skipping" % name)
 		return
+	
+	if debug_ai_combat:
+		print("[AI_BLOCK] %s: Starting block!" % name)
+	
 	is_blocking = true
 	mesh_animation_player.play('block', 0.1)
 	await mesh_animation_player.animation_finished
 	is_blocking = false
+	
+	if debug_ai_combat:
+		print("[AI_BLOCK] %s: Block finished" % name)
 
 func handle_rotation_towards_enemy(delta: float) -> void:
 	# Only rotate on server
