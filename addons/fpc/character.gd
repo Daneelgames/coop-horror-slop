@@ -462,6 +462,22 @@ func handle_attacking():
 @rpc("call_local")
 func rpc_melee_attack():
 	
+	# Apply forward push when attacking
+	if item_in_hands != null:
+		var push_force = item_in_hands.push_forward_on_attack_force
+		if push_force > 0:
+			# Get forward direction from camera/head (where player is looking)
+			# Use camera forward direction if available, otherwise use head
+			var forward_direction: Vector3
+			if CAMERA != null:
+				forward_direction = -CAMERA.global_transform.basis.z.normalized()
+			else:
+				forward_direction = -HEAD.global_transform.basis.z.normalized()
+			# Ignore Y component for horizontal push
+			forward_direction.y = 0
+			forward_direction = forward_direction.normalized()
+			velocity += forward_direction * push_force
+	
 	var attack_string = ''
 	if input_dir.y != 0:
 		attack_string = 'attack_vertical'

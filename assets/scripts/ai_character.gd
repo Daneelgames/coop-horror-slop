@@ -13,6 +13,7 @@ var state = 'normal'
 @export var home_position: Vector3  # Home/spawn position for patrol
 @export var patrol_from_home_distance_min_max: Vector2 = Vector2(5.0, 15.0)  # Min and max distance from home for patrol points
 @export var combat_from_home_distance_max: float = 30
+@export var combat_strafe_distance_max: float = 3.0  # Distance to maintain from enemy when circling in combat
 @export var navigation_agent_3d: NavigationAgent3D
 
 # Movement control
@@ -52,8 +53,13 @@ func _physics_process(_delta): # Most things happen here.
 		play_mesh_animation(input_dir, true, state)
 	
 	# Handle movement using NavigationAgent3D (only on server)
-	if multiplayer.is_server() and should_move and not is_dead():
-		_handle_movement(_delta)
+	if multiplayer.is_server() and not is_dead():
+		if should_move:
+			_handle_movement(_delta)
+		else:
+			# Still need to apply gravity and move_and_slide even when not moving
+			# (e.g., when attacking to apply push velocity)
+			_handle_physics(_delta)
 
 func _exit_tree():
 	# Unregister this AI character from the visibility manager when removed
@@ -132,6 +138,23 @@ func rpc_start_attacking():
 	
 	is_attacking = true
 	
+	# Apply forward push when attacking (only on server)
+	if multiplayer.is_server() and item_in_hands != null:
+		var push_force = item_in_hands.push_forward_on_attack_force
+		if push_force > 0:
+			# Get direction towards closest enemy (where AI is looking)
+			var closest_enemy = _get_closest_visible_enemy()
+			if closest_enemy != null:
+				var direction_to_enemy = (closest_enemy.global_position - global_position).normalized()
+				# Ignore Y component for horizontal push
+				direction_to_enemy.y = 0
+				direction_to_enemy = direction_to_enemy.normalized()
+				velocity += direction_to_enemy * push_force
+			else:
+				# Fallback to forward direction if no enemy
+				var forward_direction = -transform.basis.z.normalized()
+				velocity += forward_direction * push_force
+	
 	# Choose attack animation similar to character.gd
 	var attack_string = ''
 	if input_dir.y != 0:
@@ -194,7 +217,9 @@ func _handle_movement(delta: float):
 		return
 	
 	# Don't move if attacking, blocking, taking damage, or in stun lock
+	# But still apply physics (gravity, move_and_slide) to preserve push velocity
 	if is_attacking or is_blocking or is_taking_damage or is_stun_lock or is_blocking_react:
+		_handle_physics(delta)
 		return
 	
 	# Check if navigation is finished
@@ -203,6 +228,7 @@ func _handle_movement(delta: float):
 		velocity.x = 0
 		velocity.z = 0
 		input_dir = Vector2.ZERO
+		_handle_physics(delta)
 		return
 	
 	# Get next path position from navigation agent
@@ -216,15 +242,8 @@ func _handle_movement(delta: float):
 	velocity.x = direction.x * base_speed
 	velocity.z = direction.z * base_speed
 	
-	# Apply gravity
-	var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
-	if not is_on_floor():
-		velocity.y -= gravity * delta
-	else:
-		velocity.y = 0
-	
-	# Move the character
-	move_and_slide()
+	# Apply physics (gravity and move_and_slide)
+	_handle_physics(delta)
 	
 	# Update input_dir for animation
 	input_dir = Vector2(direction.x, direction.z)
@@ -241,6 +260,18 @@ func _handle_movement(delta: float):
 	if not has_visible_enemies and direction.length_squared() > 0.0001:
 		var target_angle = atan2(direction.x, direction.z)
 		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+
+## Handle physics (gravity and movement) - called separately to preserve push velocity during attacks
+func _handle_physics(delta: float):
+	# Apply gravity
+	var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	else:
+		velocity.y = 0
+	
+	# Move the character (this applies any velocity including push from attacks)
+	move_and_slide()
 #endregion
 
 func _get_closest_visible_enemy() -> Unit:

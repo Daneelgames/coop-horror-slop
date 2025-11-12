@@ -171,7 +171,7 @@ func handle_movement_target(delta: float):
 		
 		# Calculate position around enemy
 		# Use a circular offset around the enemy
-		var strafe_distance: float = 3.0  # Distance to maintain from enemy
+		var strafe_distance = ai_character.combat_strafe_distance_max  # Distance to maintain from enemy
 		var enemy_pos = closest_enemy.global_position
 		var my_pos = ai_character.global_position
 		
@@ -185,8 +185,8 @@ func handle_movement_target(delta: float):
 			current_target_offset_angle -= TAU
 		
 		# Calculate offset position around enemy
-		var offset_x = cos(base_angle + current_target_offset_angle) * strafe_distance
-		var offset_z = sin(base_angle + current_target_offset_angle) * strafe_distance
+		var offset_x = cos(base_angle + current_target_offset_angle) * randf_range(strafe_distance * 0.1, strafe_distance)
+		var offset_z = sin(base_angle + current_target_offset_angle) * randf_range(strafe_distance * 0.1, strafe_distance)
 		var target_position = enemy_pos + Vector3(offset_x, 0, offset_z)
 		
 		# Ensure target is still within combat range from home

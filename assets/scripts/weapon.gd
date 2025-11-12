@@ -4,6 +4,7 @@ class_name Weapon
 @export var attack_points : Array[Node3D]
 @export var weapon_slot_position : Vector3
 @export var weapon_blocking_angle = 160
+@export var push_forward_on_attack_force : float = 5
 var weapon_active_distance : float = 0
 var attack_points_prev_positions : Array[Vector3]
 var is_dangerous = false
