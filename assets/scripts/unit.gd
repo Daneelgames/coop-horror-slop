@@ -29,6 +29,10 @@ func rpc_stun_lock_on_blocked_attack():
 	if is_stun_lock:
 		return
 	is_stun_lock = true
+	# Zero out horizontal attack-push velocity when attack is blocked (only on server)
+	if multiplayer.is_server():
+		velocity.x = 0
+		velocity.z = 0
 	mesh_animation_player.play("stun_lock", 0.1)
 	await mesh_animation_player.animation_finished
 	is_stun_lock = false
@@ -59,6 +63,10 @@ func take_damage(dmg):
 	play_take_damage()
 	if is_dead():
 		return
+	# Zero out horizontal attack-push velocity when taking damage (only on server)
+	if multiplayer.is_server():
+		velocity.x = 0
+		velocity.z = 0
 	health_current -= dmg
 	if  health_current <= 0:
 		death()
@@ -105,6 +113,17 @@ func play_attack_woosh():
 func play_hit_solid():
 	hit_solid_audio_stream_player_3d.play()
 	pass
+
+@rpc("any_peer", "call_local", "reliable")
+func rpc_play_hit_solid():
+	# Only allow server to call this RPC
+	var sender_id = multiplayer.get_remote_sender_id()
+	if !multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+	play_hit_solid()
 	
 @onready var take_damage_audio_stream_player_3d: AudioStreamPlayer3D = %TakeDamageAudioStreamPlayer3D
 func play_take_damage():

@@ -869,9 +869,24 @@ func change_selected_item_index(delta: int):
 
 @rpc("any_peer", "call_local", "reliable")
 func rpc_update_item_in_hands(item_index: int, item_path: String):
-	# Only allow server to call this RPC for security
-	if not multiplayer.is_server() and multiplayer.get_remote_sender_id() != 1:
-		return
+	# Allow server calls, local calls (call_local), or calls from the character's owner
+	var sender_id = multiplayer.get_remote_sender_id()
+	if multiplayer.is_server():
+		# On server: allow if it's a local call (sender_id == 0) or if sender has authority over this character
+		if sender_id != 0:
+			if sender_id != get_multiplayer_authority():
+				return
+	else:
+		# On clients: allow if it's a local call (sender_id == 0) or from server (sender_id == 1)
+		# Also allow if sender matches this character's authority (owner calling for themselves)
+		if sender_id != 0 and sender_id != 1:
+			# Check if sender has authority over this character
+			if sender_id != get_multiplayer_authority():
+				return
+	
+	# Update the selected item index to keep it in sync
+	current_selected_item_index = item_index
+	
 	if item_in_hands != null:
 		item_in_hands.queue_free()
 		item_in_hands = null
