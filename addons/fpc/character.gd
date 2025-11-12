@@ -281,7 +281,7 @@ func handle_blocking():
 	if is_blocking:
 		return
 	if Input.is_action_just_pressed(controls.BLOCK):
-		rpc_block()
+		rpc_block.rpc()
 
 @rpc("call_local")
 func rpc_block():
@@ -1042,7 +1042,7 @@ func play_attack_woosh():
 	attack_woosh_audio_stream_player_3d.play()
 	pass
 	
-@onready var hit_solid_audio_stream_player_3d: AudioStreamPlayer3D = %HitSolidWooshAudioStreamPlayer3D
+@onready var hit_solid_audio_stream_player_3d: AudioStreamPlayer3D = %HitSolidAudioStreamPlayer3D
 func play_hit_solid():
 	hit_solid_audio_stream_player_3d.play()
 	pass

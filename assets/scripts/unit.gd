@@ -8,7 +8,7 @@ class_name Unit
 @export var take_damage_anims : Array[StringName]= []
 @export var death_anims : Array[StringName]= []
 
-var is_taking_damage = false
+@export var is_taking_damage = false
 
 @rpc("any_peer", "call_local", "reliable")
 func rpc_take_damage(dmg):
