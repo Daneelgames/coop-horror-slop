@@ -135,6 +135,6 @@ func play_mesh_animation(moving_vector, auth, state):
 		if mesh_animation_player.current_animation != "idle":
 			mesh_animation_player.play("idle", 0.2)
 			
-@rpc("any_peer", "call_local")
+@rpc("authority", "call_local")
 func rpc_full_heal_and_resurrect():
 	health_current = health_max

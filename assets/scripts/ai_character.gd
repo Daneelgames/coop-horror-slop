@@ -8,6 +8,7 @@ var state = 'normal'
 @export var rotation_speed: float = 5.0  # How fast the AI rotates towards enemies
 @export var debug_ai_combat : bool = true  # Enable debug prints for AI combat
 @export var attack_range_multiplier : float = 2.5  # Multiplier for weapon_active_distance to account for character reach
+@export var blocking_range_multiplier : float = 3.5  # Multiplier for enemy weapon range when checking if should block (larger than attack range)
 @onready var navigation_agent_3d: NavigationAgent3D = %NavigationAgent3D
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
@@ -36,10 +37,10 @@ func _physics_process(_delta): # Most things happen here.
 	visual_node_3d.global_rotation = slerped_basis.get_euler()
 	if mesh_animation_player:
 		play_mesh_animation(input_dir, true, state)
-	if is_dead() == false and is_attacking == false and is_taking_damage == false:
+	if is_dead() == false and is_attacking == false and is_taking_damage == false and is_stun_lock == false and is_blocking_react == false and is_blocking == false:
 		handle_attacking()
 		handle_blocking()
-		handle_rotation_towards_enemy(_delta)
+	handle_rotation_towards_enemy(_delta)
 
 func _exit_tree():
 	# Unregister this AI character from the visibility manager when removed
@@ -148,12 +149,13 @@ func handle_attacking():
 	if distance <= effective_attack_range:
 		if debug_ai_combat:
 			print("[AI_ATTACK] %s: ATTACKING! Distance %s <= effective_range %s" % [name, distance, effective_attack_range])
-		_start_attacking()
+		rpc_start_attacking.rpc()
 	else:
 		if debug_ai_combat:
 			print("[AI_ATTACK] %s: Too far - Distance %s > effective_range %s" % [name, distance, effective_attack_range])
 
-func _start_attacking():
+@rpc("call_local", "reliable")
+func rpc_start_attacking():
 	if is_attacking:
 		if debug_ai_combat:
 			print("[AI_ATTACK] %s: Already attacking, skipping" % name)
@@ -177,10 +179,10 @@ func _start_attacking():
 		print("[AI_ATTACK] %s: Playing attack animation: %s" % [name, attack_string])
 	
 	mesh_animation_player.play(attack_string, 0.1)
-	if item_in_hands:
+	if item_in_hands and multiplayer.is_server():
 		item_in_hands.set_dangerous(true, self)
 	await mesh_animation_player.animation_finished
-	if item_in_hands:
+	if item_in_hands and multiplayer.is_server():
 		item_in_hands.set_dangerous(false, self)
 	is_attacking = false
 	
@@ -227,22 +229,22 @@ func handle_blocking():
 	# Check if distance is around enemy's weapon active distance
 	var distance = global_position.distance_to(closest_enemy.global_position)
 	var enemy_weapon_range = closest_enemy.item_in_hands.weapon_active_distance
-	var enemy_effective_range = enemy_weapon_range * attack_range_multiplier
+	var enemy_effective_blocking_range = enemy_weapon_range * blocking_range_multiplier
 	
 	if debug_ai_combat:
-		print("[AI_BLOCK] %s: Distance to enemy=%s, enemy_weapon_range=%s, enemy_effective_range=%s" % [name, distance, enemy_weapon_range, enemy_effective_range])
+		print("[AI_BLOCK] %s: Distance to enemy=%s, enemy_weapon_range=%s, enemy_effective_blocking_range=%s" % [name, distance, enemy_weapon_range, enemy_effective_blocking_range])
 	
-	if distance <= enemy_effective_range:
+	if distance <= enemy_effective_blocking_range:
 		if debug_ai_combat:
-			print("[AI_BLOCK] %s: BLOCKING! Distance %s <= enemy effective_range %s" % [name, distance, enemy_effective_range])
-		# AI characters are server-controlled, so call blocking directly (no RPC needed)
-		# The is_blocking variable will be synced via MultiplayerSynchronizer
-		_start_blocking()
+			print("[AI_BLOCK] %s: BLOCKING! Distance %s <= enemy effective_blocking_range %s" % [name, distance, enemy_effective_blocking_range])
+		# Use RPC to sync animation across all clients
+		rpc_start_blocking.rpc()
 	else:
 		if debug_ai_combat:
-			print("[AI_BLOCK] %s: Too far - Distance %s > enemy effective_range %s" % [name, distance, enemy_effective_range])
+			print("[AI_BLOCK] %s: Too far - Distance %s > enemy effective_blocking_range %s" % [name, distance, enemy_effective_blocking_range])
 
-func _start_blocking():
+@rpc("call_local", "reliable")
+func rpc_start_blocking():
 	if is_blocking:
 		if debug_ai_combat:
 			print("[AI_BLOCK] %s: Already blocking, skipping" % name)

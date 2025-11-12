@@ -189,3 +189,21 @@ size = Vector3(37.347656, 2, 29.935547)
 
 [node name="AiCharacter3" parent="." instance=ExtResource("7_0aogx")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.53875685, -4.75, 4.6504173)
+
+[node name="AiCharacter4" parent="." instance=ExtResource("7_0aogx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.531149, 2.5634155, 14.612509)
+
+[node name="AiCharacter5" parent="." instance=ExtResource("7_0aogx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.531149, -1.2633891, 0.4909935)
+
+[node name="AiCharacter6" parent="." instance=ExtResource("7_0aogx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.639378, 2.5634155, 21.289791)
+
+[node name="AiCharacter7" parent="." instance=ExtResource("7_0aogx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.62285, 2.5634155, 14.706499)
+
+[node name="AiCharacter8" parent="." instance=ExtResource("7_0aogx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.513087, 2.5634155, 23.177689)
+
+[node name="AiCharacter9" parent="." instance=ExtResource("7_0aogx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.204284, 2.5634155, 15.312815)

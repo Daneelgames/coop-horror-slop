@@ -1013,9 +1013,13 @@ func _debug_clear_block_reason(source : String) -> void:
 
 func death():
 	super.death()
-	enter_crouch_state()
+	if _has_input_authority:
+		enter_crouch_state()
 
 func cheat_codes():
 	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):
 		rpc_full_heal_and_resurrect.rpc()
+		if _has_input_authority:
+			enter_normal_state()
+
 	pass
