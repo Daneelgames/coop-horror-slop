@@ -36,7 +36,7 @@ func _physics_process(_delta: float) -> void:
 		var result = melee_raycast(point, prev_point)
 		if result != null:
 			# Handle hit - result is a dictionary with collision info
-			_handle_melee_hit(result)
+			_handle_melee_hit(result, prev_point, point)
 
 	attack_points_prev_positions = []
 	for point in attack_points:
@@ -101,7 +101,7 @@ func melee_raycast(point: Vector3, prev_point: Vector3):
 	# - rid: RID
 	return result
 
-func _handle_melee_hit(hit_result: Dictionary):
+func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 	# Process the melee hit
 	var collider = hit_result.get("collider")
 	if collider == null:
@@ -120,7 +120,8 @@ func _handle_melee_hit(hit_result: Dictionary):
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
 		if attack_was_blocked(hit_unit, hit_position) == false:
 			hit_unit.rpc_take_damage.rpc(randi_range(damage_min_max.x,damage_min_max.y))
-			GameManager.particles_manager.spawn_blood_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
+			var danger_direction = point.direction_to(prev_point)
+			GameManager.particles_manager.spawn_blood_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2, danger_direction)
 		else:
 			GameManager.particles_manager.spawn_solid_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
 	else:

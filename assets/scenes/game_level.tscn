@@ -167,3 +167,7 @@ transform = Transform3D(0.76211476, 0.647442, 0, -0.64744174, 0.76211506, 0, 0, 
 
 [node name="WeaponFireAxe4" parent="." instance=ExtResource("4_h4wow")]
 transform = Transform3D(0.76211476, 0.647442, 0, -0.64744174, 0.76211506, 0, 0, 0, 0.99999994, -1.2377746, -2.0129247, 2.4813356)
+
+[node name="GPUParticlesCollisionBox3D" type="GPUParticlesCollisionBox3D" parent="."]
+transform = Transform3D(1.0000005, 0, 0, 0, 1, 0, 0, 0, 1.0000005, 2.152295, -5.6179733, -2.733758)
+size = Vector3(37.347656, 2, 29.935547)

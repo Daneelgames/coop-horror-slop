@@ -1,0 +1,41 @@
+[gd_scene load_steps=7 format=3 uid="uid://dj6l4m5wv7ft2"]
+
+[ext_resource type="Shader" uid="uid://i4530fmjfaxo" path="res://assets/blood/blood.tres" id="1_wrmh0"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_prs26"]
+render_priority = 0
+shader = ExtResource("1_wrmh0")
+shader_parameter/ColorParameter = Color(1, 0, 0.071664, 1)
+
+[sub_resource type="Curve" id="Curve_tadu7"]
+_data = [Vector2(0, 0.18088746), 0.0, 0.0, 0, 0, Vector2(0.104417674, 0.5580205), 0.0, 0.0, 0, 0, Vector2(1, 0.60068256), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_fx13b"]
+curve = SubResource("Curve_tadu7")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_weifu"]
+direction = Vector3(0, 0, -1)
+spread = 6.0
+initial_velocity_min = 4.0
+initial_velocity_max = 6.0
+linear_accel_min = 4.0
+linear_accel_max = 4.0
+scale_min = 0.099999994
+scale_curve = SubResource("CurveTexture_fx13b")
+collision_mode = 1
+collision_friction = 1.0
+collision_bounce = 0.0
+collision_use_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_q885a"]
+
+[node name="BloodSplatterGpuParticles3D" type="GPUParticles3D"]
+transform = Transform3D(-0.7992645, 0, -0.60098016, 0, 1, 0, 0.60098016, 0, -0.7992645, 0, 0, 0)
+material_override = SubResource("ShaderMaterial_prs26")
+amount = 60
+lifetime = 5.0
+explosiveness = 0.85
+randomness = 0.5
+process_material = SubResource("ParticleProcessMaterial_weifu")
+draw_pass_1 = SubResource("QuadMesh_q885a")
