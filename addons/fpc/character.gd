@@ -239,7 +239,7 @@ func _physics_process(delta): # Most things happen here.
 		gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	if not is_on_floor() and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
-	if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false:
+	if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
 		handle_attacking()
 		handle_blocking()
 		handle_jumping()
@@ -247,7 +247,7 @@ func _physics_process(delta): # Most things happen here.
 
 	input_dir = Vector2.ZERO
 
-	if not immobile and is_dead() == false: # Immobility works by interrupting user input, so other forces can still be applied to the player
+	if not immobile and is_dead() == false and is_taking_damage == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false: # Immobility works by interrupting user input, so other forces can still be applied to the player
 		input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
 
 	handle_movement(delta, input_dir)

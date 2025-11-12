@@ -52,8 +52,10 @@ shadow_mesh = SubResource("ArrayMesh_4mmwe")
 [node name="WeaponRustyPipe" type="Node3D" node_paths=PackedStringArray("attack_points")]
 transform = Transform3D(0.9999999, 0, 0, 0, 1.0000002, 0, 0, 0, 0.99999994, 0, 0, 0)
 script = ExtResource("1_yxjb5")
+damage_min_max = Vector2i(30, 40)
 attack_points = [NodePath("AttackPointNode3D"), NodePath("AttackPointNode3D2"), NodePath("AttackPointNode3D3"), NodePath("AttackPointNode3D4")]
 weapon_slot_position = Vector3(3.6044846, 10.317631, 3.410141)
+weapon_blocking_angle = 140
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8.742278e-08, -1.1464114e-14, -1, 0.07993118, -0.010865498, -4.6368423e-10)

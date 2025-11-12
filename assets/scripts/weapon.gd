@@ -124,6 +124,8 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 			var danger_direction = point.direction_to(prev_point)
 			GameManager.particles_manager.spawn_blood_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2, danger_direction)
 		else:
+			hit_unit.rpc_take_attack_blocked.rpc()
+			weapon_owner.rpc_stun_lock_on_blocked_attack.rpc()
 			GameManager.particles_manager.spawn_solid_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
 			weapon_owner.play_hit_solid()
 	else:

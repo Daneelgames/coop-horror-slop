@@ -2,6 +2,7 @@ extends CharacterBody3D
 class_name Unit
 
 var item_in_hands : Weapon = null
+@export var team : int = 0
 @export var mesh_animation_player: AnimationPlayer
 @export var health_current : float = 100
 @export var health_max : float = 100
@@ -11,7 +12,28 @@ var item_in_hands : Weapon = null
 
 @export var is_attacking = false 
 @export var is_blocking = false
+@export var is_blocking_react = false
+@export var is_stun_lock = false
 @export var is_taking_damage = false
+@onready var eyes: BoneAttachment3D = %Eyes
+
+@rpc("any_peer", "call_local", "reliable")
+func rpc_stun_lock_on_blocked_attack():
+	if is_stun_lock:
+		return
+	is_stun_lock = true
+	mesh_animation_player.play("stun_lock", 0.1)
+	await mesh_animation_player.animation_finished
+	is_stun_lock = false
+	
+@rpc("any_peer", "call_local", "reliable")
+func rpc_take_attack_blocked():
+	if is_blocking_react:
+		return
+	is_blocking_react = true
+	mesh_animation_player.play("block_react", 0.1)
+	await mesh_animation_player.animation_finished
+	is_blocking_react = false
 
 @rpc("any_peer", "call_local", "reliable")
 func rpc_take_damage(dmg):
@@ -87,7 +109,7 @@ func play_death():
 	death_audio_stream_player_3d.play()
 
 func play_mesh_animation(moving_vector, auth, state):
-	if is_attacking or is_taking_damage or is_dead() or is_blocking:
+	if is_attacking or is_taking_damage or is_dead() or is_blocking or is_blocking_react or is_stun_lock:
 		return
 	# For remote instances, use synced input_dir directly
 	# For local instance, check if on floor to avoid playing walk animation while in air

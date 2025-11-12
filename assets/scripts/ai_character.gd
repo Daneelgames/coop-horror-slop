@@ -1,9 +1,13 @@
 extends Unit
 class_name AiCharacter
+@export var visual_node_3d : Node3D
+@export var visible_enemies : Array[Unit] = []
 @export var input_dir : Vector2
 @export var random_weapons_paths : Array[StringName]
 var state = 'normal'
- 
+@export var rotation_speed: float = 5.0  # How fast the AI rotates towards enemies
+@onready var navigation_agent_3d: NavigationAgent3D = %NavigationAgent3D
+
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
 
 func _enter_tree():
@@ -18,6 +22,28 @@ func _ready():
 	# Wait a frame to ensure node is fully ready and synced across all clients
 	await get_tree().process_frame
 	spawn_random_weapon_to_hands()
+	
+	# Register this AI character with the visibility manager
+	if GameManager.ai_visibility_manager:
+		GameManager.ai_visibility_manager.register_ai_character(self)
+
+func _physics_process(_delta): # Most things happen here. 
+	visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
+	# Convert Euler angles to Basis (quaternion) for proper rotation interpolation
+	var current_basis = Basis.from_euler(visual_node_3d.global_rotation)
+	var target_basis = Basis.from_euler(global_rotation)
+	var slerped_basis = current_basis.slerp(target_basis, 10 * _delta)
+	visual_node_3d.global_rotation = slerped_basis.get_euler()
+	if mesh_animation_player:
+		play_mesh_animation(input_dir, true, state)
+	if is_dead() == false and is_attacking == false and is_taking_damage == false:
+		handle_blocking()
+		handle_rotation_towards_enemy(_delta)
+
+func _exit_tree():
+	# Unregister this AI character from the visibility manager when removed
+	if GameManager.ai_visibility_manager:
+		GameManager.ai_visibility_manager.unregister_ai_character(self)
 
 func spawn_random_weapon_to_hands():
 	# Only server picks the random weapon to ensure synchronization
@@ -77,11 +103,6 @@ func _spawn_weapon(weapon_path: String):
 	item_in_hands.position = item_in_hands.weapon_slot_position
 	item_in_hands.scale = Vector3.ONE * 100
 
-func _physics_process(_delta): # Most things happen here.
-	if mesh_animation_player:
-		play_mesh_animation(input_dir, true, state)
-	handle_blocking()
-
 #region Input Handling
 func handle_blocking():
 	if is_blocking or is_attacking or is_dead() or is_taking_damage:
@@ -97,4 +118,55 @@ func _start_blocking():
 	mesh_animation_player.play('block', 0.1)
 	await mesh_animation_player.animation_finished
 	is_blocking = false
+
+func handle_rotation_towards_enemy(delta: float) -> void:
+	# Only rotate on server
+	if not multiplayer.is_server():
+		return
+	
+	# Don't rotate if dead, attacking, or taking damage
+	if is_dead() or is_attacking or is_taking_damage:
+		return
+	
+	# Find closest visible enemy
+	var closest_enemy = _get_closest_visible_enemy()
+	if closest_enemy == null:
+		return
+	
+	# Calculate direction to enemy
+	var enemy_pos = closest_enemy.global_position
+	var my_pos = global_position
+	
+	# Calculate direction vector (ignore Y for horizontal rotation)
+	var direction = Vector3(my_pos.x - enemy_pos.x, 0, my_pos.z - enemy_pos.z)
+	if direction.length_squared() < 0.0001:
+		return  # Too close or same position
+	
+	direction = direction.normalized()
+	
+	# Calculate target rotation angle
+	var target_angle = atan2(direction.x, direction.z)
+	
+	# Smoothly rotate towards target angle
+	var current_angle = rotation.y
+	var new_angle = lerp_angle(current_angle, target_angle, rotation_speed * delta)
+	rotation.y = new_angle
+
+func _get_closest_visible_enemy() -> Unit:
+	if visible_enemies.is_empty():
+		return null
+	
+	var closest_enemy: Unit = null
+	var closest_distance_squared: float = INF
+	
+	for enemy in visible_enemies:
+		if not is_instance_valid(enemy) or enemy.is_dead():
+			continue
+		
+		var distance_squared = global_position.distance_squared_to(enemy.global_position)
+		if distance_squared < closest_distance_squared:
+			closest_distance_squared = distance_squared
+			closest_enemy = enemy
+	
+	return closest_enemy
 	

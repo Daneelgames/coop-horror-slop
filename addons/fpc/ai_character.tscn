@@ -440,19 +440,22 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("28_rivgy")
 
-[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("mesh_animation_player")]
+[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "mesh_animation_player")]
 collision_layer = 2
 collision_mask = 3
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_q1sc8")
+visual_node_3d = NodePath("VisualParent")
 random_weapons_paths = Array[StringName]([&"res://assets/prefabs/weapon_axe_w.tscn", &"res://assets/prefabs/weapon_rusty_pipe_w.tscn"])
+team = 1
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])
 death_anims = Array[StringName]([&"death_0", &"death_1", &"death_2", &"death_3"])
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13531351, 0, 0)
+top_level = true
 
 [node name="Mesh" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -507,7 +510,7 @@ bones/5/parent = 4
 bones/5/rest = Transform3D(0.99999994, -4.989427e-11, 1.3429304e-18, 4.989427e-11, 0.99999994, -4.2351645e-22, -1.3429303e-18, 4.2351647e-22, 1, 2.9020833e-07, 10.556473, 3.1133533)
 bones/5/enabled = true
 bones/5/position = Vector3(2.9020833e-07, 10.556473, 3.1133533)
-bones/5/rotation = Quaternion(-0.14462703, 0.45662352, -0.06160472, 0.8756614)
+bones/5/rotation = Quaternion(2.1175824e-22, 6.714652e-19, 2.4947136e-11, 1)
 bones/5/scale = Vector3(0.99999994, 0.99999994, 1)
 bones/6/name = "mixamorig_HeadTop_End"
 bones/6/parent = 5
@@ -933,6 +936,12 @@ transform = Transform3D(-0.9410648, -0.31081933, -0.13337326, 0.32398295, -0.715
 bone_name = "mixamorig_RightHand"
 bone_idx = 10
 
+[node name="Eyes" type="BoneAttachment3D" parent="VisualParent/soldier_low_poly/Armature/Skeleton3D"]
+unique_name_in_owner = true
+transform = Transform3D(0.5341269, -0.3735211, -0.7584131, -0.049168456, 0.8818571, -0.4689458, 0.8439729, 0.28776655, 0.45265839, -16.193172, 53.379604, 13.500521)
+bone_name = "mixamorig_Head"
+bone_idx = 5
+
 [node name="MeshAnimationPlayer" type="AnimationPlayer" parent="VisualParent/soldier_low_poly"]
 root_node = NodePath("../Armature")
 libraries = {
@@ -997,3 +1006,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0413975, 0.09894803)
 stream = SubResource("AudioStreamRandomizer_60krm")
 pitch_scale = 0.6
 bus = &"SFX"
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+unique_name_in_owner = true
