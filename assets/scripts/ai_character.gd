@@ -37,10 +37,16 @@ func _ready():
 	if home_position == Vector3.ZERO:
 		home_position = global_position
 	
+	# Initialize last position for client-side movement detection
+	_last_position = global_position
+	
 	# Register this AI character with the visibility manager
 	if GameManager.ai_visibility_manager:
 		GameManager.ai_visibility_manager.register_ai_character(self)
 	super._ready()
+
+var _last_position: Vector3 = Vector3.ZERO
+var _smoothed_input_dir: Vector2 = Vector2.ZERO
 
 func _physics_process(_delta): # Most things happen here. 
 	visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
@@ -49,8 +55,35 @@ func _physics_process(_delta): # Most things happen here.
 	var target_basis = Basis.from_euler(global_rotation)
 	var slerped_basis = current_basis.slerp(target_basis, 10 * _delta)
 	visual_node_3d.global_rotation = slerped_basis.get_euler()
+	
+	# Calculate input_dir for clients based on movement (for animation)
+	if not multiplayer.is_server():
+		# Calculate movement direction from position change
+		var position_delta = global_position - _last_position
+		var target_input_dir: Vector2
+		
+		# Use a larger threshold to prevent jitter from small position changes
+		if position_delta.length_squared() > 0.001:  # Increased threshold
+			# Normalize and convert to Vector2 for input_dir
+			position_delta.y = 0  # Ignore vertical movement
+			position_delta = position_delta.normalized()
+			target_input_dir = Vector2(position_delta.x, position_delta.z)
+		else:
+			target_input_dir = Vector2.ZERO
+		
+		# Smooth the input_dir to prevent rapid changes
+		_smoothed_input_dir = _smoothed_input_dir.lerp(target_input_dir, 10.0 * _delta)
+		
+		# Only update input_dir if change is significant enough
+		if _smoothed_input_dir.length_squared() > 0.01:
+			input_dir = _smoothed_input_dir.normalized()
+		else:
+			input_dir = Vector2.ZERO
+		
+		_last_position = global_position
+	
 	if mesh_animation_player:
-		play_mesh_animation(input_dir, true, state)
+		play_mesh_animation(input_dir, multiplayer.is_server(), state)
 	
 	# Handle movement using NavigationAgent3D (only on server)
 	if multiplayer.is_server() and not is_dead():
@@ -60,6 +93,7 @@ func _physics_process(_delta): # Most things happen here.
 			# Still need to apply gravity and move_and_slide even when not moving
 			# (e.g., when attacking to apply push velocity)
 			_handle_physics(_delta)
+		_last_position = global_position
 
 func _exit_tree():
 	# Unregister this AI character from the visibility manager when removed
