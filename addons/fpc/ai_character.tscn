@@ -458,6 +458,7 @@ script = ExtResource("1_q1sc8")
 visual_node_3d = NodePath("VisualParent")
 random_weapons_paths = Array[StringName]([&"res://assets/prefabs/weapon_axe_w.tscn", &"res://assets/prefabs/weapon_rusty_pipe_w.tscn"])
 debug_ai_combat = false
+resurrect_after_death_seconds = 5.0
 team = 1
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])

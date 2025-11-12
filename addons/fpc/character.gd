@@ -1015,11 +1015,15 @@ func death():
 	super.death()
 	if _has_input_authority:
 		enter_crouch_state()
+		await get_tree().create_timer(5).timeout
+		rpc_full_heal_and_resurrect.rpc()
+		enter_normal_state()
+
 
 func cheat_codes():
-	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):
-		rpc_full_heal_and_resurrect.rpc()
-		if _has_input_authority:
-			enter_normal_state()
+	#if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):
+		#rpc_full_heal_and_resurrect.rpc()
+		#if _has_input_authority:
+			#enter_normal_state()
 
 	pass

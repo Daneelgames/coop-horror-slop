@@ -312,3 +312,10 @@ func _get_closest_visible_enemy() -> Unit:
 	
 	return closest_enemy
 	
+@export var resurrect_after_death_seconds : float = -1
+
+func death():
+	super.death()
+	if resurrect_after_death_seconds > 0:
+		await get_tree().create_timer(resurrect_after_death_seconds).timeout
+		rpc_full_heal_and_resurrect.rpc()
