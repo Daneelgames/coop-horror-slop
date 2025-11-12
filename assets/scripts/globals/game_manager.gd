@@ -145,7 +145,7 @@ func _spawn_player_for(peer_id: int) -> void:
 	if player:
 		_player_nodes[peer_id] = player
 		await get_tree().process_frame
-		player.global_position = Vector3(randf_range(-10,10),1, randf_range(-10,10))
+		player.global_position = Vector3(randf_range(-5,5),0, randf_range(-5,5))
 		# Authority is set in character.gd _enter_tree() based on the character name
 
 func _setup_player_multiplayer_signals() -> void:
