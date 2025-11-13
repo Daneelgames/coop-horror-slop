@@ -34,6 +34,9 @@ func _physics_process(_delta: float) -> void:
 	if weapon_resource == null:
 		return
 	
+	if is_dangerous and (weapon_owner.is_dead() or weapon_owner.is_blocking or weapon_owner.is_taking_damage or weapon_owner.is_blocking_react or weapon_owner.is_stun_lock):
+		is_dangerous = false
+	
 	var should_reduce = weapon_owner is PlayerCharacter and weapon_resource.reducing_durability_when_in_hands
 	
 	# Debug output when conditions are met

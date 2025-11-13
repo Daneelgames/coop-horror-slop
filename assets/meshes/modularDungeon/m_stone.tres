@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://8dxna0d1uwu3"]
+
+[ext_resource type="Texture2D" uid="uid://dpm3wekkq2vbr" path="res://assets/meshes/modularDungeon/Textures/T_Stone04_D.png" id="1_1uffi"]
+[ext_resource type="Texture2D" uid="uid://bi68sv3ilvgml" path="res://assets/meshes/modularDungeon/Textures/T_Stone04_N.png" id="2_sdx04"]
+
+[resource]
+resource_name = "StoneShader"
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.9063318, 0.9063318, 0.9063318, 0.8)
+albedo_texture = ExtResource("1_1uffi")
+emission_enabled = true
+normal_enabled = true
+normal_texture = ExtResource("2_sdx04")
+texture_filter = 2

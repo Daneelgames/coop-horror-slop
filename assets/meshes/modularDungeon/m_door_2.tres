@@ -1,0 +1,17 @@
+[gd_resource type="StandardMaterial3D" load_steps=4 format=3 uid="uid://bpq5kc5grjnbq"]
+
+[ext_resource type="Texture2D" uid="uid://celhfu7mets1m" path="res://assets/meshes/modularDungeon/Textures/T_Door02_D.png" id="1_xtp6e"]
+[ext_resource type="Texture2D" uid="uid://b2d1pbw5jrk22" path="res://assets/meshes/modularDungeon/Textures/T_Door02_M.png" id="2_k6osp"]
+[ext_resource type="Texture2D" uid="uid://b83v25stw7smb" path="res://assets/meshes/modularDungeon/Textures/T_Door02_N.png" id="3_4ndpt"]
+
+[resource]
+resource_name = "Door2Shader"
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.6651851, 0.6651851, 0.6651851, 1)
+albedo_texture = ExtResource("1_xtp6e")
+metallic = 1.0
+metallic_texture = ExtResource("2_k6osp")
+emission_enabled = true
+normal_enabled = true
+normal_texture = ExtResource("3_4ndpt")
+texture_filter = 2

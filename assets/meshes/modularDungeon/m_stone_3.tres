@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://dah4n64qkc4lm"]
+
+[ext_resource type="Texture2D" uid="uid://bl7st8mrb3we0" path="res://assets/meshes/modularDungeon/Textures/T_stone03_D.png" id="1_7smo5"]
+[ext_resource type="Texture2D" uid="uid://dgvh4lxv8sob0" path="res://assets/meshes/modularDungeon/Textures/T_stone03_N.png" id="2_3ba3b"]
+
+[resource]
+resource_name = "Stone3Shader"
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.9063318, 0.9063318, 0.9063318, 0.8)
+albedo_texture = ExtResource("1_7smo5")
+emission_enabled = true
+normal_enabled = true
+normal_texture = ExtResource("2_3ba3b")
+texture_filter = 2

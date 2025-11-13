@@ -1,0 +1,16 @@
+[gd_resource type="StandardMaterial3D" load_steps=4 format=3 uid="uid://budscopl3po3l"]
+
+[ext_resource type="Texture2D" uid="uid://bjeij7tfh4cvo" path="res://assets/meshes/modularDungeon/Textures/T_candlestick_D.png" id="1_glm3e"]
+[ext_resource type="Texture2D" uid="uid://du530cfjkvxpu" path="res://assets/meshes/modularDungeon/Textures/T_candlestick_E.png" id="2_7hyyq"]
+[ext_resource type="Texture2D" uid="uid://b20vuhxiucud2" path="res://assets/meshes/modularDungeon/Textures/T_candlestick_N.png" id="3_6o6q0"]
+
+[resource]
+resource_name = "CandleShader"
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.9063318, 0.9063318, 0.9063318, 0.8)
+albedo_texture = ExtResource("1_glm3e")
+emission_enabled = true
+emission_texture = ExtResource("2_7hyyq")
+normal_enabled = true
+normal_texture = ExtResource("3_6o6q0")
+texture_filter = 2
