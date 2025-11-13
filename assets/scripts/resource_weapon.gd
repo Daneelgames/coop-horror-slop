@@ -12,3 +12,8 @@ enum WEAPON_TYPE {TORCH, RUSTY_PIPE, FIRE_AXE}
 @export var push_forward_on_attack_force : float = 5
 @export var weapon_durability_current : float = 100
 @export var weapon_durability_max : float = 100
+
+
+@export_category('TORCH DURABILITY BURNING')
+@export var reducing_durability_when_in_hands : bool = false
+@export var in_hands_reduce_durability_speed := 0.5

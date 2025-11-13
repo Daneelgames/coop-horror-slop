@@ -29,6 +29,47 @@ func set_dangerous(isdngrs, wpnownr):
 func _physics_process(_delta: float) -> void:
 	if multiplayer.is_server() == false:
 		return
+	
+	# Debug: Check conditions for durability reduction
+	if weapon_resource == null:
+		return
+	
+	var should_reduce = weapon_owner is PlayerCharacter and weapon_resource.reducing_durability_when_in_hands
+	
+	# Debug output when conditions are met
+	if should_reduce:
+		var old_durability = weapon_resource.weapon_durability_current
+		var reduction_amount = weapon_resource.in_hands_reduce_durability_speed * _delta
+		
+		# Multiply by delta to make it frame-rate independent (durability per second)
+		weapon_resource.weapon_durability_current -= reduction_amount
+		weapon_resource.weapon_durability_current = max(0.0, weapon_resource.weapon_durability_current)
+		
+		# Detailed debug output every frame (can be throttled if too verbose)
+		var owner_name = "null"
+		if weapon_owner != null:
+			owner_name = str(weapon_owner.name)
+		var durability_percent = 0.0
+		if weapon_resource.weapon_durability_max > 0:
+			durability_percent = weapon_resource.weapon_durability_current / weapon_resource.weapon_durability_max * 100.0
+		# print("[WEAPON DURABILITY] %s | Owner: %s | Delta: %.4f | Speed: %.2f/sec | Reduction: %.4f | %.2f -> %.2f (%.1f%%)" % [
+		# 	str(weapon_resource.weapon_name),
+		# 	owner_name,
+		# 	_delta,
+		# 	weapon_resource.in_hands_reduce_durability_speed,
+		# 	reduction_amount,
+		# 	old_durability,
+		# 	weapon_resource.weapon_durability_current,
+		# 	durability_percent
+		# ])
+		
+		if weapon_resource.weapon_durability_current <= 0:
+			print("[WEAPON BROKE] %s durability reached 0! Calling weapon_broke()" % weapon_resource.weapon_name)
+			weapon_broke()
+			return
+	elif weapon_owner is PlayerCharacter:
+		print("cant reduce durability, weapon_resource.reducing_durability_when_in_hands is false")
+		
 	if not is_dangerous:
 		# Update positions even when not dangerous
 		attack_points_prev_positions = []
@@ -174,3 +215,80 @@ func attack_was_blocked(attack_target, hit_pos):
 			if angle_deg <= blocking_angle / 2.0:
 				return true
 	return false
+
+func weapon_broke():
+	# this is used for when torch is out of fuel - weapon should be destroyed, and should be removed from weapon_owner item_in_hands and carrying_items
+	# make sure this gets synced across all clients
+	# Only server should process this logic
+	if multiplayer.is_server() == false:
+		return
+	
+	if weapon_owner == null:
+		queue_free()
+		return
+	
+	# Only PlayerCharacter has carrying_items
+	if not weapon_owner is PlayerCharacter:
+		# For non-player characters (like AI), use RPC to destroy weapon on all clients
+		if weapon_owner.item_in_hands == self:
+			var weapon_path = get_path()
+			weapon_owner.rpc_destroy_weapon.rpc(weapon_path)
+			weapon_owner.item_in_hands = null
+		else:
+			queue_free()
+		return
+	
+	var player_owner = weapon_owner as PlayerCharacter
+	
+	# Find the matching item in carrying_items
+	# Since the weapon is currently in hands, it should be the selected item
+	var item_keys = player_owner.carrying_items.keys()
+	var item_key_to_remove = null
+	
+	# Check if current selected item matches
+	if item_keys.size() > player_owner.current_selected_item_index and player_owner.current_selected_item_index >= 0:
+		var selected_key = item_keys[player_owner.current_selected_item_index]
+		var selected_resource = player_owner.carrying_items[selected_key]
+		# Compare by weapon_name and weapon_type to find the match
+		if selected_resource != null and selected_resource.weapon_name == weapon_resource.weapon_name and selected_resource.weapon_type == weapon_resource.weapon_type:
+			item_key_to_remove = selected_key
+	
+	# If not found by selected index, search all items
+	if item_key_to_remove == null:
+		for key in item_keys:
+			var resource = player_owner.carrying_items[key]
+			if resource != null and resource.weapon_name == weapon_resource.weapon_name and resource.weapon_type == weapon_resource.weapon_type:
+				item_key_to_remove = key
+				break
+	
+	# Remove from carrying_items if found
+	if item_key_to_remove != null:
+		player_owner.carrying_items.erase(item_key_to_remove)
+	
+	# Clamp selected index
+	player_owner._clamp_selected_index()
+	
+	# Update inventory UI
+	if player_owner.inventory_slots_panel_container:
+		player_owner.inventory_slots_panel_container.update_inventory_items_ui(player_owner.carrying_items, player_owner.current_selected_item_index)
+	
+	# Update item in hands for all clients (this will also free the old weapon on all clients)
+	var new_item_keys = player_owner.carrying_items.keys()
+	if new_item_keys.size() > player_owner.current_selected_item_index and player_owner.current_selected_item_index >= 0:
+		var selected_item_resource = player_owner.carrying_items[new_item_keys[player_owner.current_selected_item_index]]
+		var selected_weapon_data = GameManager.serialize_weapon_resource(selected_item_resource)
+		player_owner.rpc_update_item_in_hands.rpc(player_owner.current_selected_item_index, selected_weapon_data)
+	else:
+		player_owner.rpc_update_item_in_hands.rpc(-1, {})  # No item selected - this will free the weapon on all clients
+	
+	# Update inventory on owner's client if not server
+	if player_owner.get_multiplayer_authority() != 1:  # Owner is not server
+		var owner_peer_id = player_owner.get_multiplayer_authority()
+		# Serialize inventory dictionary for RPC
+		var serialized_inventory: Dictionary = {}
+		for key in player_owner.carrying_items.keys():
+			serialized_inventory[key] = GameManager.serialize_weapon_resource(player_owner.carrying_items[key])
+		player_owner.rpc_update_inventory.rpc_id(owner_peer_id, serialized_inventory)
+	
+	# Note: Don't call queue_free() or clear item_in_hands here - rpc_update_item_in_hands already handles 
+	# freeing the weapon and clearing item_in_hands on all clients

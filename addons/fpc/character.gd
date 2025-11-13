@@ -194,6 +194,9 @@ func _ready():
 	if multiplayer.has_multiplayer_peer():
 		_cached_local_peer_id = multiplayer.get_unique_id()
 
+	for key in carrying_items.keys():
+		carrying_items[key] = carrying_items[key].duplicate()
+
 	# If the controller is rotated in a certain direction for game design purposes, redirect this rotation into the head.
 	HEAD.rotation.y = rotation.y
 	rotation.y = 0
@@ -274,6 +277,15 @@ func _physics_process(delta): # Most things happen here.
 
 
 	update_debug_menu_per_tick()
+	
+	# Update inventory UI durability display if torch is losing durability
+	if item_in_hands != null and item_in_hands.weapon_resource != null:
+		if item_in_hands.weapon_resource.reducing_durability_when_in_hands:
+			# Sync durability from item_in_hands back to carrying_items
+			_sync_weapon_durability_to_inventory()
+			# Update UI durability display
+			if inventory_slots_panel_container:
+				inventory_slots_panel_container.update_durability_display(carrying_items)
 
 	was_on_floor = is_on_floor() # This must always be at the end of physics_process
 
@@ -356,7 +368,7 @@ func rpc_drop_item(selected_item_index):
 			return
 		
 		# Serialize weapon resource for RPC
-		var weapon_data = requesting_player._serialize_weapon_resource(weapon_resource)
+		var weapon_data = GameManager.serialize_weapon_resource(weapon_resource)
 		
 		# Tell all clients to spawn the pickup
 		rpc_spawn_dropped_pickup.rpc(drop_position, weapon_data)
@@ -375,7 +387,7 @@ func rpc_drop_item(selected_item_index):
 		var new_item_keys = requesting_player.carrying_items.keys()
 		if new_item_keys.size() > requesting_player.current_selected_item_index and requesting_player.current_selected_item_index >= 0:
 			var selected_item_resource = requesting_player.carrying_items[new_item_keys[requesting_player.current_selected_item_index]]
-			var selected_weapon_data = requesting_player._serialize_weapon_resource(selected_item_resource)
+			var selected_weapon_data = GameManager.serialize_weapon_resource(selected_item_resource)
 			requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_weapon_data)
 		else:
 			requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
@@ -385,14 +397,14 @@ func rpc_drop_item(selected_item_index):
 			# Serialize inventory dictionary for RPC
 			var serialized_inventory: Dictionary = {}
 			for key in requesting_player.carrying_items.keys():
-				serialized_inventory[key] = requesting_player._serialize_weapon_resource(requesting_player.carrying_items[key])
+				serialized_inventory[key] = GameManager.serialize_weapon_resource(requesting_player.carrying_items[key])
 			requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, serialized_inventory)
 
 # Spawn dropped pickup on all clients
 @rpc("authority", "call_local", "reliable")
 func rpc_spawn_dropped_pickup(drop_position: Vector3, weapon_data: Dictionary):
 	# Deserialize weapon resource from data
-	var weapon_resource = _deserialize_weapon_resource(weapon_data)
+	var weapon_resource = GameManager.deserialize_weapon_resource(weapon_data)
 	if weapon_resource == null:
 		return
 	
@@ -442,7 +454,7 @@ func handle_interaction():
 			var weapon_path = col.get_path()
 			
 			# Serialize weapon resource for RPC
-			var weapon_data = _serialize_weapon_resource(col.weapon_resource)
+			var weapon_data = GameManager.serialize_weapon_resource(col.weapon_resource)
 			
 			# Client sends request to server
 			if multiplayer.is_server():
@@ -465,7 +477,7 @@ func rpc_request_weapon_pickup(pickup_node_path: NodePath, weapon_data: Dictiona
 		return
 	
 	# Deserialize weapon resource from data
-	var weapon_resource = _deserialize_weapon_resource(weapon_data)
+	var weapon_resource = GameManager.deserialize_weapon_resource(weapon_data)
 	if weapon_resource == null:
 		return
 	
@@ -543,14 +555,14 @@ func rpc_request_weapon_pickup(pickup_node_path: NodePath, weapon_data: Dictiona
 		# Serialize inventory dictionary for RPC
 		var serialized_inventory: Dictionary = {}
 		for key in requesting_player.carrying_items.keys():
-			serialized_inventory[key] = requesting_player._serialize_weapon_resource(requesting_player.carrying_items[key])
+			serialized_inventory[key] = GameManager.serialize_weapon_resource(requesting_player.carrying_items[key])
 		requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, serialized_inventory)
 	
 	# Update item in hands for all clients
 	var item_keys = requesting_player.carrying_items.keys()
 	if item_keys.size() > requesting_player.current_selected_item_index:
 		var selected_item_resource = requesting_player.carrying_items[item_keys[requesting_player.current_selected_item_index]]
-		var selected_weapon_data = requesting_player._serialize_weapon_resource(selected_item_resource)
+		var selected_weapon_data = GameManager.serialize_weapon_resource(selected_item_resource)
 		requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_weapon_data)
 	else:
 		requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
@@ -580,7 +592,7 @@ func rpc_update_inventory(serialized_inventory: Dictionary):
 	for key in serialized_inventory.keys():
 		var weapon_data = serialized_inventory[key] as Dictionary
 		if weapon_data != null:
-			carrying_items[key] = _deserialize_weapon_resource(weapon_data)
+			carrying_items[key] = GameManager.deserialize_weapon_resource(weapon_data)
 	
 	_clamp_selected_index()
 	if inventory_slots_panel_container:
@@ -590,7 +602,7 @@ func rpc_update_inventory(serialized_inventory: Dictionary):
 	var item_keys = carrying_items.keys()
 	if item_keys.size() > current_selected_item_index and current_selected_item_index >= 0:
 		var selected_item_res = carrying_items[item_keys[current_selected_item_index]]
-		var weapon_data = _serialize_weapon_resource(selected_item_res)
+		var weapon_data = GameManager.serialize_weapon_resource(selected_item_res)
 		rpc_update_item_in_hands(current_selected_item_index, weapon_data)
 	else:
 		rpc_update_item_in_hands(-1, {})  # No item selected
@@ -990,6 +1002,11 @@ func change_selected_item_index(delta: int):
 	on_change_item_cooldown = true
 	await get_tree().create_timer(0.15).timeout
 	on_change_item_cooldown = false
+	
+	# Sync durability from currently equipped weapon back to inventory before switching
+	if item_in_hands != null and item_in_hands.weapon_resource != null:
+		_sync_weapon_durability_to_inventory()
+	
 	current_selected_item_index += delta
 	
 	# Wrap around
@@ -1005,7 +1022,7 @@ func change_selected_item_index(delta: int):
 	var item_keys = carrying_items.keys()
 	if item_keys.size() > current_selected_item_index:
 		var selected_item_res = carrying_items[item_keys[current_selected_item_index]]
-		var weapon_data = _serialize_weapon_resource(selected_item_res)
+		var weapon_data = GameManager.serialize_weapon_resource(selected_item_res)
 		rpc_update_item_in_hands.rpc(current_selected_item_index, weapon_data)
 	else:
 		rpc_update_item_in_hands.rpc(-1, {})  # No item selected
@@ -1024,52 +1041,71 @@ func rpc_update_item_in_hands(item_index: int, weapon_data: Dictionary):
 		return
 	
 	# Deserialize weapon resource from data
-	var weapon_resource = _deserialize_weapon_resource(weapon_data)
+	var weapon_resource = GameManager.deserialize_weapon_resource(weapon_data)
 	if weapon_resource == null:
 		return
 	
 	# Use the provided item_path instead of relying on carrying_items
 	item_in_hands = load(weapon_resource.weapon_prefab_path).instantiate()
+	item_in_hands.weapon_owner = self
 	if item_in_hands == null:
 		push_error("Failed to load item: " + weapon_resource.weapon_prefab_path)
 		return
 	
 	weapon_bone_attachment_3d.add_child(item_in_hands)
 	item_in_hands.weapon_resource = weapon_resource.duplicate()
+	print("item_in_hands.weapon_resource.reducing_durability_when_in_hands %s"%item_in_hands.weapon_resource.reducing_durability_when_in_hands)
 	item_in_hands.position = item_in_hands.weapon_slot_position
 	item_in_hands.scale = Vector3.ONE * 100
 
+func _sync_weapon_durability_to_inventory():
+	# Sync durability from item_in_hands.weapon_resource back to carrying_items
+	if item_in_hands == null or item_in_hands.weapon_resource == null:
+		return
 	
-# Helper functions to serialize/deserialize ResourceWeapon for RPC
-func _serialize_weapon_resource(weapon_resource: ResourceWeapon) -> Dictionary:
-	if weapon_resource == null:
-		return {}
-	return {
-		"weapon_name": weapon_resource.weapon_name,
-		"weapon_type": weapon_resource.weapon_type,
-		"pickup_prefab_path": weapon_resource.pickup_prefab_path,
-		"weapon_prefab_path": weapon_resource.weapon_prefab_path,
-		"damage_min_max": weapon_resource.damage_min_max,
-		"weapon_blocking_angle": weapon_resource.weapon_blocking_angle,
-		"push_forward_on_attack_force": weapon_resource.push_forward_on_attack_force,
-		"weapon_durability_current": weapon_resource.weapon_durability_current,
-		"weapon_durability_max": weapon_resource.weapon_durability_max
-	}
-
-func _deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
-	if data.is_empty():
-		return null
-	var weapon_resource = ResourceWeapon.new()
-	weapon_resource.weapon_name = data.get("weapon_name", &'Weapon')
-	weapon_resource.weapon_type = data.get("weapon_type", ResourceWeapon.WEAPON_TYPE.TORCH)
-	weapon_resource.pickup_prefab_path = data.get("pickup_prefab_path", "")
-	weapon_resource.weapon_prefab_path = data.get("weapon_prefab_path", "")
-	weapon_resource.damage_min_max = data.get("damage_min_max", Vector2i(30, 60))
-	weapon_resource.weapon_blocking_angle = data.get("weapon_blocking_angle", 160)
-	weapon_resource.push_forward_on_attack_force = data.get("push_forward_on_attack_force", 5.0)
-	weapon_resource.weapon_durability_current = data.get("weapon_durability_current", 100.0)
-	weapon_resource.weapon_durability_max = data.get("weapon_durability_max", 100.0)
-	return weapon_resource
+	var equipped_resource = item_in_hands.weapon_resource
+	var item_keys = carrying_items.keys()
+	
+	# Use current_selected_item_index to find the exact item that's currently equipped
+	# This ensures we sync to the correct item when multiple items of the same type exist
+	if current_selected_item_index >= 0 and current_selected_item_index < item_keys.size():
+		var current_item_key = item_keys[current_selected_item_index]
+		var inventory_resource = carrying_items[current_item_key] as ResourceWeapon
+		if inventory_resource != null:
+			# Verify it matches the equipped weapon (safety check)
+			if inventory_resource.weapon_name == equipped_resource.weapon_name and inventory_resource.weapon_type == equipped_resource.weapon_type:
+				var old_inventory_durability = inventory_resource.weapon_durability_current
+				# Sync durability
+				inventory_resource.weapon_durability_current = equipped_resource.weapon_durability_current
+				# Debug output when durability changes significantly
+				if abs(old_inventory_durability - inventory_resource.weapon_durability_current) > 0.1:
+					print("[DURABILITY SYNC] %s (index %d): Synced %.2f -> %.2f (equipped: %.2f)" % [
+						current_item_key,
+						current_selected_item_index,
+						old_inventory_durability,
+						inventory_resource.weapon_durability_current,
+						equipped_resource.weapon_durability_current
+					])
+			else:
+				print("[DURABILITY SYNC WARNING] Selected item doesn't match equipped weapon!")
+	else:
+		# Fallback: Find matching item by weapon_name and weapon_type (for cases where index might be invalid)
+		for key in item_keys:
+			var inventory_resource = carrying_items[key] as ResourceWeapon
+			if inventory_resource != null:
+				if inventory_resource.weapon_name == equipped_resource.weapon_name and inventory_resource.weapon_type == equipped_resource.weapon_type:
+					var old_inventory_durability = inventory_resource.weapon_durability_current
+					# Sync durability
+					inventory_resource.weapon_durability_current = equipped_resource.weapon_durability_current
+					# Debug output when durability changes significantly
+					if abs(old_inventory_durability - inventory_resource.weapon_durability_current) > 0.1:
+						print("[DURABILITY SYNC FALLBACK] %s: Synced %.2f -> %.2f (equipped: %.2f)" % [
+							key,
+							old_inventory_durability,
+							inventory_resource.weapon_durability_current,
+							equipped_resource.weapon_durability_current
+						])
+					break
 
 func _clamp_selected_index():
 	# Ensure selected index is within valid range

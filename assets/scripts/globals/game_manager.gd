@@ -166,3 +166,38 @@ func _on_peer_disconnected_from_game(peer_id: int) -> void:
 		if is_instance_valid(node):
 			node.queue_free()
 		_player_nodes.erase(peer_id)
+
+# Helper functions to serialize/deserialize ResourceWeapon for RPC
+func serialize_weapon_resource(weapon_resource: ResourceWeapon) -> Dictionary:
+	if weapon_resource == null:
+		return {}
+	return {
+		"weapon_name": weapon_resource.weapon_name,
+		"weapon_type": weapon_resource.weapon_type,
+		"pickup_prefab_path": weapon_resource.pickup_prefab_path,
+		"weapon_prefab_path": weapon_resource.weapon_prefab_path,
+		"damage_min_max": weapon_resource.damage_min_max,
+		"weapon_blocking_angle": weapon_resource.weapon_blocking_angle,
+		"push_forward_on_attack_force": weapon_resource.push_forward_on_attack_force,
+		"weapon_durability_current": weapon_resource.weapon_durability_current,
+		"weapon_durability_max": weapon_resource.weapon_durability_max,
+		"reducing_durability_when_in_hands": weapon_resource.reducing_durability_when_in_hands,
+		"in_hands_reduce_durability_speed": weapon_resource.in_hands_reduce_durability_speed
+	}
+
+func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
+	if data.is_empty():
+		return null
+	var weapon_resource = ResourceWeapon.new()
+	weapon_resource.weapon_name = data.get("weapon_name", &'Weapon')
+	weapon_resource.weapon_type = data.get("weapon_type", ResourceWeapon.WEAPON_TYPE.TORCH)
+	weapon_resource.pickup_prefab_path = data.get("pickup_prefab_path", "")
+	weapon_resource.weapon_prefab_path = data.get("weapon_prefab_path", "")
+	weapon_resource.damage_min_max = data.get("damage_min_max", Vector2i(30, 60))
+	weapon_resource.weapon_blocking_angle = data.get("weapon_blocking_angle", 160)
+	weapon_resource.push_forward_on_attack_force = data.get("push_forward_on_attack_force", 5.0)
+	weapon_resource.weapon_durability_current = data.get("weapon_durability_current", 100.0)
+	weapon_resource.weapon_durability_max = data.get("weapon_durability_max", 100.0)
+	weapon_resource.reducing_durability_when_in_hands = data.get("reducing_durability_when_in_hands", false)
+	weapon_resource.in_hands_reduce_durability_speed = data.get("in_hands_reduce_durability_speed", 0.5)
+	return weapon_resource

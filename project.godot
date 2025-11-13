@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="SteamGodotTemplate"
+config/name="glslop"
 config/description="A project template using the Expresso Bits SteamMultiplayerPeer addon and the Gramps GodotSteam addon.
 It contains boilerplate code for a main menu with saved settings, LAN and Steam netcode, a simple audio bus for music and sfx.
 Main menu UI is controlled by a theme resource in assets/misc. UI work with mouse keyboard or controller."
