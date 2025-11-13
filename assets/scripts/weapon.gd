@@ -1,10 +1,8 @@
 extends Node3D
 class_name Weapon
-@export var damage_min_max : Vector2i = Vector2i(30,60)
+@export var weapon_resource : ResourceWeapon
 @export var attack_points : Array[Node3D]
 @export var weapon_slot_position : Vector3
-@export var weapon_blocking_angle = 160
-@export var push_forward_on_attack_force : float = 5
 var weapon_active_distance : float = 0
 var attack_points_prev_positions : Array[Vector3]
 var is_dangerous = false
@@ -129,7 +127,7 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
 		# if attack_was_blocked(hit_unit, hit_position) == false:
 		if attack_was_blocked(hit_unit, owner_position) == false:
-			hit_unit.rpc_take_damage.rpc(randi_range(damage_min_max.x,damage_min_max.y))
+			hit_unit.rpc_take_damage.rpc(randi_range(weapon_resource.damage_min_max.x,weapon_resource.damage_min_max.y))
 			var danger_direction = point.direction_to(prev_point)
 			GameManager.particles_manager.spawn_blood_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2, danger_direction)
 		else:

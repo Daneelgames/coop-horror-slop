@@ -1,9 +1,7 @@
 extends RigidBody3D
 class_name Interactive
 
-@export var prefab_path_pickup : StringName
-@export var prefab_path_weapon : StringName
-@export var interactive_name := &"Weapon"
+@export var weapon_resource : ResourceWeapon
 @onready var visual_parent: Node3D = %VisualParent
 
 func _process(delta: float) -> void:

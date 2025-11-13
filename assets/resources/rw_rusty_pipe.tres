@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://bu6nd4i40ikd2"]
+
+[ext_resource type="Script" uid="uid://cwpodhjf4csvp" path="res://assets/scripts/resource_weapon.gd" id="1_etmty"]
+
+[resource]
+script = ExtResource("1_etmty")
+weapon_name = &"Rusty Pipe"
+weapon_type = 1
+pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_rusty_pipe_p.tscn"
+weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_rusty_pipe_w.tscn"
+metadata/_custom_type_script = "uid://cwpodhjf4csvp"

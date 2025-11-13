@@ -1,16 +1,17 @@
-[gd_scene load_steps=10 format=4 uid="uid://8p21pj2xip4f"]
+[gd_scene load_steps=11 format=4 uid="uid://8p21pj2xip4f"]
 
-[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive.gd" id="1_cwhif"]
-[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="2_5koyn"]
-[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="3_1ulnn"]
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive.gd" id="1_vmhgn"]
+[ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="2_o5cji"]
+[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="3_7msx8"]
+[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="4_jpws1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dgubb"]
 size = Vector3(0.32006836, 0.6557617, 0.24316406)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go8lt"]
-albedo_texture = ExtResource("2_5koyn")
+albedo_texture = ExtResource("3_7msx8")
 normal_enabled = true
-normal_texture = ExtResource("3_1ulnn")
+normal_texture = ExtResource("4_jpws1")
 texture_filter = 2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hxx2q"]
@@ -68,10 +69,8 @@ freeze_mode = 1
 continuous_cd = true
 linear_damp = 1.0
 angular_damp = 1.0
-script = ExtResource("1_cwhif")
-prefab_path_pickup = &"res://assets/prefabs/weapon_rusty_pipe_p.tscn"
-prefab_path_weapon = &"res://assets/prefabs/weapon_rusty_pipe_w.tscn"
-interactive_name = &"Pipe"
+script = ExtResource("1_vmhgn")
+weapon_resource = ExtResource("2_o5cji")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8.742278e-08, -1.1464114e-14, -1, 0.28330055, 0.020958137, 2.318427e-09)

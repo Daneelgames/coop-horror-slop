@@ -1,13 +1,16 @@
-[gd_scene load_steps=8 format=4 uid="uid://dyeao5loqms31"]
+[gd_scene load_steps=16 format=4 uid="uid://c7elrvrqoyi2e"]
 
-[ext_resource type="Script" uid="uid://cbpt8dfmd3loy" path="res://assets/scripts/weapon.gd" id="1_yxjb5"]
-[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="2_dt8yx"]
-[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="3_yu5bk"]
+[ext_resource type="Script" uid="uid://cbpt8dfmd3loy" path="res://assets/scripts/weapon.gd" id="1_16eic"]
+[ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="2_ylkl6"]
+[ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="3_i6lfl"]
+[ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="4_qhnce"]
+[ext_resource type="Texture2D" uid="uid://dixv7of6phw28" path="res://addons/kenney_particle_pack/fire_02.png" id="5_cxj0a"]
+[ext_resource type="AudioStream" uid="uid://cdqlejb6d7sfg" path="res://assets/audio/fire.wav" id="6_sywq2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go8lt"]
-albedo_texture = ExtResource("2_dt8yx")
+albedo_texture = ExtResource("3_i6lfl")
 normal_enabled = true
-normal_texture = ExtResource("3_yu5bk")
+normal_texture = ExtResource("4_qhnce")
 texture_filter = 2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hxx2q"]
@@ -49,13 +52,41 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_4mmwe")
 
-[node name="WeaponRustyPipe" type="Node3D" node_paths=PackedStringArray("attack_points")]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ail72"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.67058825, 0, 1)
+albedo_texture = ExtResource("5_cxj0a")
+texture_filter = 2
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_tw7qq"]
+_data = [Vector2(0, 0.04147482), 0.0, 0.0, 0, 0, Vector2(0.06071428, 0.97432524), 0.0, 0.0, 0, 0, Vector2(1, 0.05431211), -2.1861095, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_cv04b"]
+curve = SubResource("Curve_tw7qq")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_hcskf"]
+angle_min = -720.0
+angle_max = 720.0
+gravity = Vector3(0, 2, 0)
+scale_min = 0.19999999
+scale_max = 0.5
+scale_curve = SubResource("CurveTexture_cv04b")
+
+[sub_resource type="QuadMesh" id="QuadMesh_ijily"]
+
+[node name="WeaponTorch" type="Node3D" node_paths=PackedStringArray("attack_points")]
 transform = Transform3D(0.9999999, 0, 0, 0, 1.0000002, 0, 0, 0, 0.99999994, 0, 0, 0)
-script = ExtResource("1_yxjb5")
-damage_min_max = Vector2i(30, 40)
+script = ExtResource("1_16eic")
+weapon_resource = ExtResource("2_ylkl6")
 attack_points = [NodePath("AttackPointNode3D"), NodePath("AttackPointNode3D2"), NodePath("AttackPointNode3D3"), NodePath("AttackPointNode3D4")]
 weapon_slot_position = Vector3(3.6044846, 10.317631, 3.410141)
-weapon_blocking_angle = 140
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8.742278e-08, -1.1464114e-14, -1, 0.07993118, -0.010865498, -4.6368423e-10)
@@ -77,3 +108,22 @@ transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8
 
 [node name="AttackPointNode3D4" type="Node3D" parent="."]
 transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422784e-08, 8.742278e-08, -1.1464114e-14, -1, 0.62026507, -0.01086556, -4.636896e-10)
+
+[node name="FireGPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.67208606, 0, 0)
+material_override = SubResource("StandardMaterial3D_ail72")
+lifetime = 0.5
+process_material = SubResource("ParticleProcessMaterial_hcskf")
+draw_pass_1 = SubResource("QuadMesh_ijily")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="FireGPUParticles3D"]
+light_color = Color(1, 0.8472153, 0.55758405, 1)
+light_energy = 2.0
+shadow_enabled = true
+omni_attenuation = 0.25
+
+[node name="FireAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="FireGPUParticles3D"]
+stream = ExtResource("6_sywq2")
+unit_size = 1.0
+max_db = 0.0
+autoplay = true

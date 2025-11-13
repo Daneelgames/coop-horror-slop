@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://duqoopnatiw2q"]
+
+[ext_resource type="Script" uid="uid://cwpodhjf4csvp" path="res://assets/scripts/resource_weapon.gd" id="1_3pqlt"]
+
+[resource]
+script = ExtResource("1_3pqlt")
+weapon_name = &"Torch"
+pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_torch_p.tscn"
+weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_torch_w.tscn"
+metadata/_custom_type_script = "uid://cwpodhjf4csvp"

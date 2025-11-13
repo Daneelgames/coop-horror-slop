@@ -1,14 +1,18 @@
-[gd_scene load_steps=8 format=4 uid="uid://drfwmdegv2tpe"]
+[gd_scene load_steps=11 format=4 uid="uid://ddvcpahdpbvc"]
 
-[ext_resource type="Script" uid="uid://cbpt8dfmd3loy" path="res://assets/scripts/weapon.gd" id="1_faeex"]
-[ext_resource type="Texture2D" uid="uid://bl4b3i30mcmxs" path="res://assets/meshes/MeleeWeaponsPack#1/FireAxe/FireAxe_Base_Color.png" id="2_iuo7g"]
-[ext_resource type="Texture2D" uid="uid://deu3nsf5aeh8s" path="res://assets/meshes/MeleeWeaponsPack#1/FireAxe/FireAxe_Normal.png" id="3_68oxa"]
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive.gd" id="1_j7cmu"]
+[ext_resource type="Texture2D" uid="uid://bl4b3i30mcmxs" path="res://assets/meshes/MeleeWeaponsPack#1/FireAxe/FireAxe_Base_Color.png" id="2_8w7u7"]
+[ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="2_072hg"]
+[ext_resource type="Texture2D" uid="uid://deu3nsf5aeh8s" path="res://assets/meshes/MeleeWeaponsPack#1/FireAxe/FireAxe_Normal.png" id="3_072hg"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_c0qol"]
+size = Vector3(0.32006836, 0.7792969, 0.14453125)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_prdun"]
-albedo_texture = ExtResource("2_iuo7g")
+albedo_texture = ExtResource("2_8w7u7")
 normal_enabled = true
 normal_scale = 2.0
-normal_texture = ExtResource("3_68oxa")
+normal_texture = ExtResource("3_072hg")
 texture_filter = 2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1rhh0"]
@@ -50,16 +54,33 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_vatvv")
 
-[node name="WeaponFireAxe" type="Node3D" node_paths=PackedStringArray("attack_points")]
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dgubb"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[node name="WeaponFireAxe" type="RigidBody3D"]
 transform = Transform3D(0.9999999, 0, 0, 0, 1.0000002, 0, 0, 0, 0.99999994, 0, 0, 0)
-script = ExtResource("1_faeex")
-damage_min_max = Vector2i(40, 60)
-attack_points = [NodePath("AttackPointNode3D"), NodePath("AttackPointNode3D2"), NodePath("AttackPointNode3D3"), NodePath("AttackPointNode3D4"), NodePath("AttackPointNode3D5")]
-weapon_slot_position = Vector3(0.17316498, 8.294342, 3.78641)
-weapon_blocking_angle = 180
+collision_layer = 4
+collision_mask = 3
+freeze_mode = 1
+continuous_cd = true
+linear_damp = 1.0
+angular_damp = 1.0
+script = ExtResource("1_j7cmu")
+weapon_resource = ExtResource("2_072hg")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.31895426, 0.027154861, 1.6302732e-09)
+shape = SubResource("BoxShape3D_c0qol")
 
 [node name="VisualParent" type="Node3D" parent="."]
-transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.045112643, 0.0053986907, -2.7171218e-10)
+unique_name_in_owner = true
+transform = Transform3D(-4.3711385e-08, 0.9999999, 0, 1.0000002, 4.371141e-08, 8.7422805e-08, 8.742277e-08, 3.8213714e-15, -0.99999994, 0.04511264, 0.005398692, -2.7171215e-10)
+top_level = true
 
 [node name="FireAxe2" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -0.002145201, 0.33522686, 0)
@@ -77,7 +98,13 @@ transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.74
 transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.42492026, 0.0053986907, -2.7171218e-10)
 
 [node name="AttackPointNode3D4" type="Node3D" parent="."]
-transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.61277413, 0.005398692, -2.7171204e-10)
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.57693154, 0.0053986907, -2.7171218e-10)
 
 [node name="AttackPointNode3D5" type="Node3D" parent="."]
-transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.7627184, 0.005398724, -2.7170924e-10)
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.6743912, 0.0053987205, -2.7170957e-10)
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+unique_name_in_owner = true
+replication_interval = 0.1
+delta_interval = 0.1
+replication_config = SubResource("SceneReplicationConfig_dgubb")
