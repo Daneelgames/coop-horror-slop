@@ -160,7 +160,7 @@ func attack_was_blocked(attack_target, hit_pos):
 		if attack_target.item_in_hands != null:
 			var item_in_hands = attack_target.item_in_hands
 			# weapon_blocking_angle is the total arc (e.g., 160 = 80 degrees on each side)
-			if angle_deg <= item_in_hands.weapon_blocking_angle / 2.0:
+			if angle_deg <= item_in_hands.weapon_resource.weapon_blocking_angle / 2.0:
 				return true
 		else:
 			# For units without weapons (like AI), allow blocking from front hemisphere

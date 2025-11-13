@@ -3,7 +3,7 @@ class_name AiCharacter
 @export var visual_node_3d : Node3D
 @export var visible_enemies : Array[Unit] = []
 @export var input_dir : Vector2
-@export var random_weapons_paths : Array[StringName]
+@export var random_weapons : Array[ResourceWeapon]
 var state = 'normal'
 @export var rotation_speed: float = 5.0  # How fast the AI rotates towards enemies
 @export var debug_ai_combat : bool = true  # Enable debug prints for AI combat
@@ -31,6 +31,7 @@ func _enter_tree():
 func _ready():
 	# Wait a frame to ensure node is fully ready and synced across all clients
 	await get_tree().process_frame
+	print("[AI_WEAPON_SPAWN] %s: Starting weapon spawn process (is_server: %s, has_multiplayer: %s)" % [name, multiplayer.is_server(), multiplayer.has_multiplayer_peer()])
 	spawn_random_weapon_to_hands()
 	
 	# Set home position to current position if not already set
@@ -101,62 +102,113 @@ func _exit_tree():
 		GameManager.ai_visibility_manager.unregister_ai_character(self)
 
 func spawn_random_weapon_to_hands():
+	print("[AI_WEAPON_SPAWN] %s: spawn_random_weapon_to_hands called (is_server: %s, has_multiplayer: %s)" % [name, multiplayer.is_server(), multiplayer.has_multiplayer_peer()])
+	print("[AI_WEAPON_SPAWN] %s: random_weapons array size: %d" % [name, random_weapons.size()])
+	
 	# Only server picks the random weapon to ensure synchronization
 	if multiplayer.is_server():
-		if random_weapons_paths.is_empty():
+		if random_weapons.is_empty():
+			print("[AI_WEAPON_SPAWN] %s: ERROR - random_weapons array is empty on server!" % name)
 			return
-		var weapon_index = randi() % random_weapons_paths.size()
-		var weapon_path = random_weapons_paths[weapon_index]
+		var weapon_index = randi() % random_weapons.size()
+		var weapon = random_weapons[weapon_index]
+		print("[AI_WEAPON_SPAWN] %s: Selected weapon index %d, weapon_resource: %s" % [name, weapon_index, weapon])
+		if weapon == null:
+			print("[AI_WEAPON_SPAWN] %s: ERROR - Selected weapon is null!" % name)
+			return
+		print("[AI_WEAPON_SPAWN] %s: Calling rpc_spawn_weapon.rpc()" % name)
 		# Pass weapon path string instead of index for better synchronization
-		rpc_spawn_weapon.rpc(weapon_path)
+		rpc_spawn_weapon.rpc(weapon)
 	else:
 		# If not server and not in multiplayer, spawn locally (for testing)
 		if not multiplayer.has_multiplayer_peer():
-			if random_weapons_paths.is_empty():
+			if random_weapons.is_empty():
+				print("[AI_WEAPON_SPAWN] %s: ERROR - random_weapons array is empty (single player mode)!" % name)
 				return
-			var weapon_index = randi() % random_weapons_paths.size()
-			var weapon_path = random_weapons_paths[weapon_index]
-			_spawn_weapon(weapon_path)
+			var weapon_index = randi() % random_weapons.size()
+			var weapon = random_weapons[weapon_index]
+			print("[AI_WEAPON_SPAWN] %s: Single player mode - spawning weapon directly, weapon_resource: %s" % [name, weapon])
+			_spawn_weapon(weapon)
+		else:
+			print("[AI_WEAPON_SPAWN] %s: Client waiting for server RPC (not spawning locally)" % name)
 
 @rpc("authority", "call_local", "reliable")
-func rpc_spawn_weapon(weapon_path: String):
-	_spawn_weapon(weapon_path)
+func rpc_spawn_weapon(weapon_resource: ResourceWeapon):
+	print("[AI_WEAPON_SPAWN] %s: rpc_spawn_weapon RPC received (is_server: %s, weapon_resource: %s)" % [name, multiplayer.is_server(), weapon_resource])
+	if weapon_resource == null:
+		print("[AI_WEAPON_SPAWN] %s: ERROR - weapon_resource is null in RPC!" % name)
+		return
+	_spawn_weapon(weapon_resource)
 
-func _spawn_weapon(weapon_path: String):
+func _spawn_weapon(weapon_resource: ResourceWeapon):
+	print("[AI_WEAPON_SPAWN] %s: _spawn_weapon called with weapon_resource: %s" % [name, weapon_resource])
+	
+	if weapon_resource == null:
+		print("[AI_WEAPON_SPAWN] %s: ERROR - weapon_resource parameter is null!" % name)
+		return
+	
 	# Ensure weapon_bone_attachment_3d is ready
+	print("[AI_WEAPON_SPAWN] %s: Checking weapon_bone_attachment_3d (is_node_ready: %s, weapon_bone_attachment_3d: %s)" % [name, is_node_ready(), weapon_bone_attachment_3d])
 	if not is_node_ready() or weapon_bone_attachment_3d == null:
+		print("[AI_WEAPON_SPAWN] %s: Waiting for node to be ready..." % name)
 		await ready
 		if weapon_bone_attachment_3d == null:
+			print("[AI_WEAPON_SPAWN] %s: ERROR - weapon_bone_attachment_3d is not available after ready!" % name)
 			push_error("weapon_bone_attachment_3d is not available")
 			return
 	
+	print("[AI_WEAPON_SPAWN] %s: weapon_bone_attachment_3d is ready: %s" % [name, weapon_bone_attachment_3d])
+	
 	# Remove existing weapon if any
 	if item_in_hands != null:
+		print("[AI_WEAPON_SPAWN] %s: Removing existing weapon: %s" % [name, item_in_hands])
 		item_in_hands.queue_free()
 		item_in_hands = null
 	
 	# Validate weapon path
-	if weapon_path == null or weapon_path == "":
+	print("[AI_WEAPON_SPAWN] %s: Checking weapon_prefab_path: '%s'" % [name, weapon_resource.weapon_prefab_path])
+	if weapon_resource.weapon_prefab_path == null or weapon_resource.weapon_prefab_path == "":
+		print("[AI_WEAPON_SPAWN] %s: ERROR - weapon_prefab_path is null or empty!" % name)
 		return
 	
 	# Load and instantiate weapon
-	var weapon_scene = load(weapon_path)
+	print("[AI_WEAPON_SPAWN] %s: Loading weapon scene from path: %s" % [name, weapon_resource.weapon_prefab_path])
+	var weapon_scene = load(weapon_resource.weapon_prefab_path)
 	if weapon_scene == null:
-		push_error("Failed to load weapon scene: " + str(weapon_path))
+		print("[AI_WEAPON_SPAWN] %s: ERROR - Failed to load weapon scene: %s" % [name, weapon_resource.weapon_prefab_path])
+		push_error("Failed to load weapon scene: " + str(weapon_resource.weapon_prefab_path))
 		return
 	
+	print("[AI_WEAPON_SPAWN] %s: Weapon scene loaded successfully, instantiating..." % name)
 	item_in_hands = weapon_scene.instantiate()
-	if item_in_hands == null or not item_in_hands is Weapon:
-		push_error("Failed to instantiate weapon or not a Weapon class: " + str(weapon_path))
-		if item_in_hands != null:
-			item_in_hands.queue_free()
-			item_in_hands = null
+	if item_in_hands == null:
+		print("[AI_WEAPON_SPAWN] %s: ERROR - Failed to instantiate weapon (item_in_hands is null)" % name)
+		push_error("Failed to instantiate weapon or not a Weapon class: " + str(weapon_resource.weapon_prefab_path))
 		return
+	
+	if not item_in_hands is Weapon:
+		print("[AI_WEAPON_SPAWN] %s: ERROR - Instantiated object is not a Weapon class (type: %s)" % [name, item_in_hands.get_class()])
+		push_error("Failed to instantiate weapon or not a Weapon class: " + str(weapon_resource.weapon_prefab_path))
+		item_in_hands.queue_free()
+		item_in_hands = null
+		return
+	
+	print("[AI_WEAPON_SPAWN] %s: Weapon instantiated successfully: %s" % [name, item_in_hands])
 	
 	# Add weapon to bone attachment
+	print("[AI_WEAPON_SPAWN] %s: Adding weapon to bone attachment..." % name)
 	weapon_bone_attachment_3d.add_child(item_in_hands)
+	
+	if item_in_hands.weapon_resource == null:
+		print("[AI_WEAPON_SPAWN] %s: WARNING - weapon.weapon_resource is null, setting from parameter" % name)
+		item_in_hands.weapon_resource = weapon_resource.duplicate()
+	else:
+		print("[AI_WEAPON_SPAWN] %s: Duplicating existing weapon_resource..." % name)
+		item_in_hands.weapon_resource = item_in_hands.weapon_resource.duplicate()
+	
 	item_in_hands.position = item_in_hands.weapon_slot_position
 	item_in_hands.scale = Vector3.ONE * 100
+	print("[AI_WEAPON_SPAWN] %s: SUCCESS - Weapon spawned and attached! (position: %s, scale: %s)" % [name, item_in_hands.position, item_in_hands.scale])
 
 #region RPC Methods for Combat
 # These RPC methods are called by the combat state to sync animations across clients
@@ -174,7 +226,7 @@ func rpc_start_attacking():
 	
 	# Apply forward push when attacking (only on server)
 	if multiplayer.is_server() and item_in_hands != null:
-		var push_force = item_in_hands.push_forward_on_attack_force
+		var push_force = item_in_hands.weapon_resource.push_forward_on_attack_force
 		if push_force > 0:
 			# Get direction towards closest enemy (where AI is looking)
 			var closest_enemy = _get_closest_visible_enemy()

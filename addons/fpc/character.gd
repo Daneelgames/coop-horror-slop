@@ -347,6 +347,16 @@ func rpc_drop_item(selected_item_index):
 	var drop_position = requesting_player.global_position + forward_direction * drop_distance
 	drop_position.y = requesting_player.global_position.y + 0.5  # Slightly above ground
 	
+	# Check if drop position is inside a wall (layer 1 - solids)
+	var space_state = requesting_player.get_world_3d().direct_space_state
+	var query = PhysicsRayQueryParameters3D.create(requesting_player.global_position, drop_position)
+	# Check only layer 1 (solids) - bit 0
+	query.collision_mask = (1 << 0)  # layer 1 only
+	var result = space_state.intersect_ray(query)
+	if result:
+		# Collision detected, can't drop here
+		return
+	
 	# Instantiate the pickup prefab
 	var pickup_scene = load(weapon_resource.pickup_prefab_path)
 	if pickup_scene == null:
@@ -556,19 +566,36 @@ func handle_attacking():
 	if is_attacking:
 		return
 	if Input.is_action_just_pressed("attack"):
-		rpc_melee_attack.rpc()
+		var attack_string = ''
+		if input_dir.y != 0:
+			attack_string = 'attack_vertical'
+		elif input_dir.x != 0:
+			attack_string = 'attack_horizontal'
+		else:
+			attack_string = ['attack_vertical', 'attack_horizontal'].pick_random()
+		rpc_melee_attack.rpc(attack_string)
 		
 @rpc("call_local")
-func rpc_melee_attack():
+func rpc_melee_attack(attack_string: String):
 	
-	var attack_string = ''
-	if input_dir.y != 0:
-		attack_string = 'attack_vertical'
-	elif input_dir.x != 0:
-		attack_string = 'attack_horizontal'
-	else:
-		attack_string = ['attack_vertical', 'attack_horizontal'].pick_random()
+	# Apply forward push when attacking (only on server)
+	if multiplayer.is_server() and item_in_hands != null and item_in_hands.weapon_resource != null:
+		var push_force = item_in_hands.weapon_resource.push_forward_on_attack_force
+		if push_force > 0:
+			# Get forward direction from camera/head (where player is looking)
+			# Use camera forward direction if available, otherwise use head
+			var forward_direction: Vector3
+			if CAMERA != null:
+				forward_direction = -CAMERA.global_transform.basis.z.normalized()
+			else:
+				forward_direction = -HEAD.global_transform.basis.z.normalized()
+			# Ignore Y component for horizontal push
+			forward_direction.y = 0
+			forward_direction = forward_direction.normalized()
+			velocity += forward_direction * push_force
+	
 	mesh_animation_player.play(attack_string, 0.1)
+
 	is_attacking = true
 	if item_in_hands:
 		item_in_hands.set_dangerous(true, self)

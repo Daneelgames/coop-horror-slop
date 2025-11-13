@@ -1,9 +1,13 @@
-[gd_scene load_steps=49 format=4 uid="uid://b1wtst1i1aqdl"]
+[gd_scene load_steps=53 format=4 uid="uid://b1wtst1i1aqdl"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_q1sc8"]
+[ext_resource type="Script" uid="uid://cwpodhjf4csvp" path="res://assets/scripts/resource_weapon.gd" id="2_cf55f"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_pjyar"]
 [ext_resource type="Texture2D" uid="uid://8mo78r7i5pk3" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_normal.png" id="3_dqj5t"]
+[ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="3_lpatj"]
 [ext_resource type="Texture2D" uid="uid://bjbg7bb722uhe" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_diffuse.png" id="4_72wbg"]
+[ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="4_ithmg"]
+[ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="5_0yo82"]
 [ext_resource type="Script" uid="uid://b0eohos8rbidu" path="res://assets/scripts/ai_state_machine.gd" id="5_i4cim"]
 [ext_resource type="AnimationLibrary" uid="uid://dh0c63nv708ei" path="res://assets/animations/unit_anims.res" id="5_m2jqq"]
 [ext_resource type="AudioStream" uid="uid://b7ys0ad0k7jx5" path="res://assets/audio/FootStepRun_1.wav" id="6_ay662"]
@@ -459,7 +463,7 @@ platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_q1sc8")
 visual_node_3d = NodePath("VisualParent")
-random_weapons_paths = Array[StringName]([&"res://assets/prefabs/weapons/weapon_axe_w.tscn", &"res://assets/prefabs/weapons/weapon_rusty_pipe_w.tscn"])
+random_weapons = Array[ExtResource("2_cf55f")]([ExtResource("3_lpatj"), ExtResource("4_ithmg"), ExtResource("5_0yo82")])
 debug_ai_combat = false
 base_speed = 2.0
 patrol_from_home_distance_min_max = Vector2(5, 10)

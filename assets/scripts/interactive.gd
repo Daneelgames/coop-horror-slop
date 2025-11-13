@@ -4,6 +4,10 @@ class_name Interactive
 @export var weapon_resource : ResourceWeapon
 @onready var visual_parent: Node3D = %VisualParent
 
+func _ready() -> void:
+	if weapon_resource:
+		weapon_resource = weapon_resource.duplicate()
+
 func _process(delta: float) -> void:
 	visual_parent.global_position = visual_parent.global_position.lerp(global_position, 10 * delta)
 	var current_basis = Basis.from_euler(visual_parent.global_rotation)
