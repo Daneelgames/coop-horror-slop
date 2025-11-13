@@ -55,6 +55,14 @@ func _spawn_player_scene(peer_id: int) -> Node:
 	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
 	return player
 
+func _spawn_pickup_scene(pickup_prefab_path: String) -> Node:
+	var pickup_scene = load(pickup_prefab_path)
+	if pickup_scene == null:
+		return null
+	var pickup: Node = pickup_scene.instantiate()
+	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
+	return pickup
+
 func start_multiplayer_game():
 	if !multiplayer.is_server():
 		push_warning("start_multiplayer_game called on a non-authority peer.")
@@ -97,6 +105,7 @@ func _ensure_game_spawner() -> void:
 		_game_spawner = MultiplayerSpawner.new()
 		_game_spawner.name = "GameLevelSpawner"
 		_game_spawner.spawn_path = NodePath(".")
+		_game_spawner.spawn_function = Callable(self, "_spawn_pickup_scene")
 		_game_root.add_child(_game_spawner)
 	if !_spawner_has_game_level:
 		_game_spawner.add_spawnable_scene(GAME_LEVEL_SCENE_PATH)

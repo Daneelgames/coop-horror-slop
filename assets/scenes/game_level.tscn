@@ -65,6 +65,7 @@ sky_material = SubResource("ProceduralSkyMaterial_8kkgg")
 background_mode = 1
 sky = SubResource("Sky_vcb5n")
 ambient_light_source = 2
+ambient_light_color = Color(0.26293245, 0.26293245, 0.26293245, 1)
 tonemap_mode = 2
 tonemap_white = 2.0
 glow_enabled = true

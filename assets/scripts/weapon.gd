@@ -45,13 +45,19 @@ func _physics_process(_delta: float) -> void:
 		weapon_resource.weapon_durability_current -= reduction_amount
 		weapon_resource.weapon_durability_current = max(0.0, weapon_resource.weapon_durability_current)
 		
+		# Sync durability to clients when it changes (every frame for smooth updates)
+		# Only sync if durability actually changed
+		if abs(old_durability - weapon_resource.weapon_durability_current) > 0.001:
+			if weapon_owner is PlayerCharacter:
+				weapon_owner.rpc_sync_weapon_durability.rpc(weapon_resource.weapon_durability_current)
+		
 		# Detailed debug output every frame (can be throttled if too verbose)
-		var owner_name = "null"
-		if weapon_owner != null:
-			owner_name = str(weapon_owner.name)
-		var durability_percent = 0.0
-		if weapon_resource.weapon_durability_max > 0:
-			durability_percent = weapon_resource.weapon_durability_current / weapon_resource.weapon_durability_max * 100.0
+		# var owner_name = "null"
+		# if weapon_owner != null:
+		# 	owner_name = str(weapon_owner.name)
+		# var durability_percent = 0.0
+		# if weapon_resource.weapon_durability_max > 0:
+		# 	durability_percent = weapon_resource.weapon_durability_current / weapon_resource.weapon_durability_max * 100.0
 		# print("[WEAPON DURABILITY] %s | Owner: %s | Delta: %.4f | Speed: %.2f/sec | Reduction: %.4f | %.2f -> %.2f (%.1f%%)" % [
 		# 	str(weapon_resource.weapon_name),
 		# 	owner_name,
@@ -68,7 +74,8 @@ func _physics_process(_delta: float) -> void:
 			weapon_broke()
 			return
 	elif weapon_owner is PlayerCharacter:
-		print("cant reduce durability, weapon_resource.reducing_durability_when_in_hands is false")
+		#print("cant reduce durability, weapon_resource.reducing_durability_when_in_hands is false")
+		pass
 		
 	if not is_dangerous:
 		# Update positions even when not dangerous

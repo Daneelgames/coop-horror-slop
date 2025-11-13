@@ -370,8 +370,10 @@ func rpc_drop_item(selected_item_index):
 		# Serialize weapon resource for RPC
 		var weapon_data = GameManager.serialize_weapon_resource(weapon_resource)
 		
-		# Tell all clients to spawn the pickup
-		rpc_spawn_dropped_pickup.rpc(drop_position, weapon_data)
+		# Tell all clients to spawn the pickup - must call from server's perspective
+		# Call from requesting_player node so it broadcasts to all clients
+		print("[DROP ITEM] Server spawning pickup at %s with weapon_data: %s" % [drop_position, weapon_data])
+		requesting_player.rpc_spawn_dropped_pickup.rpc(drop_position, weapon_data)
 		
 		# Remove item from inventory
 		requesting_player.carrying_items.erase(item_key)
@@ -400,33 +402,58 @@ func rpc_drop_item(selected_item_index):
 				serialized_inventory[key] = GameManager.serialize_weapon_resource(requesting_player.carrying_items[key])
 			requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, serialized_inventory)
 
-# Spawn dropped pickup on all clients
-@rpc("authority", "call_local", "reliable")
+# Spawn dropped pickup using MultiplayerSpawner for synchronization
+@rpc("any_peer", "call_local", "reliable")
 func rpc_spawn_dropped_pickup(drop_position: Vector3, weapon_data: Dictionary):
+	# Only server spawns pickups
+	if not multiplayer.is_server():
+		return
+	
+	print("[DROP ITEM] Server spawning pickup at %s" % drop_position)
 	# Deserialize weapon resource from data
 	var weapon_resource = GameManager.deserialize_weapon_resource(weapon_data)
 	if weapon_resource == null:
+		print("[DROP ITEM] Failed to deserialize weapon_resource!")
 		return
 	
-	# Instantiate the pickup prefab
-	var pickup_scene = load(weapon_resource.pickup_prefab_path)
-	if pickup_scene == null:
+	# Use GameManager's spawner to spawn the pickup (ensures synchronization)
+	var game_root = GameManager._game_level
+	if game_root == null:
+		print("[DROP ITEM] ERROR: GameManager._game_level is null!")
 		return
 	
-	var pickup_instance = pickup_scene.instantiate()
+	var game_spawner = GameManager._game_spawner
+	if game_spawner == null:
+		print("[DROP ITEM] ERROR: GameManager._game_spawner is null!")
+		return
+	
+	# Register the pickup prefab with the spawner
+	# The spawn function should already be set in GameManager._ensure_game_spawner()
+	var pickup_prefab_path = weapon_resource.pickup_prefab_path
+	game_spawner.add_spawnable_scene(pickup_prefab_path)
+	
+	# Spawn using MultiplayerSpawner - this ensures all clients get synchronized copies
+	# The spawner will add it to its spawn_path (which is "."), then we reparent it
+	var pickup_instance = game_spawner.spawn(pickup_prefab_path)
+	
 	if pickup_instance == null or not pickup_instance is Interactive:
+		print("[DROP ITEM] Failed to spawn pickup!")
 		return
 	
 	var pickup = pickup_instance as Interactive
+	
+	# Reparent to game_level (this happens on server, clients will sync via MultiplayerSpawner)
+	if pickup.parent == null:
+		game_root.add_child(pickup)
 	pickup.global_position = drop_position
+
+	pickup.snap_visual()
 	pickup.weapon_resource = weapon_resource.duplicate()
 	
-	# Add to scene tree (under GameRoot)
-	var game_root = GameManager._game_level
-	if game_root == null:
-		return
+	# Set multiplayer authority to server so RPCs work
+	pickup.set_multiplayer_authority(1)
 	
-	game_root.add_child(pickup)
+	print("[DROP ITEM] Pickup spawned successfully: %s at %s" % [pickup.name, drop_position])
 
 @onready var interaction_feedback_label_3d: Label3D = %InteractionFeedbackLabel3D
 
@@ -451,121 +478,20 @@ func handle_interaction():
 		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
 			
 		if Input.is_action_just_pressed(controls.INTERACTION):
-			var weapon_path = col.get_path()
-			
-			# Serialize weapon resource for RPC
-			var weapon_data = GameManager.serialize_weapon_resource(col.weapon_resource)
-			
-			# Client sends request to server
+			# Call RPC directly on the Interactive pickup node
+			# The pickup node handles the pickup logic itself
+			# Since pickups are spawned via MultiplayerSpawner, they're synchronized
 			if multiplayer.is_server():
 				# If we're the server, process directly
-				rpc_request_weapon_pickup(weapon_path, weapon_data)
+				col.rpc_request_pickup()
 			else:
 				# Otherwise send RPC to server (peer ID 1)
-				rpc_request_weapon_pickup.rpc_id(1, weapon_path, weapon_data)
+				col.rpc_request_pickup.rpc_id(1)
 	else:
 		interaction_feedback_label_3d.visible = false
 			
 
 @onready var items_bag: Node3D = %ItemsBag
-
-# Client requests weapon pickup from server
-@rpc("any_peer", "reliable")
-func rpc_request_weapon_pickup(pickup_node_path: NodePath, weapon_data: Dictionary):
-	# Only server processes this
-	if !multiplayer.is_server():
-		return
-	
-	# Deserialize weapon resource from data
-	var weapon_resource = GameManager.deserialize_weapon_resource(weapon_data)
-	if weapon_resource == null:
-		return
-	
-	# Get requesting peer ID - if called directly (server), use server's peer ID (1)
-	var requesting_peer_id = multiplayer.get_unique_id()
-	if multiplayer.get_remote_sender_id() != 0:
-		requesting_peer_id = multiplayer.get_remote_sender_id()
-	
-	# Find the weapon node
-	var weapon_node = get_node_or_null(pickup_node_path)
-	if weapon_node == null or not weapon_node is Interactive:
-		return
-	
-	var weapon = weapon_node as Interactive
-	
-	# Get the requesting player's character - find via scene tree path
-	# Path structure: Main/GameRoot/Players/PlayerSpawner/Player_{peer_id}
-	var root = get_tree().root
-	var player_path = root.get_node_or_null("Main/GameRoot/Players/PlayerSpawner/Player_%d" % requesting_peer_id)
-	var requesting_player = player_path
-	
-	if requesting_player == null:
-		# Try searching all nodes for the player
-		var all_players = get_tree().get_nodes_in_group("players")
-		for player in all_players:
-			if player.name == "Player_%d" % requesting_peer_id:
-				requesting_player = player
-				break
-	
-	if requesting_player == null:
-		return
-	
-	# Check if player can pick up (inventory not full)
-	if requesting_player.carrying_items.size() >= requesting_player.inventory_slots_max:
-		return
-	
-	# Process pickup on server
-	# Handle duplicate names by appending a counter
-	var final_name = weapon_resource.weapon_name
-	var counter = 1
-	while requesting_player.carrying_items.has(final_name):
-		final_name = StringName("%s %d" % [weapon_resource.weapon_name, counter+1])
-		counter += 1
-	
-	requesting_player.carrying_items[final_name] = weapon_resource
-	
-	# Clamp selected index if needed
-	requesting_player._clamp_selected_index()
-	
-	# Tell all clients to destroy the weapon
-	# Call from server's own character node (peer ID 1) to ensure proper authority
-	var server_player = root.get_node_or_null("Main/GameRoot/Players/PlayerSpawner/Player_1")
-	if server_player == null:
-		# Fallback: find server's player node
-		var all_players = get_tree().get_nodes_in_group("players")
-		for player in all_players:
-			if player.name == "Player_1":
-				server_player = player
-				break
-	
-	if server_player != null:
-		server_player.rpc_destroy_weapon.rpc(pickup_node_path)
-	else:
-		# Fallback: call  directly if we can't find server player
-		rpc_destroy_weapon.rpc(pickup_node_path)
-	
-	# Tell requesting client to update their inventory UI
-	# If requesting peer is the server, update directly (no RPC needed)
-	if requesting_peer_id == 1:
-		# Server picking up - update directly
-		if requesting_player.inventory_slots_panel_container:
-			requesting_player.inventory_slots_panel_container.update_inventory_items_ui(requesting_player.carrying_items, requesting_player.current_selected_item_index)
-	else:
-		# Client picking up - send RPC to their character node
-		# Serialize inventory dictionary for RPC
-		var serialized_inventory: Dictionary = {}
-		for key in requesting_player.carrying_items.keys():
-			serialized_inventory[key] = GameManager.serialize_weapon_resource(requesting_player.carrying_items[key])
-		requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, serialized_inventory)
-	
-	# Update item in hands for all clients
-	var item_keys = requesting_player.carrying_items.keys()
-	if item_keys.size() > requesting_player.current_selected_item_index:
-		var selected_item_resource = requesting_player.carrying_items[item_keys[requesting_player.current_selected_item_index]]
-		var selected_weapon_data = GameManager.serialize_weapon_resource(selected_item_resource)
-		requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_weapon_data)
-	else:
-		requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
 	
 # Server tells all clients to destroy the weapon
 # This RPC can be called by the server from any character node
@@ -577,6 +503,32 @@ func rpc_destroy_weapon(weapon_path: NodePath):
 	var weapon_node = get_node_or_null(weapon_path)
 	if weapon_node != null:
 		weapon_node.queue_free()
+
+@rpc("any_peer", "call_local", "reliable")
+func rpc_destroy_weapon_by_position(weapon_position: Vector3):
+	# Only process if called from server (peer ID 1)
+	var sender_id = multiplayer.get_remote_sender_id()
+	if not multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+	
+	# Find and destroy weapon by position
+	var game_root = GameManager._game_level
+	if game_root == null:
+		return
+	
+	var search_radius = 0.5  # Search within 0.5 units
+	for child in game_root.get_children():
+		if child is Interactive:
+			var distance = child.global_position.distance_to(weapon_position)
+			if distance < search_radius:
+				print("[DESTROY WEAPON] Destroying pickup at position %s" % weapon_position)
+				child.queue_free()
+				return
+	
+	print("[DESTROY WEAPON] Could not find pickup at position %s to destroy" % weapon_position)
 
 # Server tells requesting client to update their inventory UI
 # This RPC can be called by the server from any character node
@@ -1015,23 +967,78 @@ func change_selected_item_index(delta: int):
 	elif current_selected_item_index >= item_count:
 		current_selected_item_index = 0
 	
-	# Update UI
+	# Update UI locally first
 	if inventory_slots_panel_container:
 		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
-	# Get the item path before calling RPC
+	
+	# Send request to server to update item in hands for all clients
+	if multiplayer.is_server():
+		# Server processes directly
+		_rpc_update_item_in_hands_server(current_selected_item_index)
+	else:
+		# Client sends request to server
+		rpc_request_change_item.rpc(current_selected_item_index)
+
+@rpc("any_peer", "reliable")
+func rpc_request_change_item(item_index: int):
+	# Only server processes this
+	if !multiplayer.is_server():
+		return
+	
+	# Get requesting peer ID
+	var requesting_peer_id = multiplayer.get_unique_id()
+	if multiplayer.get_remote_sender_id() != 0:
+		requesting_peer_id = multiplayer.get_remote_sender_id()
+	
+	# Find requesting player
+	var root = get_tree().root
+	var player_path = root.get_node_or_null("Main/GameRoot/Players/PlayerSpawner/Player_%d" % requesting_peer_id)
+	var requesting_player = player_path
+	
+	if requesting_player == null:
+		var all_players = get_tree().get_nodes_in_group("players")
+		for player in all_players:
+			if player.name == "Player_%d" % requesting_peer_id:
+				requesting_player = player
+				break
+	
+	if requesting_player == null:
+		return
+	
+	# Sync durability before switching
+	if requesting_player.item_in_hands != null and requesting_player.item_in_hands.weapon_resource != null:
+		requesting_player._sync_weapon_durability_to_inventory()
+	
+	# Update selected index
+	requesting_player.current_selected_item_index = item_index
+	requesting_player._clamp_selected_index()
+	
+	# Broadcast update to all clients
+	requesting_player._rpc_update_item_in_hands_server(requesting_player.current_selected_item_index)
+
+func _rpc_update_item_in_hands_server(item_index: int):
+	# Get the item and broadcast to all clients
 	var item_keys = carrying_items.keys()
-	if item_keys.size() > current_selected_item_index:
-		var selected_item_res = carrying_items[item_keys[current_selected_item_index]]
+	if item_keys.size() > item_index and item_index >= 0:
+		var selected_item_res = carrying_items[item_keys[item_index]]
 		var weapon_data = GameManager.serialize_weapon_resource(selected_item_res)
-		rpc_update_item_in_hands.rpc(current_selected_item_index, weapon_data)
+		rpc_update_item_in_hands.rpc(item_index, weapon_data)
 	else:
 		rpc_update_item_in_hands.rpc(-1, {})  # No item selected
 	
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
 
-@rpc("authority", "call_local", "reliable")
+@rpc("any_peer", "call_local", "reliable")
 func rpc_update_item_in_hands(item_index: int, weapon_data: Dictionary):
+	# Only process if called from server (peer ID 1)
+	var sender_id = multiplayer.get_remote_sender_id()
+	if not multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+	
 	if item_in_hands != null:
 		item_in_hands.queue_free()
 		item_in_hands = null
@@ -1057,6 +1064,33 @@ func rpc_update_item_in_hands(item_index: int, weapon_data: Dictionary):
 	print("item_in_hands.weapon_resource.reducing_durability_when_in_hands %s"%item_in_hands.weapon_resource.reducing_durability_when_in_hands)
 	item_in_hands.position = item_in_hands.weapon_slot_position
 	item_in_hands.scale = Vector3.ONE * 100
+	
+	# Sync durability to client if this is a server call
+	if multiplayer.is_server() and item_in_hands.weapon_resource != null:
+		rpc_sync_weapon_durability.rpc(item_in_hands.weapon_resource.weapon_durability_current)
+
+@rpc("any_peer", "call_local", "reliable")
+func rpc_sync_weapon_durability(durability: float):
+	# Only process if called from server (peer ID 1)
+	var sender_id = multiplayer.get_remote_sender_id()
+	if not multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+	
+	# Update durability on client's weapon
+	if item_in_hands != null and item_in_hands.weapon_resource != null:
+		var old_durability = item_in_hands.weapon_resource.weapon_durability_current
+		item_in_hands.weapon_resource.weapon_durability_current = durability
+		# Also sync to inventory
+		_sync_weapon_durability_to_inventory()
+		# Update UI
+		if inventory_slots_panel_container:
+			inventory_slots_panel_container.update_durability_display(carrying_items)
+	else:
+		#print("[DURABILITY SYNC] Warning: item_in_hands or weapon_resource is null!")
+		pass
 
 func _sync_weapon_durability_to_inventory():
 	# Sync durability from item_in_hands.weapon_resource back to carrying_items
@@ -1078,16 +1112,17 @@ func _sync_weapon_durability_to_inventory():
 				# Sync durability
 				inventory_resource.weapon_durability_current = equipped_resource.weapon_durability_current
 				# Debug output when durability changes significantly
-				if abs(old_inventory_durability - inventory_resource.weapon_durability_current) > 0.1:
-					print("[DURABILITY SYNC] %s (index %d): Synced %.2f -> %.2f (equipped: %.2f)" % [
-						current_item_key,
-						current_selected_item_index,
-						old_inventory_durability,
-						inventory_resource.weapon_durability_current,
-						equipped_resource.weapon_durability_current
-					])
+				#if abs(old_inventory_durability - inventory_resource.weapon_durability_current) > 0.1:
+					#print("[DURABILITY SYNC] %s (index %d): Synced %.2f -> %.2f (equipped: %.2f)" % [
+						#current_item_key,
+						#current_selected_item_index,
+						#old_inventory_durability,
+						#inventory_resource.weapon_durability_current,
+						#equipped_resource.weapon_durability_current
+					#])
 			else:
-				print("[DURABILITY SYNC WARNING] Selected item doesn't match equipped weapon!")
+				#print("[DURABILITY SYNC WARNING] Selected item doesn't match equipped weapon!")
+				pass
 	else:
 		# Fallback: Find matching item by weapon_name and weapon_type (for cases where index might be invalid)
 		for key in item_keys:
@@ -1098,13 +1133,13 @@ func _sync_weapon_durability_to_inventory():
 					# Sync durability
 					inventory_resource.weapon_durability_current = equipped_resource.weapon_durability_current
 					# Debug output when durability changes significantly
-					if abs(old_inventory_durability - inventory_resource.weapon_durability_current) > 0.1:
-						print("[DURABILITY SYNC FALLBACK] %s: Synced %.2f -> %.2f (equipped: %.2f)" % [
-							key,
-							old_inventory_durability,
-							inventory_resource.weapon_durability_current,
-							equipped_resource.weapon_durability_current
-						])
+					#if abs(old_inventory_durability - inventory_resource.weapon_durability_current) > 0.1:
+						#print("[DURABILITY SYNC FALLBACK] %s: Synced %.2f -> %.2f (equipped: %.2f)" % [
+							#key,
+							#old_inventory_durability,
+							#inventory_resource.weapon_durability_current,
+							#equipped_resource.weapon_durability_current
+						#])
 					break
 
 func _clamp_selected_index():
