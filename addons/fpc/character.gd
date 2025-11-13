@@ -304,10 +304,6 @@ func handle_dropping_item():
 
 @rpc("authority", 'call_local', "reliable")
 func rpc_drop_item(selected_item_index):
-	# Only server processes this
-	if !multiplayer.is_server():
-		return
-	
 	# Get requesting peer ID - if called directly (server), use server's peer ID (1)
 	var requesting_peer_id = multiplayer.get_unique_id()
 	if multiplayer.get_remote_sender_id() != 0:
@@ -329,32 +325,75 @@ func rpc_drop_item(selected_item_index):
 	if requesting_player == null:
 		return
 	
-	# Check if there's an item to drop
-	var item_keys = requesting_player.carrying_items.keys()
-	if item_keys.size() == 0 or selected_item_index < 0 or selected_item_index >= item_keys.size():
-		return
-	
-	# Get the weapon resource from the selected item
-	var item_key = item_keys[selected_item_index]
-	var weapon_resource = requesting_player.carrying_items[item_key]
-	
-	if weapon_resource == null or weapon_resource.pickup_prefab_path == null or weapon_resource.pickup_prefab_path == "":
-		return
-	
-	# Calculate drop position in front of player
-	var drop_distance = 1.5  # Distance in front of player
-	var forward_direction = -requesting_player.CAMERA.global_transform.basis.z  # Forward is negative Z
-	var drop_position = requesting_player.global_position + forward_direction * drop_distance
-	drop_position.y = requesting_player.global_position.y + 0.5  # Slightly above ground
-	
-	# Check if drop position is inside a wall (layer 1 - solids)
-	var space_state = requesting_player.get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(requesting_player.global_position, drop_position)
-	# Check only layer 1 (solids) - bit 0
-	query.collision_mask = (1 << 0)  # layer 1 only
-	var result = space_state.intersect_ray(query)
-	if result:
-		# Collision detected, can't drop here
+	# Only server processes inventory changes and validation
+	if multiplayer.is_server():
+		# Check if there's an item to drop
+		var item_keys = requesting_player.carrying_items.keys()
+		if item_keys.size() == 0 or selected_item_index < 0 or selected_item_index >= item_keys.size():
+			return
+		
+		# Get the weapon resource from the selected item
+		var item_key = item_keys[selected_item_index]
+		var weapon_resource = requesting_player.carrying_items[item_key]
+		
+		if weapon_resource == null or weapon_resource.pickup_prefab_path == null or weapon_resource.pickup_prefab_path == "":
+			return
+		
+		# Calculate drop position in front of player
+		var drop_distance = 1.5  # Distance in front of player
+		var forward_direction = -requesting_player.CAMERA.global_transform.basis.z  # Forward is negative Z
+		var drop_position = requesting_player.global_position + forward_direction * drop_distance
+		drop_position.y = requesting_player.global_position.y + 0.5  # Slightly above ground
+		
+		# Check if drop position is inside a wall (layer 1 - solids)
+		var space_state = requesting_player.get_world_3d().direct_space_state
+		var query = PhysicsRayQueryParameters3D.create(requesting_player.global_position, drop_position)
+		# Check only layer 1 (solids) - bit 0
+		query.collision_mask = (1 << 0)  # layer 1 only
+		var result = space_state.intersect_ray(query)
+		if result:
+			# Collision detected, can't drop here
+			return
+		
+		# Serialize weapon resource for RPC
+		var weapon_data = requesting_player._serialize_weapon_resource(weapon_resource)
+		
+		# Tell all clients to spawn the pickup
+		rpc_spawn_dropped_pickup.rpc(drop_position, weapon_data)
+		
+		# Remove item from inventory
+		requesting_player.carrying_items.erase(item_key)
+		
+		# Clamp selected index if needed
+		requesting_player._clamp_selected_index()
+		
+		# Update inventory UI
+		if requesting_player.inventory_slots_panel_container:
+			requesting_player.inventory_slots_panel_container.update_inventory_items_ui(requesting_player.carrying_items, requesting_player.current_selected_item_index)
+		
+		# Update item in hands for all clients
+		var new_item_keys = requesting_player.carrying_items.keys()
+		if new_item_keys.size() > requesting_player.current_selected_item_index and requesting_player.current_selected_item_index >= 0:
+			var selected_item_resource = requesting_player.carrying_items[new_item_keys[requesting_player.current_selected_item_index]]
+			var selected_weapon_data = requesting_player._serialize_weapon_resource(selected_item_resource)
+			requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_weapon_data)
+		else:
+			requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
+		
+		# Update inventory on requesting client if not server
+		if requesting_peer_id != 1:
+			# Serialize inventory dictionary for RPC
+			var serialized_inventory: Dictionary = {}
+			for key in requesting_player.carrying_items.keys():
+				serialized_inventory[key] = requesting_player._serialize_weapon_resource(requesting_player.carrying_items[key])
+			requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, serialized_inventory)
+
+# Spawn dropped pickup on all clients
+@rpc("authority", "call_local", "reliable")
+func rpc_spawn_dropped_pickup(drop_position: Vector3, weapon_data: Dictionary):
+	# Deserialize weapon resource from data
+	var weapon_resource = _deserialize_weapon_resource(weapon_data)
+	if weapon_resource == null:
 		return
 	
 	# Instantiate the pickup prefab
@@ -372,33 +411,10 @@ func rpc_drop_item(selected_item_index):
 	
 	# Add to scene tree (under GameRoot)
 	var game_root = GameManager._game_level
-	
 	if game_root == null:
 		return
 	
 	game_root.add_child(pickup)
-	
-	# Remove item from inventory
-	requesting_player.carrying_items.erase(item_key)
-	
-	# Clamp selected index if needed
-	requesting_player._clamp_selected_index()
-	
-	# Update inventory UI
-	if requesting_player.inventory_slots_panel_container:
-		requesting_player.inventory_slots_panel_container.update_inventory_items_ui(requesting_player.carrying_items, requesting_player.current_selected_item_index)
-	
-	# Update item in hands for all clients
-	var new_item_keys = requesting_player.carrying_items.keys()
-	if new_item_keys.size() > requesting_player.current_selected_item_index and requesting_player.current_selected_item_index >= 0:
-		var selected_item_resource = requesting_player.carrying_items[new_item_keys[requesting_player.current_selected_item_index]]
-		requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_item_resource)
-	else:
-		requesting_player.rpc_update_item_in_hands.rpc(-1, null)  # No item selected
-	
-	# Update inventory on requesting client if not server
-	if requesting_peer_id != 1:
-		requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, requesting_player.carrying_items)
 
 @onready var interaction_feedback_label_3d: Label3D = %InteractionFeedbackLabel3D
 
@@ -425,13 +441,16 @@ func handle_interaction():
 		if Input.is_action_just_pressed(controls.INTERACTION):
 			var weapon_path = col.get_path()
 			
+			# Serialize weapon resource for RPC
+			var weapon_data = _serialize_weapon_resource(col.weapon_resource)
+			
 			# Client sends request to server
 			if multiplayer.is_server():
 				# If we're the server, process directly
-				rpc_request_weapon_pickup(weapon_path, col.weapon_resource)
+				rpc_request_weapon_pickup(weapon_path, weapon_data)
 			else:
 				# Otherwise send RPC to server (peer ID 1)
-				rpc_request_weapon_pickup.rpc_id(1, weapon_path, col.weapon_resource)
+				rpc_request_weapon_pickup.rpc_id(1, weapon_path, weapon_data)
 	else:
 		interaction_feedback_label_3d.visible = false
 			
@@ -440,9 +459,14 @@ func handle_interaction():
 
 # Client requests weapon pickup from server
 @rpc("any_peer", "reliable")
-func rpc_request_weapon_pickup(pickup_node_path: NodePath, weapon_resource : ResourceWeapon):
+func rpc_request_weapon_pickup(pickup_node_path: NodePath, weapon_data: Dictionary):
 	# Only server processes this
 	if !multiplayer.is_server():
+		return
+	
+	# Deserialize weapon resource from data
+	var weapon_resource = _deserialize_weapon_resource(weapon_data)
+	if weapon_resource == null:
 		return
 	
 	# Get requesting peer ID - if called directly (server), use server's peer ID (1)
@@ -516,15 +540,20 @@ func rpc_request_weapon_pickup(pickup_node_path: NodePath, weapon_resource : Res
 			requesting_player.inventory_slots_panel_container.update_inventory_items_ui(requesting_player.carrying_items, requesting_player.current_selected_item_index)
 	else:
 		# Client picking up - send RPC to their character node
-		requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, requesting_player.carrying_items)
+		# Serialize inventory dictionary for RPC
+		var serialized_inventory: Dictionary = {}
+		for key in requesting_player.carrying_items.keys():
+			serialized_inventory[key] = requesting_player._serialize_weapon_resource(requesting_player.carrying_items[key])
+		requesting_player.rpc_update_inventory.rpc_id(requesting_peer_id, serialized_inventory)
 	
 	# Update item in hands for all clients
 	var item_keys = requesting_player.carrying_items.keys()
 	if item_keys.size() > requesting_player.current_selected_item_index:
 		var selected_item_resource = requesting_player.carrying_items[item_keys[requesting_player.current_selected_item_index]]
-		requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_item_resource)
+		var selected_weapon_data = requesting_player._serialize_weapon_resource(selected_item_resource)
+		requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_weapon_data)
 	else:
-		requesting_player.rpc_update_item_in_hands.rpc(-1, null)  # No item selected
+		requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
 	
 # Server tells all clients to destroy the weapon
 # This RPC can be called by the server from any character node
@@ -540,14 +569,19 @@ func rpc_destroy_weapon(weapon_path: NodePath):
 # Server tells requesting client to update their inventory UI
 # This RPC can be called by the server from any character node
 @rpc("any_peer", "reliable")
-func rpc_update_inventory(inventory: Dictionary[StringName, ResourceWeapon]):
+func rpc_update_inventory(serialized_inventory: Dictionary):
 	# Only process if called from server (peer ID 1)
 	# When client receives this, remote_sender_id will be 1 (server)
 	if !multiplayer.is_server():
 		if multiplayer.get_remote_sender_id() != 1:
 			return
-	# Server can also process this locally if needed
-	carrying_items = inventory
+	# Deserialize inventory dictionary
+	carrying_items.clear()
+	for key in serialized_inventory.keys():
+		var weapon_data = serialized_inventory[key] as Dictionary
+		if weapon_data != null:
+			carrying_items[key] = _deserialize_weapon_resource(weapon_data)
+	
 	_clamp_selected_index()
 	if inventory_slots_panel_container:
 		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
@@ -556,9 +590,10 @@ func rpc_update_inventory(inventory: Dictionary[StringName, ResourceWeapon]):
 	var item_keys = carrying_items.keys()
 	if item_keys.size() > current_selected_item_index and current_selected_item_index >= 0:
 		var selected_item_res = carrying_items[item_keys[current_selected_item_index]]
-		rpc_update_item_in_hands(current_selected_item_index, selected_item_res)
+		var weapon_data = _serialize_weapon_resource(selected_item_res)
+		rpc_update_item_in_hands(current_selected_item_index, weapon_data)
 	else:
-		rpc_update_item_in_hands(-1, null)  # No item selected
+		rpc_update_item_in_hands(-1, {})  # No item selected
 
 func handle_attacking():
 	if !_has_input_authority:
@@ -970,21 +1005,27 @@ func change_selected_item_index(delta: int):
 	var item_keys = carrying_items.keys()
 	if item_keys.size() > current_selected_item_index:
 		var selected_item_res = carrying_items[item_keys[current_selected_item_index]]
-		rpc_update_item_in_hands.rpc(current_selected_item_index, selected_item_res)
+		var weapon_data = _serialize_weapon_resource(selected_item_res)
+		rpc_update_item_in_hands.rpc(current_selected_item_index, weapon_data)
 	else:
-		rpc_update_item_in_hands.rpc(-1, null)  # No item selected
+		rpc_update_item_in_hands.rpc(-1, {})  # No item selected
 	
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
 
 @rpc("authority", "call_local", "reliable")
-func rpc_update_item_in_hands(item_index: int, weapon_resource : ResourceWeapon):
+func rpc_update_item_in_hands(item_index: int, weapon_data: Dictionary):
 	if item_in_hands != null:
 		item_in_hands.queue_free()
 		item_in_hands = null
 	
-	# If no item selected (item_index < 0 or empty path), don't spawn anything
-	if item_index < 0 or weapon_resource == null:
+	# If no item selected (item_index < 0 or empty data), don't spawn anything
+	if item_index < 0 or weapon_data.is_empty():
+		return
+	
+	# Deserialize weapon resource from data
+	var weapon_resource = _deserialize_weapon_resource(weapon_data)
+	if weapon_resource == null:
 		return
 	
 	# Use the provided item_path instead of relying on carrying_items
@@ -999,6 +1040,37 @@ func rpc_update_item_in_hands(item_index: int, weapon_resource : ResourceWeapon)
 	item_in_hands.scale = Vector3.ONE * 100
 
 	
+# Helper functions to serialize/deserialize ResourceWeapon for RPC
+func _serialize_weapon_resource(weapon_resource: ResourceWeapon) -> Dictionary:
+	if weapon_resource == null:
+		return {}
+	return {
+		"weapon_name": weapon_resource.weapon_name,
+		"weapon_type": weapon_resource.weapon_type,
+		"pickup_prefab_path": weapon_resource.pickup_prefab_path,
+		"weapon_prefab_path": weapon_resource.weapon_prefab_path,
+		"damage_min_max": weapon_resource.damage_min_max,
+		"weapon_blocking_angle": weapon_resource.weapon_blocking_angle,
+		"push_forward_on_attack_force": weapon_resource.push_forward_on_attack_force,
+		"weapon_durability_current": weapon_resource.weapon_durability_current,
+		"weapon_durability_max": weapon_resource.weapon_durability_max
+	}
+
+func _deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
+	if data.is_empty():
+		return null
+	var weapon_resource = ResourceWeapon.new()
+	weapon_resource.weapon_name = data.get("weapon_name", &'Weapon')
+	weapon_resource.weapon_type = data.get("weapon_type", ResourceWeapon.WEAPON_TYPE.TORCH)
+	weapon_resource.pickup_prefab_path = data.get("pickup_prefab_path", "")
+	weapon_resource.weapon_prefab_path = data.get("weapon_prefab_path", "")
+	weapon_resource.damage_min_max = data.get("damage_min_max", Vector2i(30, 60))
+	weapon_resource.weapon_blocking_angle = data.get("weapon_blocking_angle", 160)
+	weapon_resource.push_forward_on_attack_force = data.get("push_forward_on_attack_force", 5.0)
+	weapon_resource.weapon_durability_current = data.get("weapon_durability_current", 100.0)
+	weapon_resource.weapon_durability_max = data.get("weapon_durability_max", 100.0)
+	return weapon_resource
+
 func _clamp_selected_index():
 	# Ensure selected index is within valid range
 	var item_count = carrying_items.size()

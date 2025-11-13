@@ -117,8 +117,9 @@ func spawn_random_weapon_to_hands():
 			print("[AI_WEAPON_SPAWN] %s: ERROR - Selected weapon is null!" % name)
 			return
 		print("[AI_WEAPON_SPAWN] %s: Calling rpc_spawn_weapon.rpc()" % name)
-		# Pass weapon path string instead of index for better synchronization
-		rpc_spawn_weapon.rpc(weapon)
+		# Serialize weapon resource for RPC
+		var weapon_data = _serialize_weapon_resource(weapon)
+		rpc_spawn_weapon.rpc(weapon_data)
 	else:
 		# If not server and not in multiplayer, spawn locally (for testing)
 		if not multiplayer.has_multiplayer_peer():
@@ -133,12 +134,45 @@ func spawn_random_weapon_to_hands():
 			print("[AI_WEAPON_SPAWN] %s: Client waiting for server RPC (not spawning locally)" % name)
 
 @rpc("authority", "call_local", "reliable")
-func rpc_spawn_weapon(weapon_resource: ResourceWeapon):
-	print("[AI_WEAPON_SPAWN] %s: rpc_spawn_weapon RPC received (is_server: %s, weapon_resource: %s)" % [name, multiplayer.is_server(), weapon_resource])
+func rpc_spawn_weapon(weapon_data: Dictionary):
+	print("[AI_WEAPON_SPAWN] %s: rpc_spawn_weapon RPC received (is_server: %s)" % [name, multiplayer.is_server()])
+	# Deserialize weapon resource from data
+	var weapon_resource = _deserialize_weapon_resource(weapon_data)
 	if weapon_resource == null:
-		print("[AI_WEAPON_SPAWN] %s: ERROR - weapon_resource is null in RPC!" % name)
+		print("[AI_WEAPON_SPAWN] %s: ERROR - Failed to deserialize weapon_resource from RPC!" % name)
 		return
 	_spawn_weapon(weapon_resource)
+
+# Helper functions to serialize/deserialize ResourceWeapon for RPC
+func _serialize_weapon_resource(weapon_resource: ResourceWeapon) -> Dictionary:
+	if weapon_resource == null:
+		return {}
+	return {
+		"weapon_name": weapon_resource.weapon_name,
+		"weapon_type": weapon_resource.weapon_type,
+		"pickup_prefab_path": weapon_resource.pickup_prefab_path,
+		"weapon_prefab_path": weapon_resource.weapon_prefab_path,
+		"damage_min_max": weapon_resource.damage_min_max,
+		"weapon_blocking_angle": weapon_resource.weapon_blocking_angle,
+		"push_forward_on_attack_force": weapon_resource.push_forward_on_attack_force,
+		"weapon_durability_current": weapon_resource.weapon_durability_current,
+		"weapon_durability_max": weapon_resource.weapon_durability_max
+	}
+
+func _deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
+	if data.is_empty():
+		return null
+	var weapon_resource = ResourceWeapon.new()
+	weapon_resource.weapon_name = data.get("weapon_name", &'Weapon')
+	weapon_resource.weapon_type = data.get("weapon_type", ResourceWeapon.WEAPON_TYPE.TORCH)
+	weapon_resource.pickup_prefab_path = data.get("pickup_prefab_path", "")
+	weapon_resource.weapon_prefab_path = data.get("weapon_prefab_path", "")
+	weapon_resource.damage_min_max = data.get("damage_min_max", Vector2i(30, 60))
+	weapon_resource.weapon_blocking_angle = data.get("weapon_blocking_angle", 160)
+	weapon_resource.push_forward_on_attack_force = data.get("push_forward_on_attack_force", 5.0)
+	weapon_resource.weapon_durability_current = data.get("weapon_durability_current", 100.0)
+	weapon_resource.weapon_durability_max = data.get("weapon_durability_max", 100.0)
+	return weapon_resource
 
 func _spawn_weapon(weapon_resource: ResourceWeapon):
 	print("[AI_WEAPON_SPAWN] %s: _spawn_weapon called with weapon_resource: %s" % [name, weapon_resource])
@@ -162,7 +196,7 @@ func _spawn_weapon(weapon_resource: ResourceWeapon):
 	# Remove existing weapon if any
 	if item_in_hands != null:
 		print("[AI_WEAPON_SPAWN] %s: Removing existing weapon: %s" % [name, item_in_hands])
-		item_in_hands.queue_free()
+		item_in_hands.queue_free()						
 		item_in_hands = null
 	
 	# Validate weapon path

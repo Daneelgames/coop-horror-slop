@@ -8,6 +8,8 @@ var attack_points_prev_positions : Array[Vector3]
 var is_dangerous = false
 var weapon_owner : Unit = null
 var hit_objects_this_attack = []
+var time_since_set_dangerous : float = 0.0
+var time_to_actual_dangerous : float = 0.2
 
 func _ready() -> void:
 	weapon_active_distance = attack_points[0].global_position.distance_to(attack_points.back().global_position) * 100
@@ -15,13 +17,12 @@ func _ready() -> void:
 func set_dangerous(isdngrs, wpnownr):
 	if multiplayer.is_server() == false:
 		return
+	time_since_set_dangerous = 0.0
 	hit_objects_this_attack = []
 	weapon_owner = wpnownr
 	attack_points_prev_positions = []
 	for point in attack_points:
 		attack_points_prev_positions.append(point.global_position)
-	if isdngrs:
-		await get_tree().create_timer(0.1).timeout
 	is_dangerous = isdngrs
 	
 
@@ -34,7 +35,11 @@ func _physics_process(_delta: float) -> void:
 		for point in attack_points:
 			attack_points_prev_positions.append(point.global_position)
 		return
-	
+
+	if time_since_set_dangerous < time_to_actual_dangerous:
+		time_since_set_dangerous += _delta
+		return
+
 	for i in attack_points.size():
 		var point = attack_points[i].global_position
 		var prev_point = attack_points_prev_positions[i]
