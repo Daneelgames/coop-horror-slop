@@ -47,16 +47,16 @@ func update_durability_display(items):
 			var weapon_resource = items[key_name] as ResourceWeapon
 			var label = item_labels[key_name]
 			if label != null and is_instance_valid(label):
-				var old_text = label.text
+				# var old_text = label.text
 				var new_text = _format_item_text(key_name, weapon_resource)
 				label.text = new_text
 				# Debug output when text changes
-				if old_text != new_text and weapon_resource != null:
-					print("[UI UPDATE] %s: %s -> %s (durability: %.2f/%.2f)" % [
-						key_name,
-						old_text,
-						new_text,
-						weapon_resource.weapon_durability_current,
-						weapon_resource.weapon_durability_max
-					])
+				# if old_text != new_text and weapon_resource != null:
+				# 	print("[UI UPDATE] %s: %s -> %s (durability: %.2f/%.2f)" % [
+				# 		key_name,
+				# 		old_text,
+				# 		new_text,
+				# 		weapon_resource.weapon_durability_current,
+				# 		weapon_resource.weapon_durability_max
+				# 	])
 	

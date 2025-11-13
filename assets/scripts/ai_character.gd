@@ -309,7 +309,8 @@ func _handle_movement(delta: float):
 	
 	# Don't move if attacking, blocking, taking damage, or in stun lock
 	# But still apply physics (gravity, move_and_slide) to preserve push velocity
-	if is_attacking or is_blocking or is_taking_damage or is_stun_lock or is_blocking_react:
+	#if is_attacking or is_blocking or is_taking_damage or is_stun_lock or is_blocking_react:
+	if is_attacking or is_taking_damage or is_stun_lock or is_blocking_react:
 		_handle_physics(delta)
 		return
 	
@@ -328,16 +329,18 @@ func _handle_movement(delta: float):
 	
 	# Calculate direction to next path position
 	var direction = (next_path_position - current_agent_position).normalized()
-	
-	# Set velocity for movement
-	velocity.x = direction.x * base_speed
-	velocity.z = direction.z * base_speed
+	if is_blocking:
+		velocity.x = 0
+		velocity.z = 0
+		input_dir = Vector2(0, 0)
+	else:
+		# Set velocity for movement
+		velocity.x = direction.x * base_speed
+		velocity.z = direction.z * base_speed
+		input_dir = Vector2(direction.x, direction.z)
 	
 	# Apply physics (gravity and move_and_slide)
 	_handle_physics(delta)
-	
-	# Update input_dir for animation
-	input_dir = Vector2(direction.x, direction.z)
 	
 	# Rotate towards movement direction (but not if in combat - combat state handles rotation)
 	# Check if we have visible enemies to determine if we're in combat

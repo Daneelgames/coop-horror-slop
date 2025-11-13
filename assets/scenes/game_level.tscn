@@ -65,7 +65,7 @@ sky_material = SubResource("ProceduralSkyMaterial_8kkgg")
 background_mode = 1
 sky = SubResource("Sky_vcb5n")
 ambient_light_source = 2
-ambient_light_color = Color(0.26293245, 0.26293245, 0.26293245, 1)
+ambient_light_color = Color(0.22035873, 0.22710598, 0.2741551, 1)
 tonemap_mode = 2
 tonemap_white = 2.0
 glow_enabled = true
@@ -73,10 +73,12 @@ glow_normalized = true
 glow_intensity = 8.0
 glow_bloom = 1.0
 fog_enabled = true
-fog_mode = 1
 fog_light_color = Color(0, 0, 0, 1)
-fog_sun_scatter = 1.0
 fog_density = 1.0
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.1
+volumetric_fog_albedo = Color(0.98234254, 0.9823423, 0.9823424, 1)
+volumetric_fog_emission = Color(0.099985994, 0.099985994, 0.099985994, 1)
 adjustment_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h4wow"]
