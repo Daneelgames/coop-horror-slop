@@ -212,7 +212,6 @@ func _ready():
 	if OS.get_name() == "Web":
 		Input.set_use_accumulated_input(false)
 	super._ready()
-		
 
 func _process(_delta):
 	cheat_codes()

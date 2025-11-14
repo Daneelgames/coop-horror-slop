@@ -1,0 +1,96 @@
+[gd_scene load_steps=14 format=3 uid="uid://cag760n3p6h3d"]
+
+[ext_resource type="Script" uid="uid://u0cvh8rk4kx0" path="res://assets/scripts/level_generators/procedural_dungeon.gd" id="1_vs4da"]
+[ext_resource type="Script" uid="uid://chssve2spif5p" path="res://assets/scripts/resources/resource_dungeon_room.gd" id="2_4pir1"]
+
+[sub_resource type="Resource" id="Resource_ljcrj"]
+script = ExtResource("2_4pir1")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_vs4da"]
+script = ExtResource("2_4pir1")
+base_room_height = 2
+target_tiles_amount = 20
+walker_change_floor_height_chance = 0.0201
+mirror_z = true
+default_vertical_wall_tiles_amount = 2
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_4pir1"]
+script = ExtResource("2_4pir1")
+base_room_height = 4
+target_tiles_amount = 30
+walker_change_floor_height_chance = 0.0101
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_44lcu"]
+script = ExtResource("2_4pir1")
+walker_change_floor_height_chance = 0.0121
+mirror_x = true
+default_vertical_wall_tiles_amount = 4
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_avbiq"]
+script = ExtResource("2_4pir1")
+base_room_height = 2
+target_tiles_amount = 20
+walker_change_floor_height_chance = 0.0101
+mirror_z = true
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_jlmlq"]
+script = ExtResource("2_4pir1")
+base_room_height = 4
+target_tiles_amount = 30
+walker_change_floor_height_chance = 0.0201
+default_vertical_wall_tiles_amount = 5
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_q47b7"]
+script = ExtResource("2_4pir1")
+base_room_height = 2
+target_tiles_amount = 20
+walker_change_floor_height_chance = 0.0101
+mirror_z = true
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_mcte8"]
+script = ExtResource("2_4pir1")
+walker_change_floor_height_chance = 0.0501
+mirror_x = true
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_lkeyi"]
+script = ExtResource("2_4pir1")
+base_room_height = 2
+target_tiles_amount = 20
+walker_change_floor_height_chance = 0.0101
+mirror_z = true
+default_vertical_wall_tiles_amount = 10
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_xd1b4"]
+script = ExtResource("2_4pir1")
+base_room_height = 4
+target_tiles_amount = 30
+walker_change_floor_height_chance = 0.0101
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Environment" id="Environment_diio1"]
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+
+[node name="ProceduralDungeon" type="Node3D"]
+script = ExtResource("1_vs4da")
+room_spawn_type = 1
+min_distance_between_rooms_in_tiles = 5
+max_distance_between_rooms_in_tiles = 5
+rooms_resources = Array[ExtResource("2_4pir1")]([SubResource("Resource_ljcrj"), SubResource("Resource_vs4da"), SubResource("Resource_4pir1"), SubResource("Resource_44lcu"), SubResource("Resource_avbiq"), SubResource("Resource_jlmlq"), SubResource("Resource_q47b7"), SubResource("Resource_mcte8"), SubResource("Resource_lkeyi"), SubResource("Resource_xd1b4")])
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_diio1")
+
+[node name="DungeonTiles" type="Node3D" parent="."]
+unique_name_in_owner = true

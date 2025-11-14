@@ -1,0 +1,68 @@
+[gd_scene load_steps=8 format=3 uid="uid://cefhqgvoa83r2"]
+
+[ext_resource type="PackedScene" uid="uid://c081er3gcclrm" path="res://assets/prefabs/environment/dungeon_walls/straight_arched_stair_wall.tscn" id="1_pfvgd"]
+[ext_resource type="Script" uid="uid://y5qwug48dlpa" path="res://assets/scripts/dungeon_tile.gd" id="1_y2rmy"]
+[ext_resource type="PackedScene" uid="uid://hd7oocxavgfe" path="res://assets/prefabs/environment/dungeon_walls/straight_arched_wall.tscn" id="2_y2rmy"]
+[ext_resource type="PackedScene" uid="uid://dl6hok1wlwaeq" path="res://assets/prefabs/environment/dungeon_walls/wall_2m.tscn" id="3_l2blo"]
+[ext_resource type="PackedScene" uid="uid://c1yemvw006ad2" path="res://assets/prefabs/environment/dungeon_walls/floor_1.tscn" id="4_4ygpn"]
+[ext_resource type="PackedScene" uid="uid://ccjf5p2g81be8" path="res://assets/prefabs/environment/dungeon_walls/floor_2.tscn" id="5_bqpbu"]
+[ext_resource type="PackedScene" uid="uid://b3ko8bhy2wgnp" path="res://assets/prefabs/environment/dungeon_walls/stairs_1.tscn" id="6_mm2e1"]
+
+[node name="Tile" type="Node3D"]
+script = ExtResource("1_y2rmy")
+coord = null
+
+[node name="TMP" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="StraightArchedStairWall" parent="TMP" instance=ExtResource("1_pfvgd")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 1.5, 0, 2)
+visible = false
+
+[node name="StraightArchedWall" parent="TMP" instance=ExtResource("2_y2rmy")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.5, 0, -2)
+visible = false
+
+[node name="Stairs1" parent="TMP" instance=ExtResource("6_mm2e1")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 2, 0, 2)
+visible = false
+
+[node name="Floor" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Floor1" parent="Floor" instance=ExtResource("4_4ygpn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2)
+
+[node name="Floor2" parent="Floor" instance=ExtResource("5_bqpbu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2)
+visible = false
+
+[node name="Ceiling" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Ceiling" parent="Ceiling" instance=ExtResource("5_bqpbu")]
+transform = Transform3D(1, 0, 0, 0, -1, -8.742278e-08, 0, 8.742278e-08, -1, 2, 4, 2)
+
+[node name="WallF" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Wall2m" parent="WallF" instance=ExtResource("3_l2blo")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 2, 0, -2)
+
+[node name="WallR" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Wall2m3" parent="WallR" instance=ExtResource("3_l2blo")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 2, 0, 2)
+
+[node name="WallB" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Wall2m2" parent="WallB" instance=ExtResource("3_l2blo")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 2, 0, 2)
+
+[node name="WallL" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Wall2m4" parent="WallL" instance=ExtResource("3_l2blo")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -2, 0, 2)

@@ -1,0 +1,39 @@
+[gd_scene load_steps=4 format=4 uid="uid://b2wdp640bfcwt"]
+
+[ext_resource type="Material" uid="uid://b2220k3wwv20i" path="res://assets/meshes/modularDungeon/m_vault_stone.tres" id="1_jvvg1"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_5n1s4"]
+_surfaces = [{
+"aabb": AABB(-0.20000015, 0, -3.8857865e-17, 0.4000003, 8, 4),
+"format": 34359742465,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAwACAAEAAQAEAAMABAABAAAAAwAEAAUAAAAFAAQABQAGAAMABgAFAAAAAgADAAYAAAAHAAYABgAHAAIAAgAHAAAA"),
+"name": "VaultStoneShader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("w8xMvgAAAEEhMzOkw8xMvgAAAEEAAIBA18xMvm4SAzEAAIBAw8xMPgAAAAAAAIBA18xMPgAAAEEAAIBA18xMPgAAAEFFMzMkw8xMPgAAAAAhMzMk18xMvm4SAzFFMzOk")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_6qyeg"]
+resource_name = "Wall4m"
+_surfaces = [{
+"aabb": AABB(-0.20000015, 0, -3.8857865e-17, 0.4000003, 8, 4),
+"attribute_data": PackedByteArray("/////wAAAEAAAEDA/////wAAAAAAAEDA/////wAAAAAAAIA//////wAAAEAAAIA//////wAAAEAAAEDA/////wAAAEAAAIA//////wAAAAAAAIA//////wAAAAAAAEDA/////wAAAAAAAEDA/////83MTL4AAEDA/////8zMTL4AAIA//////wAAAAAAAIA//////wAAAEAAAEDA/////wAAAEDOzEzA/////wAAAADMzEzA/////wAAAAAAAEDA/////wAAAEAAAEDA/////wAAAEAAAIA//////83MDEAAAIA//////8zMDEAAAEDA/////wAAAAAAAIA//////wAAAACamZk//////wAAAECamZk//////wAAAEAAAIA/"),
+"format": 34359742495,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQA"),
+"material": ExtResource("1_jvvg1"),
+"name": "VaultStoneShader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("w8xMvgAAAEEhMzOkw8xMvgAAAEEAAIBA18xMvm4SAzEAAIBA18xMvm4SAzFFMzOk18xMPgAAAEFFMzMkw8xMPgAAAAAhMzMkw8xMPgAAAAAAAIBA18xMPgAAAEEAAIBAw8xMvgAAAEEAAIBA18xMPgAAAEEAAIBAw8xMPgAAAAAAAIBA18xMvm4SAzEAAIBAw8xMvgAAAEEhMzOk18xMPgAAAEFFMzMk18xMPgAAAEEAAIBAw8xMvgAAAEEAAIBAw8xMvgAAAEEhMzOk18xMvm4SAzFFMzOkw8xMPgAAAAAhMzMk18xMPgAAAEFFMzMk18xMvm4SAzEAAIBAw8xMPgAAAAAAAIBAw8xMPgAAAAAhMzMk18xMvm4SAzFFMzOkAAD/f///AAAAAP9///8AAAAA/3///wAAAAD/f///AAD///9//////////3//////////f/////////9///////9//38AAP8//3//fwAA/z//f/9/AAD/P/9//38AAP8//3//////AAD/f///AAAAAP9///8AAAAA/3///wAAAAD/////////P/////////8//////////z//////////P/9/AAD//wAA/38AAP//AAD/fwAA//8AAP9/AAD//wAA")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_5n1s4")
+
+[node name="Wall4m" type="MeshInstance3D"]
+mesh = SubResource("ArrayMesh_6qyeg")
+skeleton = NodePath("")

@@ -1,0 +1,62 @@
+[gd_scene load_steps=5 format=4 uid="uid://dv6ey2tytyjr4"]
+
+[ext_resource type="Material" uid="uid://bf4bl5vy8ois1" path="res://assets/meshes/modularDungeon/m_stone_2.tres" id="1_erxxk"]
+[ext_resource type="Material" uid="uid://b2220k3wwv20i" path="res://assets/meshes/modularDungeon/m_vault_stone.tres" id="2_fe4sx"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_82k4j"]
+_surfaces = [{
+"aabb": AABB(0.58607423, 0, 0.58607465, 0.37934738, 2.002426, 0.3793462),
+"format": 34359742465,
+"index_count": 42,
+"index_data": PackedByteArray("AAABAAIAAgADAAAABAACAAEAAQAFAAQABgAEAAUABQAHAAYABgAHAAgACAAJAAYACQAIAAoACgALAAkACwAKAAwADAANAAsADQAMAA4ADgAPAA0A"),
+"name": "Stone2Shader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("AAxIPwAAAAAACRY/oJZ0PwAAAABNCRY/oJZ0P50XAEBNCRY/AAxIP78nAED9CBY/3yV3P0cWAECdmBg/3yV3PwAAAACdmBg/DSR3P6EHAECllHQ/DSR3PwAAAACllHQ/tJR0PwAAAAD9I3c/tJR0P6EHAED9I3c/k5gYPwAAAADPJXc/k5gYP0YWAEDSJXc/QwkWPwAAAACRlnQ/QwkWP5wXAECTlnQ/9ggWPwAAAAAADEg/9ggWP78nAED7C0g/")
+}, {
+"aabb": AABB(0, -4.4272395e-16, 0, 0.7814331, 2.0082908, 0.7814331),
+"format": 34359742465,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAgADAAAAAgABAAQABAAFAAIABQAEAAYABgAHAAUACAAHAAYABgAJAAgACgAIAAkACQALAAoACgALAAwADAANAAoA"),
+"name": "VaultStoneShader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 14,
+"vertex_data": PackedByteArray("9ggWPwAAAAAADEg/AAAAAAAAAAAADEg/AAAAAPoiAEAADEg/9ggWP78nAED7C0g/AAAAAAAAAAAAsek+AAAAAJ2AAEAAsek+9rDpPgAAAAAAsek+9rDpPtaHAEAKsek+9rDpPp+AAEAAAAAA9rDpPlMRlaUAAAAAAAxIP/giAEAAAAAAAAxIP4Y2/6UAAAAAAAxIPwAAAAAACRY/AAxIP78nAED9CBY/")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_riv0k"]
+resource_name = "VaultColumnA1m"
+_surfaces = [{
+"aabb": AABB(0.58607423, 0, 0.58607465, 0.37934738, 2.002426, 0.3793462),
+"attribute_data": PackedByteArray("d3d3/+52fT+s/38/mZmZ/1oLcj+s/38/uLi4/yALcj9w3+Q9g4OD/7x2fT+QWuQ98fHx/5IlWT+YYuU9vLy8/yS7cD9o6uQ9nZ2d/1O7cD+s/38/5eXl/8clWT+s/38//v7+/zRAQD+8/38//v7+//I/QD/g6uQ98/Pz/4zVVz+YYuU95+fn/8DVVz+t/38/f39//5mEMz+9/38/g4OD/2aEMz+gW+Q9+Pj4/+vvPj/43+Q9+Pj4/y3wPj+9/38/8fHx/5IlWT+YYuU95eXl/8clWT+s/38/5+fn/8DVVz+t/38/8/Pz/4zVVz+YYuU9vLy8/yS7cD9o6uQ9uLi4/yALcj9w3+Q9mZmZ/1oLcj+s/38/nZ2d/1O7cD+s/38//v7+//I/QD/g6uQ9/v7+/zRAQD+8/38/+Pj4/y3wPj+9/38/+Pj4/+vvPj/43+Q9"),
+"format": 34359742495,
+"index_count": 42,
+"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQAGAAZABoAGgAbABgA"),
+"material": ExtResource("1_erxxk"),
+"name": "Stone2Shader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 28,
+"vertex_data": PackedByteArray("AAxIPwAAAAAACRY/oJZ0PwAAAABNCRY/oJZ0P50XAEBNCRY/AAxIP78nAED9CBY/DSR3P6EHAECllHQ/3yV3P0cWAECdmBg/3yV3PwAAAACdmBg/DSR3PwAAAACllHQ/k5gYPwAAAADPJXc/k5gYP0YWAEDSJXc/tJR0P6EHAED9I3c/tJR0PwAAAAD9I3c/9ggWPwAAAAAADEg/9ggWP78nAED7C0g/QwkWP5wXAECTlnQ/QwkWPwAAAACRlnQ/DSR3P6EHAECllHQ/DSR3PwAAAACllHQ/tJR0PwAAAAD9I3c/tJR0P6EHAED9I3c/3yV3P0cWAECdmBg/oJZ0P50XAEBNCRY/oJZ0PwAAAABNCRY/3yV3PwAAAACdmBg/k5gYP0YWAEDSJXc/k5gYPwAAAADPJXc/QwkWPwAAAACRlnQ/QwkWP5wXAECTlnQ///8AACYAE8D//5kGAACyvP//jgYlAFjD//8AAE0AJsCe/P9/3f9P/v//YYMQAE7+//9dgwAAUP6d/P9/7v9O/qF8/3+Q/Pa/nXz/f3z87r9gg/9/7v9GvmGD/3/+/06+AAD/fwCA678AAP9/AIDYv44G/3+Lhuy/mQb/f5iG/7+e/P9///9O/p38/3/+/7CBYYP/f/7/Tr5gg/9//v9Ovv//YYM1AE7+//+OBmUAdsP//5kGMgBjw///XYMAAFD+nXz/fzT8yb+hfP9/bfzkv5kG/3+Yhv+/jgb/f4uG5b8=")
+}, {
+"aabb": AABB(0, -4.4272395e-16, 0, 0.7814331, 2.0082908, 0.7814331),
+"attribute_data": PackedByteArray("h4eH/40nLj+9/38/7+/v/8ivBz/O/38/7+/v/5avBz9MW6M+h4eH/1onLj9WUaM+u7u7/3i15D7e/38/19fX/xO15D4mm6I+7+/v/5avBz9MW6M+7+/v/8ivBz/O/38/g4OD/8XKqD7e/38/h4eH/2DKqD54jKI+19fX/xO15D4mm6I+u7u7/3i15D7e/38//////yLAWT7v/38/w8PD/61rBD7v/38/19fX/ydrBD5uW6M+/////1m/WT5om6I+h4eH/yibq7wAAIA/i4uL/3Ohq7zcUaM+19fX/ydrBD5uW6M+w8PD/61rBD7v/38/g4OD/8XKqD7e/38//////yLAWT7v/38//////1m/WT5om6I+h4eH/2DKqD54jKI+"),
+"format": 34359742495,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQA"),
+"material": ExtResource("2_fe4sx"),
+"name": "VaultStoneShader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("9ggWPwAAAAAADEg/AAAAAAAAAAAADEg/AAAAAPoiAEAADEg/9ggWP78nAED7C0g/AAAAAAAAAAAAsek+AAAAAJ2AAEAAsek+AAAAAPoiAEAADEg/AAAAAAAAAAAADEg/9rDpPgAAAAAAsek+9rDpPtaHAEAKsek+AAAAAJ2AAEAAsek+AAAAAAAAAAAAsek+9rDpPlMRlaUAAAAAAAxIP4Y2/6UAAAAAAAxIP/giAEAAAAAA9rDpPp+AAEAAAAAAAAxIPwAAAAAACRY/AAxIP78nAED9CBY/AAxIP/giAEAAAAAAAAxIP4Y2/6UAAAAA9rDpPgAAAAAAsek+9rDpPlMRlaUAAAAA9rDpPp+AAEAAAAAA9rDpPtaHAEAKsek+/3//f/3/AMD/f/9//v//v/9//3/9/wDA/3//f/v/AcAAAP9//3/bvwAA/3//f7i/AAD/f/9/278AAP9//3//v////v8AAP+////+/wMA/b////7/BwD7v////v8DAP2//////0YAIsD/////AAD/v/////9GACLA/////40ARcD///9//v8AgP///3/8/wCA////f/r/AID///9//P8AgAAA/3//fwHAAAD/f/9//78AAP9//38BwAAA/3//fwPA")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_82k4j")
+
+[node name="VaultColumnA1m" type="MeshInstance3D"]
+mesh = SubResource("ArrayMesh_riv0k")
+skeleton = NodePath("")

@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=4 uid="uid://dl6hok1wlwaeq"]
+
+[ext_resource type="Material" uid="uid://b2220k3wwv20i" path="res://assets/meshes/modularDungeon/m_vault_stone.tres" id="1_w70hs"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_h6sel"]
+_surfaces = [{
+"aabb": AABB(-0.20000015, 0, 0, 0.4000003, 4, 4),
+"format": 34359742465,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAgABAAMAAwABAAAAAgAEAAAAAAAFAAMAAwAGAAIABgADAAUABwAFAAAABQAHAAYAAAAEAAcAAgAGAAcABwAEAAIA"),
+"name": "VaultStoneShader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("w8xMvgAAgEAAAAAAzcxMvgAAgEAAAIBAzcxMvm4SgzEAAIBAzcxMPgAAgEAAAIBA18xMvm4SgzEAAAAA18xMPgAAgEAAAAAAzcxMPgAAAAAAAIBAw8xMPgAAAAAAAAAA")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_6r5od"]
+resource_name = "Wall2m"
+_surfaces = [{
+"aabb": AABB(-0.20000015, 0, 0, 0.4000003, 4, 4),
+"attribute_data": PackedByteArray("/////wAAAEAAAIC//////wAAAAAAAIC//////wAAAAAAAIA//////wAAAEAAAIA//////wAAAEAAAIC//////wAAAEAAAIA//////wAAAAAAAIA//////wAAAAAAAIC//////wAAAAAAAIA//////wAAAAAAAIC//////83MTL4AAIC//////8zMTL4AAIA//////wAAAEAAAIC//////wAAAECamZm//////wAAAACYmZm//////wAAAAAAAIC//////wAAAEAAAIC//////wAAAEAAAIA//////8zMDEAAAIA//////83MDEAAAIC//////wAAAAAAAIA//////wAAAACamZk//////wAAAECamZk//////wAAAEAAAIA/"),
+"format": 34359742495,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQA"),
+"material": ExtResource("1_w70hs"),
+"name": "VaultStoneShader",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("w8xMvgAAgEAAAAAAzcxMvgAAgEAAAIBAzcxMvm4SgzEAAIBA18xMvm4SgzEAAAAA18xMPgAAgEAAAAAAw8xMPgAAAAAAAAAAzcxMPgAAAAAAAIBAzcxMPgAAgEAAAIBAzcxMvm4SgzEAAIBAzcxMvgAAgEAAAIBAzcxMPgAAgEAAAIBAzcxMPgAAAAAAAIBAw8xMvgAAgEAAAAAA18xMPgAAgEAAAAAAzcxMPgAAgEAAAIBAzcxMvgAAgEAAAIBAw8xMvgAAgEAAAAAA18xMvm4SgzEAAAAAw8xMPgAAAAAAAAAA18xMPgAAgEAAAAAAzcxMvm4SgzEAAIBAzcxMPgAAAAAAAIBAw8xMPgAAAAAAAAAA18xMvm4SgzEAAAAAAAD/f///AAAAAP9///8AAAAA/3////5/AAD/f///AAD///9//////////3//////////f///AID///9///////9//38AAP8//3//fwAA/z//f/9/AAD/P/9//38AAP8//3//////AAD/f///AAAAAP9///8AAAAA/3///wAAAAD/////////P/////////8//////////z//////////P/9/AAAAAAAA/38AAAAAAAD/fwAAAAAAAP9/AAAAAAAA")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_h6sel")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w70hs"]
+size = Vector3(4, 4, 0.5)
+
+[node name="Wall2m" type="MeshInstance3D"]
+mesh = SubResource("ArrayMesh_6r5od")
+skeleton = NodePath("")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
+shape = SubResource("BoxShape3D_w70hs")
