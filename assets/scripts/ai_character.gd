@@ -50,6 +50,8 @@ var _last_position: Vector3 = Vector3.ZERO
 var _smoothed_input_dir: Vector2 = Vector2.ZERO
 
 func _physics_process(_delta): # Most things happen here. 
+	if GameManager._game_level.is_game_level_ready == false:
+		return
 	visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
 	# Convert Euler angles to Basis (quaternion) for proper rotation interpolation
 	var current_basis = Basis.from_euler(visual_node_3d.global_rotation)

@@ -15,4 +15,6 @@ normal_texture = ExtResource("3_mpjqm")
 ao_enabled = true
 ao_light_affect = 1.0
 ao_texture = ExtResource("2_mpqpt")
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
 texture_filter = 2

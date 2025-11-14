@@ -1,6 +1,9 @@
-[gd_scene load_steps=5 format=4 uid="uid://dl6hok1wlwaeq"]
+[gd_scene load_steps=6 format=4 uid="uid://dl6hok1wlwaeq"]
 
 [ext_resource type="Material" uid="uid://b2220k3wwv20i" path="res://assets/meshes/modularDungeon/m_vault_stone.tres" id="1_w70hs"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w70hs"]
+size = Vector3(4, 2, 0.5)
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_h6sel"]
 _surfaces = [{
@@ -34,16 +37,21 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_h6sel")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_w70hs"]
-size = Vector3(4, 4, 0.5)
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_w70hs"]
+size = Vector3(0.468, 2, 4)
 
-[node name="Wall2m" type="MeshInstance3D"]
+[node name="StaticBody3D" type="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 1, 0)
+shape = SubResource("BoxShape3D_w70hs")
+
+[node name="Wall2m" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, -2)
 mesh = SubResource("ArrayMesh_6r5od")
 skeleton = NodePath("")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 2)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
-shape = SubResource("BoxShape3D_w70hs")
+[node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+occluder = SubResource("BoxOccluder3D_w70hs")

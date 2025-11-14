@@ -8,3 +8,6 @@ class_name ResourceDungeonRoom
 @export var mirror_z : bool = false
 @export var default_vertical_wall_tiles_amount : int = 1
 @export var rooms_indexes_to_make_extra_tunnels_to : Array[int]
+
+@export var props_to_spawn_amount : int = 10
+@export var props_by_weight : Dictionary[StringName, float] # prop path, drop weight

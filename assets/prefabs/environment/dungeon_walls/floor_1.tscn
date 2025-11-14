@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=4 uid="uid://c1yemvw006ad2"]
+[gd_scene load_steps=6 format=4 uid="uid://c1yemvw006ad2"]
 
 [ext_resource type="Material" uid="uid://dah4n64qkc4lm" path="res://assets/meshes/modularDungeon/m_stone_3.tres" id="1_8dhli"]
 
@@ -37,6 +37,9 @@ shadow_mesh = SubResource("ArrayMesh_3ygna")
 [sub_resource type="BoxShape3D" id="BoxShape3D_8dhli"]
 size = Vector3(4, 0.25, 4)
 
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_8dhli"]
+size = Vector3(4, 0.27173924, 4)
+
 [node name="Floor1" type="MeshInstance3D"]
 mesh = SubResource("ArrayMesh_vutip")
 skeleton = NodePath("")
@@ -46,3 +49,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
 shape = SubResource("BoxShape3D_8dhli")
+
+[node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
+occluder = SubResource("BoxOccluder3D_8dhli")

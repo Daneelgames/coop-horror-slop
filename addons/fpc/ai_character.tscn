@@ -1,7 +1,7 @@
 [gd_scene load_steps=53 format=4 uid="uid://b1wtst1i1aqdl"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_q1sc8"]
-[ext_resource type="Script" uid="uid://cwpodhjf4csvp" path="res://assets/scripts/resource_weapon.gd" id="2_cf55f"]
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="2_cf55f"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_pjyar"]
 [ext_resource type="Texture2D" uid="uid://8mo78r7i5pk3" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_normal.png" id="3_dqj5t"]
 [ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="3_lpatj"]
@@ -299,7 +299,8 @@ bind/64/name = &"mixamorig_LeftToe_End"
 bind/64/bone = -1
 bind/64/pose = Transform3D(-99.92396, -0.0001585168, 3.8993707, 3.899273, -0.7102333, 99.92143, 0.027536277, 99.9975, 0.7097078, 10.220509, -18.325436, -0.15309562)
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_uy03j"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cf55f"]
+height = 1.65
 
 [sub_resource type="Animation" id="Animation_j8cx7"]
 resource_name = "RESET"
@@ -307,34 +308,10 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Collision:position")
-tracks/0/interp = 2
+tracks/0/path = NodePath("Head:position:y")
+tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 1, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Collision:shape:height")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [2.0]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("Head:position:y")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
@@ -347,34 +324,10 @@ length = 0.2
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Collision:position")
-tracks/0/interp = 2
+tracks/0/path = NodePath("Head:position:y")
+tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.2),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector3(0, 1, 0), Vector3(0, 0.75, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Collision:shape:height")
-tracks/1/interp = 2
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.2),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [2.0, 1.5]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("Head:position:y")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.23333333),
 "transitions": PackedFloat32Array(1, 1),
 "update": 1,
@@ -972,8 +925,8 @@ libraries = {
 autoplay = "idle"
 
 [node name="Collision" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-shape = SubResource("CapsuleShape3D_uy03j")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.825, 0)
+shape = SubResource("CapsuleShape3D_cf55f")
 
 [node name="CrouchAnimation" type="AnimationPlayer" parent="."]
 libraries = {

@@ -1,57 +1,19 @@
-[gd_scene load_steps=24 format=3 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=25 format=3 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
 [ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
 [ext_resource type="Script" uid="uid://cw1dqj27kh05h" path="res://assets/scripts/ai_visibility_manager.gd" id="3_g7mod"]
-[ext_resource type="PackedScene" uid="uid://8p21pj2xip4f" path="res://assets/prefabs/weapons/weapon_rusty_pipe_p.tscn" id="3_vcb5n"]
 [ext_resource type="Script" uid="uid://u4gnigntn7gi" path="res://assets/scripts/ai_hearing_manager.gd" id="4_bk6l6"]
-[ext_resource type="PackedScene" uid="uid://ddvcpahdpbvc" path="res://assets/prefabs/weapons/weapon_axe_p.tscn" id="4_h4wow"]
-[ext_resource type="PackedScene" uid="uid://b1wtst1i1aqdl" path="res://addons/fpc/ai_character.tscn" id="7_0aogx"]
-[ext_resource type="PackedScene" uid="uid://ynnk72nh4l5i" path="res://assets/prefabs/weapons/weapon_torch_p.tscn" id="10_bk6l6"]
-[ext_resource type="PackedScene" uid="uid://c7elrvrqoyi2e" path="res://assets/prefabs/weapons/weapon_torch_w.tscn" id="11_dc4xw"]
+[ext_resource type="Script" uid="uid://u0cvh8rk4kx0" path="res://assets/scripts/level_generators/procedural_dungeon.gd" id="5_slvmx"]
+[ext_resource type="Script" uid="uid://chssve2spif5p" path="res://assets/scripts/resources/resource_dungeon_room.gd" id="6_0aogx"]
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="6_ax1lr"]
+[ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="8_bk6l6"]
+[ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="9_dc4xw"]
+[ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="10_0ts1u"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_ax1lr"]
-vertices = PackedVector3Array(-18.822365, 10.219229, -12.15271, -13.822365, 10.219229, -12.15271, -13.822365, 11.219229, -14.15271, -18.822365, 11.219229, -14.15271, -13.072365, 11.219229, -14.90271, -9.072365, 11.219229, -14.90271, -9.072365, 11.219229, -24.15271, -19.572365, 11.219229, -14.90271, -24.072365, 11.219229, -24.15271, -24.072365, 11.219229, -14.90271, 8.427635, -4.2807713, -17.15271, 9.677635, -4.2807713, -17.15271, 9.677635, -4.2807713, -24.15271, 7.677635, -4.2807713, -16.40271, -6.322365, -4.2807713, -24.15271, -6.322365, -4.2807713, -13.90271, 7.677635, -4.2807713, -13.90271, 10.927635, -4.2807713, -17.15271, 11.677635, -4.2807713, -16.40271, 22.177635, -4.2807713, -14.40271, 22.177635, -4.2807713, -24.15271, 11.677635, -4.2807713, -14.40271, 24.177635, 11.219229, -24.15271, 24.177635, 11.219229, 36.09729, 26.927635, 11.219229, 36.09729, 26.927635, 11.219229, -24.15271, 11.677635, 2.9692287, 16.84729, 22.177635, 2.9692287, 16.84729, 11.677635, -4.2807713, -9.938423, 11.677635, 2.7192287, 10.894909, 22.177635, 2.7192287, 10.894909, 22.177635, -4.2807713, -9.938423, -16.322365, -4.2807713, -12.90271, -16.322365, -4.2807713, -8.15271, -12.572365, -4.2807713, -8.15271, -11.822365, -4.2807713, -7.40271, -7.072365, -4.2807713, -12.90271, -6.322365, -4.2807713, 11.34729, -6.322365, -4.2807713, 13.34729, 7.677635, -4.2807713, 13.34729, -12.572365, -4.2807713, 4.09729, -16.322365, -4.2807713, 4.09729, -16.322365, -4.2807713, 10.59729, -7.072365, -4.2807713, 10.59729, -11.822365, -4.2807713, 3.34729, -24.072365, -4.2807713, -12.90271, -24.072365, -4.2807713, 10.59729, -21.572365, -4.2807713, 10.59729, -21.572365, -4.2807713, -12.90271, -20.822365, 2.9692287, -2.15271, -20.822365, 2.9692287, -12.90271, -24.072365, 2.9692287, -12.90271, -24.072365, 2.9692287, -1.90271, -11.822365, 2.9692287, -2.15271, -9.072365, 2.9692287, -1.90271, -9.072365, 2.9692287, -12.90271, -11.822365, 2.9692287, -12.90271, -18.822365, 4.4692287, -2.65271, -13.822365, 4.4692287, -2.65271, -16.072304, 6.7192287, -6.9227753, -11.822365, 2.9692287, -0.65270996, -9.072365, 2.9692287, 16.84729, -20.822365, 2.9692287, -0.65270996, -24.072365, 2.9692287, 16.84729, -13.822365, 3.2192287, -0.65270996, -18.822365, 3.2192287, -0.65270996, -13.322365, 2.9692287, -0.15270996, -19.322365, 2.9692287, -0.15270996, -19.572365, -0.28077126, 4.09729, -19.572365, -0.28077126, 10.59729, -18.322365, -0.28077126, 10.59729, -18.322365, -0.28077126, 4.09729, -6.322365, -4.2807713, 16.84729, 7.677635, -4.2807713, 16.84729, -7.322365, 2.9692287, 21.59729, -7.322365, 2.9692287, 19.59729, -8.322365, 2.9692287, 19.59729, -8.322365, 2.9692287, 22.34729, -9.072365, 2.9692287, 18.84729, -8.322365, 2.9692287, 28.09729, -24.072365, 2.9692287, 28.09729, -7.072365, -4.2807713, 30.09729, -8.572365, -4.2807713, 30.09729, -8.322365, -4.2807713, 32.84729, 10.677635, -4.2807713, 32.84729, 10.927635, -4.2807713, 30.09729, 9.427635, -4.2807713, 30.09729, 8.677635, -4.2807713, 29.34729, -6.322365, -4.2807713, 29.34729, 7.677635, -4.2807713, 18.84729, 8.677635, -4.2807713, 19.59729, 10.927635, 2.9692287, 19.59729, 9.677635, 2.9692287, 19.59729, 9.677635, 2.9692287, 21.59729, 10.677635, 2.9692287, 22.34729, 11.677635, 2.9692287, 18.84729, 10.677635, 2.9692287, 28.09729, 22.177635, 2.9692287, 28.09729, 8.427635, 2.9692287, 19.59729, -5.572365, 2.9692287, 19.59729, 8.177635, 2.9692287, 19.09729, -5.322365, 2.9692287, 19.09729, -24.072365, -4.2807713, 30.09729, -24.072365, -4.2807713, 32.84729, 22.177635, -4.2807713, 32.84729, 22.177635, -4.2807713, 30.09729)
-polygons = [PackedInt32Array(3, 2, 0), PackedInt32Array(0, 2, 1), PackedInt32Array(6, 5, 4), PackedInt32Array(3, 7, 2), PackedInt32Array(2, 7, 4), PackedInt32Array(4, 7, 6), PackedInt32Array(6, 7, 8), PackedInt32Array(7, 9, 8), PackedInt32Array(12, 11, 10), PackedInt32Array(10, 13, 12), PackedInt32Array(12, 13, 14), PackedInt32Array(14, 13, 15), PackedInt32Array(13, 16, 15), PackedInt32Array(17, 11, 12), PackedInt32Array(17, 12, 18), PackedInt32Array(18, 12, 20), PackedInt32Array(18, 20, 19), PackedInt32Array(19, 21, 18), PackedInt32Array(25, 24, 22), PackedInt32Array(22, 24, 23), PackedInt32Array(21, 19, 28), PackedInt32Array(28, 19, 31), PackedInt32Array(28, 31, 30), PackedInt32Array(28, 30, 29), PackedInt32Array(29, 30, 27), PackedInt32Array(29, 27, 26), PackedInt32Array(34, 33, 32), PackedInt32Array(34, 32, 35), PackedInt32Array(35, 32, 36), PackedInt32Array(39, 38, 37), PackedInt32Array(41, 40, 42), PackedInt32Array(42, 40, 43), PackedInt32Array(36, 15, 16), PackedInt32Array(40, 44, 43), PackedInt32Array(43, 44, 37), PackedInt32Array(35, 36, 44), PackedInt32Array(44, 36, 37), PackedInt32Array(37, 36, 16), PackedInt32Array(37, 16, 39), PackedInt32Array(48, 47, 45), PackedInt32Array(45, 47, 46), PackedInt32Array(50, 49, 51), PackedInt32Array(51, 49, 52), PackedInt32Array(56, 55, 53), PackedInt32Array(53, 55, 54), PackedInt32Array(1, 59, 0), PackedInt32Array(0, 59, 57), PackedInt32Array(57, 59, 58), PackedInt32Array(58, 59, 1), PackedInt32Array(53, 54, 60), PackedInt32Array(60, 54, 61), PackedInt32Array(49, 62, 52), PackedInt32Array(52, 62, 63), PackedInt32Array(65, 57, 64), PackedInt32Array(64, 57, 58), PackedInt32Array(66, 60, 61), PackedInt32Array(64, 66, 65), PackedInt32Array(65, 66, 67), PackedInt32Array(67, 66, 61), PackedInt32Array(67, 61, 63), PackedInt32Array(63, 62, 67), PackedInt32Array(71, 70, 68), PackedInt32Array(68, 70, 69), PackedInt32Array(38, 39, 72), PackedInt32Array(72, 39, 73), PackedInt32Array(76, 75, 74), PackedInt32Array(74, 77, 76), PackedInt32Array(76, 77, 78), PackedInt32Array(63, 61, 78), PackedInt32Array(77, 79, 78), PackedInt32Array(78, 79, 80), PackedInt32Array(78, 80, 63), PackedInt32Array(83, 82, 81), PackedInt32Array(86, 85, 84), PackedInt32Array(86, 84, 87), PackedInt32Array(87, 84, 88), PackedInt32Array(88, 84, 81), PackedInt32Array(81, 84, 83), PackedInt32Array(72, 73, 89), PackedInt32Array(90, 87, 89), PackedInt32Array(89, 87, 88), PackedInt32Array(89, 88, 72), PackedInt32Array(92, 91, 93), PackedInt32Array(93, 91, 94), PackedInt32Array(95, 26, 27), PackedInt32Array(91, 95, 94), PackedInt32Array(94, 95, 96), PackedInt32Array(96, 95, 97), PackedInt32Array(97, 95, 27), PackedInt32Array(98, 92, 93), PackedInt32Array(74, 75, 99), PackedInt32Array(100, 98, 101), PackedInt32Array(101, 98, 99), PackedInt32Array(98, 93, 99), PackedInt32Array(99, 93, 74), PackedInt32Array(102, 82, 103), PackedInt32Array(103, 82, 83), PackedInt32Array(105, 104, 85), PackedInt32Array(85, 104, 84)]
 geometry_parsed_geometry_type = 1
 agent_radius = 1.0
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_8kkgg"]
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_vcb5n"]
-noise = SubResource("FastNoiseLite_8kkgg")
-seamless = true
-in_3d_space = true
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_h4wow"]
-seed = 200
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_nbe18"]
-noise = SubResource("FastNoiseLite_h4wow")
-seamless = true
-as_normal_map = true
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slvmx"]
-albedo_texture = SubResource("NoiseTexture2D_vcb5n")
-normal_enabled = true
-normal_scale = 2.0
-normal_texture = SubResource("NoiseTexture2D_nbe18")
-uv1_scale = Vector3(0.1, 0.1, 0.1)
-uv1_triplanar = true
-texture_filter = 2
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_61kjx"]
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_pphvb"]
-noise = SubResource("FastNoiseLite_61kjx")
-seamless = true
-in_3d_space = true
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8kkgg"]
-albedo_texture = SubResource("NoiseTexture2D_pphvb")
-uv1_scale = Vector3(0.1, 0.1, 0.1)
-uv1_triplanar = true
-texture_filter = 2
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_8kkgg"]
 sky_top_color = Color(0.4800331, 0.43395272, 0.4580469, 1)
@@ -79,25 +41,254 @@ fog_light_color = Color(0, 0, 0, 1)
 fog_density = 0.5
 volumetric_fog_enabled = true
 volumetric_fog_albedo = Color(0.98234254, 0.9823423, 0.9823424, 1)
-volumetric_fog_emission = Color(0.099985994, 0.099985994, 0.099985994, 1)
+volumetric_fog_emission = Color(0.21949637, 0.21181506, 0.23340756, 1)
 volumetric_fog_emission_energy = 0.5
 volumetric_fog_gi_inject = 0.0
 volumetric_fog_anisotropy = 0.25
 adjustment_enabled = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ts1u"]
-shading_mode = 0
-disable_fog = true
-albedo_color = Color(1, 0, 0, 1)
+[sub_resource type="Resource" id="Resource_0ts1u"]
+script = ExtResource("6_0aogx")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 3
+props_to_spawn_amount = 200
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jbp4y"]
-shading_mode = 0
-disable_fog = true
-albedo_color = Color(1, 0.8784314, 0, 1)
+[sub_resource type="Resource" id="Resource_jbp4y"]
+script = ExtResource("6_0aogx")
+base_room_height = 2
+target_tiles_amount = 20
+walker_change_floor_height_chance = 0.0201
+mirror_z = true
+default_vertical_wall_tiles_amount = 2
+rooms_indexes_to_make_extra_tunnels_to = Array[int]([3])
+props_to_spawn_amount = 60
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[node name="GameLevel" type="NavigationRegion3D"]
+[sub_resource type="Resource" id="Resource_58q7l"]
+script = ExtResource("6_0aogx")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+props_to_spawn_amount = 100
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_q5pb2"]
+script = ExtResource("6_0aogx")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 10
+rooms_indexes_to_make_extra_tunnels_to = Array[int]([8])
+props_to_spawn_amount = 50
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_roc3w"]
+script = ExtResource("6_0aogx")
+base_room_height = 8
+target_tiles_amount = 30
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+props_to_spawn_amount = 0
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_s1m6h"]
+script = ExtResource("6_0aogx")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_adyel"]
+script = ExtResource("6_0aogx")
+base_room_height = 4
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 4
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_l2gu8"]
+script = ExtResource("6_0aogx")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+props_to_spawn_amount = 100
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_w8vy0"]
+script = ExtResource("6_0aogx")
+base_room_height = 2
+target_tiles_amount = 50
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_j62y2"]
+script = ExtResource("6_0aogx")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 10
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[node name="GameLevel" type="NavigationRegion3D" node_paths=PackedStringArray("level_generator")]
 navigation_mesh = SubResource("NavigationMesh_ax1lr")
 script = ExtResource("1_nbe18")
+level_generator = NodePath("ProceduralDungeon")
 
 [node name="ParticlesManager" type="Node3D" parent="."]
 script = ExtResource("2_slvmx")
@@ -108,175 +299,58 @@ script = ExtResource("3_g7mod")
 [node name="AiHearingManager" type="Node3D" parent="."]
 script = ExtResource("4_bk6l6")
 
-[node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
-material_override = SubResource("StandardMaterial3D_slvmx")
-use_collision = true
-
-[node name="CSGBox3D" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 4.3132324)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(50, 0.5, 58.626465)
-
-[node name="CSGBox3D2" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.278076, 2.7938843, -19.540771)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(17.443848, 16.087769, 10.918457)
-
-[node name="CSGBox3D10" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.580048, 2.7938843, 6.008484)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(4.684143, 16.087769, 62.016968)
-
-[node name="CSGBox3D7" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.278076, -4.1324835, -1.0902882)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(6.6376953, 11.95224, 8.228516)
-
-[node name="CSGBox3D13" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 0.5191761, 0.85466725, 0, -0.85466725, 0.5191761, -16.278076, 3.0050552, -9.125708)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(6.6376953, 16.586044, 8.228516)
-
-[node name="CSGBox3D12" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.901825, -5.3220797, -2.5913868)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(3.1583862, 9.2605095, 29.473877)
-
-[node name="CSGBox3D8" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.622873, -2.0647192, 1.2056875)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(1.8615723, 16.087769, 34.4032)
-
-[node name="CSGBox3D9" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.9391384, 7.609235, -3.9977121)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(1.8615723, 16.087769, 44.809998)
-
-[node name="CSGBox3D11" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.401408, 2.2540865, -2.0475283)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(19.341913, 0.60337067, 27.896767)
-
-[node name="CSGBox3D3" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.278076, -1.3432922, 20.41774)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(17.443848, 7.8134155, 17.168213)
-
-[node name="CSGBox3D4" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.918915, -1.3432922, 20.41774)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(14.255066, 7.8134155, 17.168213)
-
-[node name="CSGBox3D6" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9279709, 1.9594269, 20.41774)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(18.855026, 1.2079773, 4.2783203)
-
-[node name="CSGBox3D5" type="CSGBox3D" parent="CSGCombiner3D"]
-transform = Transform3D(1, 0, 0, 0, 0.94758457, 0.31950513, 0, -0.31950513, 0.94758457, 16.918915, -4.9729133, 1.7167027)
-material_override = SubResource("StandardMaterial3D_8kkgg")
-use_collision = true
-size = Vector3(14.255066, 7.8134155, 24.13684)
-
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_61kjx")
 
-[node name="WeaponRustyPipe2" parent="." instance=ExtResource("3_vcb5n")]
-transform = Transform3D(-4.371138e-08, -1.0000002, 0, -4.3711385e-08, -1.6420286e-15, 0.99999994, -0.9999999, 4.3711395e-08, -4.3711385e-08, -2.482826, -1.7894197, 1.7036324)
+[node name="ProceduralDungeon" type="Node3D" parent="."]
+script = ExtResource("5_slvmx")
+room_spawn_type = 1
+min_distance_between_rooms_in_tiles = 5
+max_distance_between_rooms_in_tiles = 5
+rooms_resources = Array[ExtResource("6_0aogx")]([SubResource("Resource_0ts1u"), SubResource("Resource_jbp4y"), SubResource("Resource_58q7l"), SubResource("Resource_q5pb2"), SubResource("Resource_roc3w"), SubResource("Resource_s1m6h"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8"), SubResource("Resource_w8vy0"), SubResource("Resource_j62y2")])
+pickup_items_to_spawn_dict = Dictionary[ExtResource("6_ax1lr"), int]({
+ExtResource("8_bk6l6"): 2,
+ExtResource("9_dc4xw"): 5,
+ExtResource("10_0ts1u"): 10
+})
+tiles_coords_islands = Dictionary[int, Array]({
+0: Array[Vector3i]([Vector3i(10, 0, -2), Vector3i(5, 0, -7), Vector3i(11, 0, -2), Vector3i(8, 0, -5), Vector3i(9, 0, -9), Vector3i(7, 0, 0), Vector3i(11, 0, -1), Vector3i(8, 0, -6), Vector3i(10, 0, 0), Vector3i(7, 0, -8), Vector3i(10, 0, -7), Vector3i(8, 0, -1), Vector3i(6, 0, -6), Vector3i(7, 0, -7), Vector3i(9, 0, -2), Vector3i(10, 0, -1), Vector3i(9, 0, 0), Vector3i(10, 0, -6), Vector3i(8, 0, -2), Vector3i(12, 0, 0), Vector3i(6, 0, 0), Vector3i(8, 0, -4), Vector3i(7, 0, -10), Vector3i(11, 0, -6), Vector3i(9, 0, -6), Vector3i(10, 0, -8), Vector3i(9, 0, -7), Vector3i(5, 0, -6), Vector3i(8, 0, -3), Vector3i(6, 0, -7), Vector3i(11, 0, 0), Vector3i(12, 0, -1), Vector3i(7, 0, -6), Vector3i(9, 0, -1), Vector3i(9, 0, -10), Vector3i(6, 0, -8), Vector3i(12, 0, -2), Vector3i(7, 0, -9), Vector3i(9, 0, -8), Vector3i(8, 0, 0)]),
+1: Array[Vector3i]([Vector3i(0, 0, 11), Vector3i(-4, 0, 13), Vector3i(4, 0, 11), Vector3i(4, 0, 10), Vector3i(-5, 0, 14), Vector3i(1, 0, 12), Vector3i(2, 0, 8), Vector3i(-4, 0, 9), Vector3i(-2, 0, 11), Vector3i(-3, 0, 9), Vector3i(-4, 0, 8), Vector3i(-1, 0, 13), Vector3i(3, 0, 9), Vector3i(-1, 0, 12), Vector3i(0, 0, 12), Vector3i(4, 0, 12), Vector3i(6, 0, 11), Vector3i(2, 0, 11), Vector3i(-2, 0, 9), Vector3i(3, 0, 8), Vector3i(-4, 0, 10), Vector3i(5, 0, 12), Vector3i(6, 0, 12), Vector3i(-5, 0, 13), Vector3i(-4, 0, 11), Vector3i(-2, 0, 10), Vector3i(4, 0, 8), Vector3i(-3, 0, 10), Vector3i(-1, 0, 14), Vector3i(3, 0, 10), Vector3i(2, 0, 10), Vector3i(-4, 0, 12), Vector3i(-2, 0, 12), Vector3i(2, 0, 12), Vector3i(-2, 0, 13)]),
+2: Array[Vector3i]([Vector3i(-13, 0, 1), Vector3i(-10, 0, 0), Vector3i(-6, 0, 3), Vector3i(-6, 0, 1), Vector3i(-9, 0, 1), Vector3i(-5, 0, 3), Vector3i(-5, 0, 2), Vector3i(-15, 0, 2), Vector3i(-6, 0, 2), Vector3i(-15, 0, 3), Vector3i(-12, 0, 1), Vector3i(-10, 0, -1), Vector3i(-14, 0, 1), Vector3i(-10, 0, -2), Vector3i(-11, 0, 1), Vector3i(-7, 0, 1), Vector3i(-14, 0, 2), Vector3i(-8, 0, 1), Vector3i(-14, 0, 3), Vector3i(-11, 0, 0), Vector3i(-9, 0, 0)]),
+3: Array[Vector3i]([Vector3i(-2, 0, -11), Vector3i(1, 0, -11), Vector3i(1, 0, -15), Vector3i(-1, 0, -11), Vector3i(5, 0, -12), Vector3i(-3, 0, -10), Vector3i(-5, 0, -10), Vector3i(-3, 0, -11), Vector3i(5, 0, -15), Vector3i(5, 0, -17), Vector3i(2, 0, -11), Vector3i(-4, 0, -9), Vector3i(3, 0, -10), Vector3i(4, 0, -11), Vector3i(0, 0, -16), Vector3i(-5, 0, -9), Vector3i(-5, 0, -11), Vector3i(0, 0, -11), Vector3i(5, 0, -16), Vector3i(-1, 0, -9), Vector3i(-4, 0, -11), Vector3i(-2, 0, -9), Vector3i(-1, 0, -10), Vector3i(6, 0, -15), Vector3i(0, 0, -15), Vector3i(1, 0, -17), Vector3i(3, 0, -12), Vector3i(-2, 0, -10), Vector3i(3, 0, -11), Vector3i(-6, 0, -11), Vector3i(1, 0, -16), Vector3i(2, 0, -12), Vector3i(0, 0, -10), Vector3i(2, 0, -10), Vector3i(4, 0, -10), Vector3i(1, 0, -14), Vector3i(5, 0, -13), Vector3i(6, 0, -16), Vector3i(4, 0, -12), Vector3i(-4, 0, -10), Vector3i(1, 0, -13), Vector3i(5, 0, -14), Vector3i(-6, 0, -10), Vector3i(1, 0, -12)]),
+4: Array[Vector3i]([Vector3i(6, 2, 3), Vector3i(6, 2, 8), Vector3i(7, 2, 8), Vector3i(9, 2, 4), Vector3i(7, 2, 3), Vector3i(4, 2, 12), Vector3i(4, 2, 0), Vector3i(4, 2, 11), Vector3i(5, 2, 10), Vector3i(5, 2, 1), Vector3i(7, 2, 4), Vector3i(3, 2, 12), Vector3i(6, 2, 9), Vector3i(7, 2, 5), Vector3i(6, 2, 10), Vector3i(9, 2, 6), Vector3i(4, 2, 1), Vector3i(8, 2, 8), Vector3i(9, 2, 7), Vector3i(10, 2, 8), Vector3i(8, 2, 7), Vector3i(8, 2, 4), Vector3i(7, 2, 6), Vector3i(10, 2, 4), Vector3i(5, 2, 2), Vector3i(5, 2, 11), Vector3i(5, 2, 12), Vector3i(6, 2, 2), Vector3i(8, 2, 5), Vector3i(7, 2, 9), Vector3i(9, 2, 5), Vector3i(8, 2, 6), Vector3i(9, 2, 8), Vector3i(7, 2, 7)]),
+5: Array[Vector3i]([Vector3i(2, 2, -14), Vector3i(3, 2, -14), Vector3i(4, 2, -13), Vector3i(4, 2, -14), Vector3i(4, 2, -12), Vector3i(2, 2, -12), Vector3i(2, 2, -13), Vector3i(3, 2, -13), Vector3i(3, 2, -12), Vector3i(1, 2, -12), Vector3i(5, 2, -13), Vector3i(1, 2, -13), Vector3i(5, 2, -12)]),
+6: Array[Vector3i]([Vector3i(0, 2, -9), Vector3i(0, 2, -8)]),
+7: Array[Vector3i]([Vector3i(6, 2, -9)]),
+8: Array[Vector3i]([Vector3i(-10, 8, 6), Vector3i(-6, 8, 4), Vector3i(-11, 8, 5), Vector3i(-5, 8, 4), Vector3i(-10, 8, 8), Vector3i(-7, 8, 3), Vector3i(-7, 8, 7), Vector3i(-6, 8, 7), Vector3i(-9, 8, 8), Vector3i(-7, 8, 6), Vector3i(-6, 8, 6), Vector3i(-10, 8, 5), Vector3i(-10, 8, 4), Vector3i(-9, 8, 4), Vector3i(-8, 8, 4), Vector3i(-11, 8, 4), Vector3i(-11, 8, 7), Vector3i(-9, 8, 6), Vector3i(-8, 8, 5), Vector3i(-6, 8, 5), Vector3i(-7, 8, 4), Vector3i(-7, 8, 5), Vector3i(-7, 8, 8), Vector3i(-9, 8, 3), Vector3i(-10, 8, 3), Vector3i(-10, 8, 2), Vector3i(-10, 8, 1), Vector3i(-8, 8, 7), Vector3i(-9, 8, 5), Vector3i(-11, 8, 3), Vector3i(-11, 8, 6), Vector3i(-10, 8, 7), Vector3i(-5, 8, 3), Vector3i(-5, 8, 6), Vector3i(-9, 8, 7), Vector3i(-6, 8, 8), Vector3i(-5, 8, 5), Vector3i(-8, 8, 6)]),
+9: Array[Vector3i]([Vector3i(-6, 8, 1)]),
+10: Array[Vector3i]([Vector3i(-9, 4, -5), Vector3i(-6, 4, -5), Vector3i(-6, 4, -6), Vector3i(-9, 4, -4), Vector3i(-7, 4, -6), Vector3i(-8, 4, -5), Vector3i(-6, 4, -7), Vector3i(-6, 4, -4), Vector3i(-9, 4, -6), Vector3i(-7, 4, -5), Vector3i(-7, 4, -4), Vector3i(-10, 4, -6), Vector3i(-10, 4, -5), Vector3i(-8, 4, -6)]),
+11: Array[Vector3i]([Vector3i(-4, 1, -2), Vector3i(4, 1, -9), Vector3i(5, 1, -10), Vector3i(0, 1, -5), Vector3i(5, 1, -9), Vector3i(2, 1, -7), Vector3i(-4, 1, -1), Vector3i(1, 1, -10), Vector3i(5, 1, -11), Vector3i(1, 1, -7), Vector3i(-2, 1, -4), Vector3i(1, 1, -6), Vector3i(1, 1, -9), Vector3i(-5, 1, -1), Vector3i(2, 1, -8), Vector3i(1, 1, -8), Vector3i(4, 1, -7), Vector3i(3, 1, -9), Vector3i(5, 1, -8), Vector3i(-5, 1, 0), Vector3i(0, 1, -6), Vector3i(2, 1, -9), Vector3i(-1, 1, -5), Vector3i(-5, 1, 1), Vector3i(-1, 1, -4), Vector3i(-3, 1, -3), Vector3i(-3, 1, -2), Vector3i(4, 1, -8), Vector3i(-2, 1, -3)]),
+12: Array[Vector3i]([Vector3i(5, 1, 0)]),
+13: Array[Vector3i]([Vector3i(5, 1, 8)]),
+14: Array[Vector3i]([Vector3i(-5, 1, 5), Vector3i(-5, 1, 8), Vector3i(-5, 1, 4), Vector3i(-5, 1, 7), Vector3i(-5, 1, 6)]),
+15: Array[Vector3i]([Vector3i(-10, 1, -3), Vector3i(-10, 1, -4)]),
+16: Array[Vector3i]([Vector3i(-6, 7, 3)]),
+17: Array[Vector3i]([Vector3i(-5, 3, -8), Vector3i(-6, 3, -8)])
+})
+tunnel_props_amount = null
+default_props_in_tunnels = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
 
-[node name="WeaponRustyPipe3" parent="." instance=ExtResource("3_vcb5n")]
-transform = Transform3D(-4.371138e-08, -1.0000002, 0, -4.3711385e-08, -1.6420286e-15, 0.99999994, -0.9999999, 4.3711395e-08, -4.3711385e-08, -2.2726693, -1.7894197, -0.94063497)
-
-[node name="WeaponRustyPipe5" parent="." instance=ExtResource("3_vcb5n")]
-transform = Transform3D(-4.371138e-08, -1.0000002, 0, -4.3711385e-08, -1.6420286e-15, 0.99999994, -0.9999999, 4.3711395e-08, -4.3711385e-08, -1.0042379, -1.7894197, -0.4625193)
-
-[node name="WeaponFireAxe" parent="." instance=ExtResource("4_h4wow")]
-transform = Transform3D(0.9999999, 0, 0, 0, 0.6483327, 0.76135725, 0, -0.7613575, 0.6483325, -1.8821565, -3.477469, 1.1413682)
-
-[node name="WeaponFireAxe2" parent="." instance=ExtResource("4_h4wow")]
-transform = Transform3D(0.76211476, 0.647442, 0, -0.64744174, 0.76211506, 0, 0, 0, 0.99999994, -2.8648353, -2.0129247, -0.008756399)
-
-[node name="WeaponFireAxe3" parent="." instance=ExtResource("4_h4wow")]
-transform = Transform3D(0.76211476, 0.647442, 0, -0.64744174, 0.76211506, 0, 0, 0, 0.99999994, -0.8369138, -2.0129247, -0.2213583)
-
-[node name="WeaponFireAxe4" parent="." instance=ExtResource("4_h4wow")]
-transform = Transform3D(0.76211476, 0.647442, 0, -0.64744174, 0.76211506, 0, 0, 0, 0.99999994, -1.2377746, -2.0129247, 2.4813356)
-
-[node name="GPUParticlesCollisionBox3D" type="GPUParticlesCollisionBox3D" parent="."]
-transform = Transform3D(1.0000005, 0, 0, 0, 1, 0, 0, 0, 1.0000005, 2.152295, -5.6179733, -2.733758)
-size = Vector3(37.347656, 2, 29.935547)
-
-[node name="AiCharacter10" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.38065, -4.75, -19.590748)
-
-[node name="AiCharacter4" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.414293, 2.5634155, 19.916323)
-
-[node name="AiCharacter5" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.531149, -1.2633891, 0.4909935)
-
-[node name="AiCharacter6" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.639378, 2.5634155, 21.289791)
-
-[node name="AiCharacter7" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.62285, 2.5634155, 14.706499)
-
-[node name="AiCharacter11" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.769627, 10.837769, -15.907322)
-
-[node name="AiCharacter12" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.988076, 10.837769, -18.962368)
-
-[node name="AiCharacter13" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.93519, 10.837769, -16.045662)
-
-[node name="AiCharacter14" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.557129, 10.837769, -20.249163)
-
-[node name="AiCharacter8" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8665018, 2.5634146, 20.657618)
-
-[node name="AiCharacter9" parent="." instance=ExtResource("7_0aogx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.204284, 2.5634155, 15.312815)
-
-[node name="WeaponTorch" parent="." instance=ExtResource("10_bk6l6")]
-transform = Transform3D(2.9802322e-08, -1.0000002, 0, 0.9999998, 2.9802322e-08, 0, 0, 0, 0.99999994, -3.7353344, -3.3706045, 3.7887125)
-
-[node name="WeaponTorch2" parent="." instance=ExtResource("10_bk6l6")]
-transform = Transform3D(2.9802322e-08, -1.0000002, 0, 0.9999998, 2.9802322e-08, 0, 0, 0, 0.99999994, -4.1698427, -3.3706045, -1.9988565)
-
-[node name="WeaponTorch3" parent="." instance=ExtResource("10_bk6l6")]
-transform = Transform3D(2.9802322e-08, -1.0000002, 0, 0.9999998, 2.9802322e-08, 0, 0, 0, 0.99999994, 5.268111, -3.3706045, -9.271998)
-
-[node name="WeaponTorch4" parent="." instance=ExtResource("10_bk6l6")]
-transform = Transform3D(2.9802322e-08, -1.0000002, 0, 0.9999998, 2.9802322e-08, 0, 0, 0, 0.99999994, 3.138916, -3.3706045, 9.635068)
-
-[node name="WeaponTorch5" parent="." instance=ExtResource("11_dc4xw")]
-transform = Transform3D(-0.7071067, 0.70710695, 6.1817225e-08, 0.7071067, 0.70710695, -6.1817225e-08, -8.742276e-08, 0, -0.99999994, 8.765848, -2.815632, -10.510456)
-
-[node name="CSGBox3D" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3998423, -4.1332455, -22.780172)
-material_override = SubResource("StandardMaterial3D_0ts1u")
-size = Vector3(0.1, 1000, 0.1)
-
-[node name="CSGBox3D2" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6062868, -1.9976369, 30.007502)
-material_override = SubResource("StandardMaterial3D_jbp4y")
-size = Vector3(0.1, 0.1, 0.1)
-
-[node name="CSGBox3D3" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7791271, -1.9976369, 30.007502)
-material_override = SubResource("StandardMaterial3D_jbp4y")
-size = Vector3(0.1, 0.1, 0.1)
+[node name="DungeonTiles" type="Node3D" parent="ProceduralDungeon"]
+unique_name_in_owner = true

@@ -141,6 +141,10 @@ drop_item={
 3d_physics/layer_2="units"
 3d_physics/layer_3="pickups"
 
+[rendering]
+
+occlusion_culling/use_occlusion_culling=true
+
 [steam]
 
 initialization/app_id=0

@@ -2,6 +2,9 @@
 
 [ext_resource type="Material" uid="uid://dah4n64qkc4lm" path="res://assets/meshes/modularDungeon/m_stone_3.tres" id="1_np182"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_np182"]
+size = Vector3(3.895502, 0.27947998, 4)
+
 [sub_resource type="ArrayMesh" id="ArrayMesh_mkwa8"]
 _surfaces = [{
 "aabb": AABB(-4.0163527, -0.064858094, 0, 4.1512756, 2.1677818, 4.031475),
@@ -34,16 +37,14 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_mkwa8")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_np182"]
-size = Vector3(4.8010254, 0.7026367, 4)
-
-[node name="Stairs1" type="MeshInstance3D"]
-mesh = SubResource("ArrayMesh_v347m")
-skeleton = NodePath("")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
+[node name="StaticBody3D" type="StaticBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(0.8982808, 0.4394219, 0, -0.4394219, 0.8982808, 0, 0, 0, 1, -0.02196765, 0.6998263, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(-3.92651e-08, -1.9207741e-08, 1, -0.53999066, 0.8416711, -5.0361866e-09, -0.8416711, -0.53999066, -4.3420304e-08, -0.02196765, 0.9132111, 0.14516044)
 shape = SubResource("BoxShape3D_np182")
+
+[node name="Stairs1" type="MeshInstance3D" parent="."]
+transform = Transform3D(-3.5963733e-08, -1.7763568e-15, 1, 0, 1, 0, -0.8227543, 0, -4.371139e-08, -2.021968, 5.9604645e-08, -1.153548)
+mesh = SubResource("ArrayMesh_v347m")
+skeleton = NodePath("")

@@ -214,6 +214,8 @@ func _ready():
 	super._ready()
 
 func _process(_delta):
+	if GameManager._game_level.is_game_level_ready == false:
+		return
 	cheat_codes()
 	_ensure_authority_state()
 	if !_has_input_authority:
@@ -233,6 +235,8 @@ func _process(_delta):
 @export var input_dir = Vector2.ZERO
 
 func _physics_process(delta): # Most things happen here.
+	if GameManager._game_level.is_game_level_ready == false:
+		return
 	_ensure_authority_state()
 	#if mesh_animation_player and _has_input_authority:
 	if mesh_animation_player:

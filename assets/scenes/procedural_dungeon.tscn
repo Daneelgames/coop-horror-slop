@@ -1,40 +1,128 @@
-[gd_scene load_steps=7 format=3 uid="uid://cag760n3p6h3d"]
+[gd_scene load_steps=14 format=3 uid="uid://cag760n3p6h3d"]
 
 [ext_resource type="Script" uid="uid://u0cvh8rk4kx0" path="res://assets/scripts/level_generators/procedural_dungeon.gd" id="1_vs4da"]
 [ext_resource type="Script" uid="uid://chssve2spif5p" path="res://assets/scripts/resources/resource_dungeon_room.gd" id="2_4pir1"]
 
-[sub_resource type="Resource" id="Resource_ljcrj"]
+[sub_resource type="Resource" id="Resource_44lcu"]
 script = ExtResource("2_4pir1")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
+default_vertical_wall_tiles_amount = 0
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_vs4da"]
+[sub_resource type="Resource" id="Resource_avbiq"]
 script = ExtResource("2_4pir1")
-base_room_height = 3
+base_room_height = 2
 target_tiles_amount = 20
 walker_change_floor_height_chance = 0.0201
 mirror_z = true
 default_vertical_wall_tiles_amount = 2
+rooms_indexes_to_make_extra_tunnels_to = Array[int]([3])
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_4pir1"]
+[sub_resource type="Resource" id="Resource_jlmlq"]
 script = ExtResource("2_4pir1")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
+default_vertical_wall_tiles_amount = 0
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_q47b7"]
+script = ExtResource("2_4pir1")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_mcte8"]
+script = ExtResource("2_4pir1")
+base_room_height = 8
+target_tiles_amount = 30
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_lkeyi"]
+script = ExtResource("2_4pir1")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_xd1b4"]
+script = ExtResource("2_4pir1")
+base_room_height = 4
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 4
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_165nf"]
+script = ExtResource("2_4pir1")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_0a6ug"]
+script = ExtResource("2_4pir1")
+base_room_height = 2
+target_tiles_amount = 50
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 0
+metadata/_custom_type_script = "uid://chssve2spif5p"
+
+[sub_resource type="Resource" id="Resource_13h21"]
+script = ExtResource("2_4pir1")
+walker_change_floor_height_chance = 0.0101
+mirror_x = true
+default_vertical_wall_tiles_amount = 10
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
 [sub_resource type="Environment" id="Environment_diio1"]
 ambient_light_source = 2
 ambient_light_color = Color(1, 1, 1, 1)
+fog_enabled = true
+fog_light_color = Color(0, 0, 0, 1)
+fog_density = 0.05
 
 [node name="ProceduralDungeon" type="Node3D"]
 script = ExtResource("1_vs4da")
 room_spawn_type = 1
-rooms_circle_spawn_radius_in_tiles = 6
 min_distance_between_rooms_in_tiles = 5
 max_distance_between_rooms_in_tiles = 5
-rooms_resources = Array[ExtResource("2_4pir1")]([SubResource("Resource_ljcrj"), SubResource("Resource_vs4da"), SubResource("Resource_4pir1")])
+rooms_resources = Array[ExtResource("2_4pir1")]([SubResource("Resource_44lcu"), SubResource("Resource_avbiq"), SubResource("Resource_jlmlq"), SubResource("Resource_q47b7"), SubResource("Resource_mcte8"), SubResource("Resource_lkeyi"), SubResource("Resource_xd1b4"), SubResource("Resource_165nf"), SubResource("Resource_0a6ug"), SubResource("Resource_13h21")])
+tiles_coords_islands = Dictionary[int, Array]({
+0: Array[Vector3i]([Vector3i(9, 0, -7), Vector3i(11, 0, -8), Vector3i(8, 0, -8), Vector3i(7, 0, -1), Vector3i(13, 0, -2), Vector3i(6, 0, -7), Vector3i(10, 0, 1), Vector3i(5, 0, -7), Vector3i(11, 0, -1), Vector3i(10, 0, 2), Vector3i(8, 0, -1), Vector3i(8, 0, -5), Vector3i(4, 0, -7), Vector3i(10, 0, -7), Vector3i(10, 0, -1), Vector3i(13, 0, -1), Vector3i(11, 0, 0), Vector3i(12, 0, -2), Vector3i(11, 0, -9), Vector3i(7, 0, 0), Vector3i(12, 0, -7), Vector3i(8, 0, -6), Vector3i(9, 0, 0), Vector3i(7, 0, -7), Vector3i(7, 0, -2), Vector3i(8, 0, -3), Vector3i(8, 0, -4), Vector3i(13, 0, 0), Vector3i(12, 0, -8), Vector3i(8, 0, -2), Vector3i(11, 0, -7), Vector3i(10, 0, 0), Vector3i(12, 0, -1), Vector3i(9, 0, -1), Vector3i(8, 0, -7), Vector3i(5, 0, -9), Vector3i(5, 0, -8), Vector3i(4, 0, -8)]),
+1: Array[Vector3i]([Vector3i(1, 0, 8), Vector3i(3, 0, 9), Vector3i(2, 0, 9), Vector3i(2, 0, 7), Vector3i(-5, 0, 7), Vector3i(-4, 0, 9), Vector3i(-3, 0, 11), Vector3i(-3, 0, 12), Vector3i(-6, 0, 6), Vector3i(1, 0, 7), Vector3i(1, 0, 10), Vector3i(-1, 0, 7), Vector3i(3, 0, 10), Vector3i(2, 0, 10), Vector3i(0, 0, 7), Vector3i(5, 0, 10), Vector3i(-2, 0, 7), Vector3i(-4, 0, 7), Vector3i(1, 0, 9), Vector3i(5, 0, 9), Vector3i(-4, 0, 8), Vector3i(-2, 0, 11), Vector3i(4, 0, 11), Vector3i(4, 0, 10), Vector3i(-5, 0, 6), Vector3i(-2, 0, 9), Vector3i(2, 0, 11), Vector3i(-2, 0, 10), Vector3i(-3, 0, 10), Vector3i(-4, 0, 11), Vector3i(0, 0, 10), Vector3i(-4, 0, 10), Vector3i(4, 0, 9), Vector3i(-1, 0, 6), Vector3i(0, 0, 6), Vector3i(-2, 0, 8), Vector3i(3, 0, 7), Vector3i(5, 0, 8), Vector3i(-1, 0, 10)]),
+2: Array[Vector3i]([Vector3i(-10, 0, -2), Vector3i(-9, 0, 2), Vector3i(-11, 0, 1), Vector3i(-10, 0, 0), Vector3i(-11, 0, 0), Vector3i(-9, 0, 0), Vector3i(-10, 0, -1), Vector3i(-9, 0, 3), Vector3i(-11, 0, 3), Vector3i(-9, 0, 1), Vector3i(-11, 0, 2), Vector3i(-10, 0, 2), Vector3i(-10, 0, 3)]),
+3: Array[Vector3i]([Vector3i(-3, 0, -10), Vector3i(-1, 0, -10), Vector3i(-4, 0, -10), Vector3i(-5, 0, -10), Vector3i(-2, 0, -10)]),
+4: Array[Vector3i]([Vector3i(8, 2, 7), Vector3i(7, 2, 5), Vector3i(8, 2, 5), Vector3i(7, 2, 7), Vector3i(7, 2, 6), Vector3i(8, 2, 6), Vector3i(9, 2, 6)]),
+5: Array[Vector3i]([Vector3i(5, 2, -14), Vector3i(0, 2, -9), Vector3i(1, 2, -7), Vector3i(4, 2, -10), Vector3i(8, 2, -12), Vector3i(7, 2, -13), Vector3i(5, 2, -10), Vector3i(4, 2, -11), Vector3i(6, 2, -12), Vector3i(7, 2, -12), Vector3i(1, 2, -8), Vector3i(5, 2, -13), Vector3i(2, 2, -7), Vector3i(3, 2, -10), Vector3i(0, 2, -7), Vector3i(1, 2, -13), Vector3i(-1, 2, -13), Vector3i(1, 2, -6), Vector3i(6, 2, -11), Vector3i(8, 2, -9), Vector3i(4, 2, -9), Vector3i(1, 2, -12), Vector3i(3, 2, -13), Vector3i(9, 2, -9), Vector3i(8, 2, -11), Vector3i(3, 2, -12), Vector3i(2, 2, -9), Vector3i(0, 2, -11), Vector3i(0, 2, -8), Vector3i(5, 2, -12), Vector3i(3, 2, -14), Vector3i(2, 2, -13), Vector3i(3, 2, -8), Vector3i(4, 2, -14), Vector3i(1, 2, -11), Vector3i(6, 2, -13), Vector3i(2, 2, -12), Vector3i(3, 2, -9), Vector3i(0, 2, -13), Vector3i(2, 2, -14), Vector3i(2, 2, -8), Vector3i(8, 2, -13), Vector3i(2, 2, -11), Vector3i(9, 2, -10), Vector3i(1, 2, -9), Vector3i(5, 2, -11), Vector3i(2, 2, -6), Vector3i(4, 2, -13), Vector3i(2, 2, -5), Vector3i(0, 2, -12), Vector3i(-2, 2, -13), Vector3i(4, 2, -12), Vector3i(10, 2, -10), Vector3i(7, 2, -11), Vector3i(8, 2, -10), Vector3i(1, 2, -14)]),
+6: Array[Vector3i]([Vector3i(11, 2, 4)]),
+7: Array[Vector3i]([Vector3i(5, 2, -6), Vector3i(4, 2, -6), Vector3i(4, 2, -5)]),
+8: Array[Vector3i]([Vector3i(6, 2, -8), Vector3i(6, 2, -9)]),
+9: Array[Vector3i]([Vector3i(11, 2, 8)]),
+10: Array[Vector3i]([Vector3i(-3, 2, -10), Vector3i(-2, 2, -9), Vector3i(-3, 2, -9)]),
+11: Array[Vector3i]([Vector3i(-11, 8, 17), Vector3i(-5, 8, 9), Vector3i(-12, 8, 11), Vector3i(-13, 8, 11), Vector3i(-10, 8, 6), Vector3i(-6, 8, 8), Vector3i(-7, 8, 8), Vector3i(-3, 8, 11), Vector3i(-13, 8, 13), Vector3i(-10, 8, 8), Vector3i(-12, 8, 15), Vector3i(-12, 8, 17), Vector3i(-10, 8, 17), Vector3i(-3, 8, 9), Vector3i(-12, 8, 9), Vector3i(-13, 8, 14), Vector3i(-10, 8, 7), Vector3i(-4, 8, 11), Vector3i(-8, 8, 6), Vector3i(-7, 8, 4), Vector3i(-13, 8, 10), Vector3i(-12, 8, 10), Vector3i(-9, 8, 6), Vector3i(-6, 8, 6), Vector3i(-5, 8, 8), Vector3i(-4, 8, 10), Vector3i(-7, 8, 5), Vector3i(-11, 8, 9), Vector3i(-11, 8, 8), Vector3i(-4, 8, 9), Vector3i(-7, 8, 6), Vector3i(-13, 8, 17), Vector3i(-13, 8, 12), Vector3i(-6, 8, 7), Vector3i(-13, 8, 9), Vector3i(-3, 8, 12), Vector3i(-7, 8, 7), Vector3i(-9, 8, 7), Vector3i(-8, 8, 5), Vector3i(-13, 8, 15), Vector3i(-13, 8, 16), Vector3i(-12, 8, 14), Vector3i(-9, 8, 5), Vector3i(-3, 8, 10), Vector3i(-9, 8, 8), Vector3i(-8, 8, 7)]),
+12: Array[Vector3i]([Vector3i(-6, 8, 17), Vector3i(-3, 8, 16), Vector3i(-4, 8, 14), Vector3i(-3, 8, 14), Vector3i(-4, 8, 17), Vector3i(-5, 8, 17), Vector3i(-3, 8, 17), Vector3i(-4, 8, 15), Vector3i(-3, 8, 15)]),
+13: Array[Vector3i]([Vector3i(-11, 4, -3), Vector3i(-6, 4, -3), Vector3i(-8, 4, -7), Vector3i(-5, 4, -4), Vector3i(-4, 4, -3), Vector3i(-5, 4, -3), Vector3i(-6, 4, -2), Vector3i(-6, 4, -5), Vector3i(-7, 4, -5), Vector3i(-9, 4, -5), Vector3i(-9, 4, -6), Vector3i(-11, 4, -4), Vector3i(-12, 4, -3), Vector3i(-6, 4, -4), Vector3i(-7, 4, -6), Vector3i(-10, 4, -5), Vector3i(-10, 4, -4), Vector3i(-8, 4, -6)]),
+14: Array[Vector3i]([Vector3i(-10, 4, -2)]),
+15: Array[Vector3i]([Vector3i(10, 1, 5), Vector3i(10, 1, 4), Vector3i(10, 1, 3), Vector3i(9, 1, 5), Vector3i(12, 1, 5), Vector3i(11, 1, 5), Vector3i(9, 1, 4)]),
+16: Array[Vector3i]([Vector3i(-2, 1, -11), Vector3i(-1, 1, -11), Vector3i(-1, 1, -12), Vector3i(-2, 1, -12)]),
+17: Array[Vector3i]([Vector3i(1, 1, -10), Vector3i(0, 1, -10), Vector3i(2, 1, -10)]),
+18: Array[Vector3i]([Vector3i(12, 1, 7), Vector3i(10, 1, 7), Vector3i(9, 1, 7), Vector3i(10, 1, 9), Vector3i(9, 1, 8), Vector3i(10, 1, 8), Vector3i(11, 1, 7)]),
+19: Array[Vector3i]([Vector3i(-4, 1, -11), Vector3i(-4, 1, -12)]),
+20: Array[Vector3i]([Vector3i(-7, 1, -10), Vector3i(-6, 1, -10), Vector3i(-8, 1, -10)]),
+21: Array[Vector3i]([Vector3i(6, 1, 7), Vector3i(4, 1, 7), Vector3i(5, 1, 7)]),
+22: Array[Vector3i]([Vector3i(-3, 1, 13)]),
+23: Array[Vector3i]([Vector3i(-10, 1, -3)]),
+24: Array[Vector3i]([Vector3i(7, 1, -8)]),
+25: Array[Vector3i]([Vector3i(-9, 7, 4)]),
+26: Array[Vector3i]([Vector3i(-8, 3, -8), Vector3i(-8, 3, -9)])
+})
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_diio1")

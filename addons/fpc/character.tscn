@@ -1,4 +1,4 @@
-[gd_scene load_steps=61 format=4 uid="uid://cc1m2a1obsyn4"]
+[gd_scene load_steps=62 format=4 uid="uid://cc1m2a1obsyn4"]
 
 [ext_resource type="Script" uid="uid://hutuis63hgev" path="res://addons/fpc/character.gd" id="1_0t4e8"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_gv6je"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://8mo78r7i5pk3" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_normal.png" id="3_4fv23"]
 [ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="3_sarb3"]
 [ext_resource type="Script" uid="uid://u5u7xxlvmcxx" path="res://addons/fpc/debug.gd" id="3_x1wcc"]
+[ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="4_8bp5q"]
 [ext_resource type="Texture2D" uid="uid://bjbg7bb722uhe" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_diffuse.png" id="4_q62an"]
 [ext_resource type="AnimationLibrary" uid="uid://dh0c63nv708ei" path="res://assets/animations/unit_anims.res" id="5_uel3y"]
 [ext_resource type="Script" uid="uid://c8h1pphcyugu3" path="res://assets/scripts/player_inventory_slots_panel_container.gd" id="7_4fv23"]
@@ -296,6 +297,8 @@ bind/64/bone = -1
 bind/64/pose = Transform3D(-99.92396, -0.0001585168, 3.8993707, 3.899273, -0.7102333, 99.92143, 0.027536277, 99.9975, 0.7097078, 10.220509, -18.325436, -0.15309562)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_uy03j"]
+radius = 0.4
+height = 1.65
 
 [sub_resource type="Animation" id="Animation_j8cx7"]
 resource_name = "RESET"
@@ -303,34 +306,10 @@ length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("Collision:position")
-tracks/0/interp = 2
+tracks/0/path = NodePath("Head:position:y")
+tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 1, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Collision:shape:height")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [2.0]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("Head:position:y")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
@@ -694,7 +673,8 @@ platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_0t4e8")
 carrying_items = Dictionary[StringName, ExtResource("2_mo3xr")]({
-&"Torch": ExtResource("3_sarb3")
+&"Torch": ExtResource("3_sarb3"),
+&"fire axe": ExtResource("4_8bp5q")
 })
 inventory_slots_max = 4
 base_speed = 2.0
@@ -1215,7 +1195,7 @@ libraries = {
 autoplay = "idle"
 
 [node name="Collision" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.825, 0)
 shape = SubResource("CapsuleShape3D_uy03j")
 
 [node name="CrouchAnimation" type="AnimationPlayer" parent="."]
@@ -1227,6 +1207,7 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
 
 [node name="Camera" type="Camera3D" parent="Head"]
+near = 0.001
 
 [node name="InteractionRayCast3D" type="RayCast3D" parent="Head/Camera"]
 unique_name_in_owner = true
