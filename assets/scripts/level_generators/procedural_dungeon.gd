@@ -138,6 +138,7 @@ func generate_dungeon():
 	await _expand_rooms_vertically()
 	
 	# Configure all tiles based on their neighbors
+	await connect_rooms_with_tunnels()
 	_configure_all_tiles_based_on_neighbours()
 
 func _is_coord_free(coord: Vector3i) -> bool:
@@ -331,3 +332,203 @@ func _get_tile_at_coord(coord: Vector3i) -> DungeonTile:
 		if tile.coord == coord:
 			return tile
 	return null
+
+func connect_rooms_with_tunnels():
+	# connect each room in order of their spawn
+	# find two closest tiles between two rooms 
+	# and connect them with a tunnel of tiles
+	# tunnel walker should only be able to walk in straight directions: up down left right front back
+	# after making a vertical step, walker should make 2 horizontal steps minimum before making another vertical one
+	# use tiles counter and await frame every 100 tile
+	
+	if rooms_resources.size() < 2:
+		return  # Need at least 2 rooms to connect
+	
+	var tiles_spawned: int = 0
+	
+	# Connect each room to the next one in order
+	for room_index in range(rooms_resources.size() - 1):
+		var room1: ResourceDungeonRoom = rooms_resources[room_index]
+		var room2: ResourceDungeonRoom = rooms_resources[room_index + 1]
+		
+		if not spawned_room_tiles.has(room1) or spawned_room_tiles[room1].is_empty():
+			continue
+		if not spawned_room_tiles.has(room2) or spawned_room_tiles[room2].is_empty():
+			continue
+		
+		# Find closest tiles between the two rooms
+		var closest_pair = _find_closest_tiles_between_rooms(room1, room2)
+		if closest_pair.is_empty():
+			continue
+		
+		var tile1: DungeonTile = closest_pair[0]
+		var tile2: DungeonTile = closest_pair[1]
+		
+		# Create tunnel between the two tiles
+		var tunnel_tiles = await _create_tunnel_between_tiles(tile1.coord, tile2.coord, room1)
+		tiles_spawned += tunnel_tiles.size()
+		
+		# Await frame every 100 tiles
+		if tiles_spawned >= 100:
+			tiles_spawned = 0
+			await get_tree().process_frame
+	
+	# Connect last room back to first room (circular connection)
+	if rooms_resources.size() >= 2:
+		var last_room: ResourceDungeonRoom = rooms_resources[rooms_resources.size() - 1]
+		var first_room: ResourceDungeonRoom = rooms_resources[0]
+		
+		if spawned_room_tiles.has(last_room) and not spawned_room_tiles[last_room].is_empty() and \
+		   spawned_room_tiles.has(first_room) and not spawned_room_tiles[first_room].is_empty():
+			
+			# Find closest tiles between the two rooms
+			var closest_pair = _find_closest_tiles_between_rooms(last_room, first_room)
+			if not closest_pair.is_empty():
+				var tile1: DungeonTile = closest_pair[0]
+				var tile2: DungeonTile = closest_pair[1]
+				
+				# Create tunnel between the two tiles
+				var tunnel_tiles = await _create_tunnel_between_tiles(tile1.coord, tile2.coord, last_room)
+				tiles_spawned += tunnel_tiles.size()
+				
+				# Await frame every 100 tiles
+				if tiles_spawned >= 100:
+					tiles_spawned = 0
+					await get_tree().process_frame
+	
+	# Create extra tunnels based on rooms_indexes_to_make_extra_tunnels_to
+	for room_index in rooms_resources.size():
+		var room: ResourceDungeonRoom = rooms_resources[room_index]
+		
+		if not spawned_room_tiles.has(room) or spawned_room_tiles[room].is_empty():
+			continue
+		
+		# Check if this room has extra tunnel connections specified
+		if room.rooms_indexes_to_make_extra_tunnels_to.is_empty():
+			continue
+		
+		# Create tunnels to each specified room index
+		for target_room_index in room.rooms_indexes_to_make_extra_tunnels_to:
+			# Validate target room index
+			if target_room_index < 0 or target_room_index >= rooms_resources.size():
+				continue
+			
+			# Skip if trying to connect to itself
+			if target_room_index == room_index:
+				continue
+			
+			var target_room: ResourceDungeonRoom = rooms_resources[target_room_index]
+			
+			if not spawned_room_tiles.has(target_room) or spawned_room_tiles[target_room].is_empty():
+				continue
+			
+			# Find closest tiles between the two rooms
+			var closest_pair = _find_closest_tiles_between_rooms(room, target_room)
+			if closest_pair.is_empty():
+				continue
+			
+			var tile1: DungeonTile = closest_pair[0]
+			var tile2: DungeonTile = closest_pair[1]
+			
+			# Create tunnel between the two tiles
+			var tunnel_tiles = await _create_tunnel_between_tiles(tile1.coord, tile2.coord, room)
+			tiles_spawned += tunnel_tiles.size()
+			
+			# Await frame every 100 tiles
+			if tiles_spawned >= 100:
+				tiles_spawned = 0
+				await get_tree().process_frame
+
+func _find_closest_tiles_between_rooms(room1: ResourceDungeonRoom, room2: ResourceDungeonRoom) -> Array:
+	# Find the two closest tiles between room1 and room2
+	if not spawned_room_tiles.has(room1) or not spawned_room_tiles.has(room2):
+		return []
+	
+	var tiles1: Array = spawned_room_tiles[room1]
+	var tiles2: Array = spawned_room_tiles[room2]
+	
+	if tiles1.is_empty() or tiles2.is_empty():
+		return []
+	
+	var closest_distance: float = INF
+	var closest_tile1: DungeonTile = null
+	var closest_tile2: DungeonTile = null
+	
+	# Check all pairs of tiles
+	for tile1 in tiles1:
+		for tile2 in tiles2:
+			var distance: float = (tile1.coord - tile2.coord).length()
+			if distance < closest_distance:
+				closest_distance = distance
+				closest_tile1 = tile1
+				closest_tile2 = tile2
+	
+	if closest_tile1 == null or closest_tile2 == null:
+		return []
+	
+	return [closest_tile1, closest_tile2]
+
+func _create_tunnel_between_tiles(start_coord: Vector3i, end_coord: Vector3i, room: ResourceDungeonRoom) -> Array:
+	# Create a tunnel path between two coordinates
+	var tunnel_tiles: Array[DungeonTile] = []
+	var current_coord: Vector3i = start_coord
+	var last_step_was_vertical: bool = false
+	var horizontal_steps_since_vertical: int = 0
+	var max_iterations: int = 10000  # Safety limit
+	var iteration: int = 0
+	
+	while current_coord != end_coord and iteration < max_iterations:
+		iteration += 1
+		var offset: Vector3i = end_coord - current_coord
+		
+		# Determine next step direction
+		var next_coord: Vector3i = current_coord
+		var can_move_vertically: bool = not last_step_was_vertical and horizontal_steps_since_vertical >= 2
+		
+		# Priority: move vertically if allowed and needed, otherwise move horizontally
+		if can_move_vertically and offset.y != 0:
+			# Move vertically
+			var y_step: int = 1 if offset.y > 0 else -1
+			next_coord = Vector3i(current_coord.x, current_coord.y + y_step, current_coord.z)
+			last_step_was_vertical = true
+			horizontal_steps_since_vertical = 0
+		else:
+			# Move horizontally - prioritize the axis with the largest difference
+			if abs(offset.x) >= abs(offset.z):
+				# Move in X direction
+				if offset.x > 0:
+					next_coord = Vector3i(current_coord.x + 1, current_coord.y, current_coord.z)
+				elif offset.x < 0:
+					next_coord = Vector3i(current_coord.x - 1, current_coord.y, current_coord.z)
+				else:
+					# X is done, move in Z direction
+					if offset.z > 0:
+						next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z + 1)
+					elif offset.z < 0:
+						next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z - 1)
+			else:
+				# Move in Z direction
+				if offset.z > 0:
+					next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z + 1)
+				elif offset.z < 0:
+					next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z - 1)
+				else:
+					# Z is done, move in X direction
+					if offset.x > 0:
+						next_coord = Vector3i(current_coord.x + 1, current_coord.y, current_coord.z)
+					elif offset.x < 0:
+						next_coord = Vector3i(current_coord.x - 1, current_coord.y, current_coord.z)
+			
+			last_step_was_vertical = false
+			horizontal_steps_since_vertical += 1
+		
+		# Spawn tile if coord is free (always spawn tunnel tiles, even if coord exists)
+		if _is_coord_free(next_coord):
+			_spawn_tile_at_coord(room, next_coord)
+			var new_tile = _get_tile_at_coord(next_coord)
+			if new_tile != null:
+				tunnel_tiles.append(new_tile)
+		
+		current_coord = next_coord
+	
+	return tunnel_tiles

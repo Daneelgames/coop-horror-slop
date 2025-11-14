@@ -7,3 +7,4 @@ class_name ResourceDungeonRoom
 @export var mirror_x : bool = false
 @export var mirror_z : bool = false
 @export var default_vertical_wall_tiles_amount : int = 1
+@export var rooms_indexes_to_make_extra_tunnels_to : Array[int]
