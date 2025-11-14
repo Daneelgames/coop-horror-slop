@@ -3,6 +3,7 @@ extends Node3D
 class_name ProceduralDungeon
 
 const DUNGEON_TILE = preload("uid://cefhqgvoa83r2")
+const STAIRS_1 = preload("res://assets/prefabs/environment/dungeon_walls/stairs_1.tscn")
 const TILE_SIZE : Vector3i = Vector3i(4,4,4) # tile's origin is at its bottom center
 enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 @export var room_spawn_type : ROOM_SPAWN_TYPE
@@ -439,6 +440,7 @@ func connect_rooms_with_tunnels():
 				tiles_spawned = 0
 				await get_tree().process_frame
 
+
 func _find_closest_tiles_between_rooms(room1: ResourceDungeonRoom, room2: ResourceDungeonRoom) -> Array:
 	# Find the two closest tiles between room1 and room2
 	if not spawned_room_tiles.has(room1) or not spawned_room_tiles.has(room2):
@@ -474,6 +476,7 @@ func _create_tunnel_between_tiles(start_coord: Vector3i, end_coord: Vector3i, ro
 	var current_coord: Vector3i = start_coord
 	var last_step_was_vertical: bool = false
 	var horizontal_steps_since_vertical: int = 0
+	var last_horizontal_direction: Vector3i = Vector3i(1, 0, 0)  # Default to X+ direction
 	var max_iterations: int = 10000  # Safety limit
 	var iteration: int = 0
 	
@@ -484,51 +487,109 @@ func _create_tunnel_between_tiles(start_coord: Vector3i, end_coord: Vector3i, ro
 		# Determine next step direction
 		var next_coord: Vector3i = current_coord
 		var can_move_vertically: bool = not last_step_was_vertical and horizontal_steps_since_vertical >= 2
+		var is_vertical_step: bool = false
 		
 		# Priority: move vertically if allowed and needed, otherwise move horizontally
 		if can_move_vertically and offset.y != 0:
-			# Move vertically
+			# Move vertically - will spawn stairs
 			var y_step: int = 1 if offset.y > 0 else -1
 			next_coord = Vector3i(current_coord.x, current_coord.y + y_step, current_coord.z)
 			last_step_was_vertical = true
 			horizontal_steps_since_vertical = 0
+			is_vertical_step = true
 		else:
 			# Move horizontally - prioritize the axis with the largest difference
 			if abs(offset.x) >= abs(offset.z):
 				# Move in X direction
 				if offset.x > 0:
 					next_coord = Vector3i(current_coord.x + 1, current_coord.y, current_coord.z)
+					last_horizontal_direction = Vector3i(1, 0, 0)
 				elif offset.x < 0:
 					next_coord = Vector3i(current_coord.x - 1, current_coord.y, current_coord.z)
+					last_horizontal_direction = Vector3i(-1, 0, 0)
 				else:
 					# X is done, move in Z direction
 					if offset.z > 0:
 						next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z + 1)
+						last_horizontal_direction = Vector3i(0, 0, 1)
 					elif offset.z < 0:
 						next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z - 1)
+						last_horizontal_direction = Vector3i(0, 0, -1)
 			else:
 				# Move in Z direction
 				if offset.z > 0:
 					next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z + 1)
+					last_horizontal_direction = Vector3i(0, 0, 1)
 				elif offset.z < 0:
 					next_coord = Vector3i(current_coord.x, current_coord.y, current_coord.z - 1)
+					last_horizontal_direction = Vector3i(0, 0, -1)
 				else:
 					# Z is done, move in X direction
 					if offset.x > 0:
 						next_coord = Vector3i(current_coord.x + 1, current_coord.y, current_coord.z)
+						last_horizontal_direction = Vector3i(1, 0, 0)
 					elif offset.x < 0:
 						next_coord = Vector3i(current_coord.x - 1, current_coord.y, current_coord.z)
+						last_horizontal_direction = Vector3i(-1, 0, 0)
 			
 			last_step_was_vertical = false
 			horizontal_steps_since_vertical += 1
 		
-		# Spawn tile if coord is free (always spawn tunnel tiles, even if coord exists)
-		if _is_coord_free(next_coord):
-			_spawn_tile_at_coord(room, next_coord)
-			var new_tile = _get_tile_at_coord(next_coord)
-			if new_tile != null:
-				tunnel_tiles.append(new_tile)
+		# Spawn tile or stairs based on step type
+		if is_vertical_step:
+			# Spawn two stairs side by side along the tunnel's movement direction
+			# Place stairs along the horizontal movement direction (not perpendicular)
+			var stair_dir: Vector3i = last_horizontal_direction
+			
+			# If no horizontal direction yet (first step is vertical), default to X direction
+			if stair_dir == Vector3i.ZERO:
+				stair_dir = Vector3i(1, 0, 0)
+			
+			# Spawn two stairs side by side along the movement direction
+			var stair1_coord: Vector3i = Vector3i(
+				current_coord.x - stair_dir.x,
+				current_coord.y,
+				current_coord.z - stair_dir.z
+			)
+			var stair2_coord: Vector3i = Vector3i(
+				current_coord.x + stair_dir.x,
+				current_coord.y,
+				current_coord.z + stair_dir.z
+			)
+			
+			# Spawn stairs at both positions
+			if _is_coord_free(stair1_coord):
+				_spawn_stairs_at_coord(room, stair1_coord)
+			if _is_coord_free(stair2_coord):
+				_spawn_stairs_at_coord(room, stair2_coord)
+			
+			# Also spawn regular tile at the destination level
+			if _is_coord_free(next_coord):
+				_spawn_tile_at_coord(room, next_coord)
+				var new_tile = _get_tile_at_coord(next_coord)
+				if new_tile != null:
+					tunnel_tiles.append(new_tile)
+		else:
+			# Spawn regular tile for horizontal movement
+			if _is_coord_free(next_coord):
+				_spawn_tile_at_coord(room, next_coord)
+				var new_tile = _get_tile_at_coord(next_coord)
+				if new_tile != null:
+					tunnel_tiles.append(new_tile)
 		
 		current_coord = next_coord
 	
 	return tunnel_tiles
+
+func _spawn_stairs_at_coord(room: ResourceDungeonRoom, coord: Vector3i):
+	# Spawn stairs at the specified coordinate
+	var world_position: Vector3 = Vector3(
+		coord.x * TILE_SIZE.x,
+		coord.y * TILE_SIZE.y,
+		coord.z * TILE_SIZE.z
+	)
+	
+	var stairs = STAIRS_1.instantiate()
+	stairs.position = world_position
+	dungeon_tiles.add_child(stairs)
+	stairs.owner = get_tree().edited_scene_root

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://dti0fg7i0mpnf"]
 
-[ext_resource type="Script" uid="uid://cwpodhjf4csvp" path="res://assets/scripts/resource_weapon.gd" id="1_gbjcl"]
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="1_gbjcl"]
 
 [resource]
 script = ExtResource("1_gbjcl")
@@ -8,4 +8,4 @@ weapon_name = &"Fire Axe"
 weapon_type = 2
 pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_axe_p.tscn"
 weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_axe_w.tscn"
-metadata/_custom_type_script = "uid://cwpodhjf4csvp"
+damage_min_max = Vector2i(40, 60)
