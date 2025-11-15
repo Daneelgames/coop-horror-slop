@@ -320,7 +320,7 @@ ExtResource("9_dc4xw"): 5,
 ExtResource("10_0ts1u"): 10
 })
 enable_spawn_props = true
-enable_spawn_mobs = null
+enable_spawn_mobs = true
 enable_spawn_pickups = true
 dungeon_seed = 54684
 tiles_coords_islands = Dictionary[int, Array]({

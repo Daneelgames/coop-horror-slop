@@ -107,33 +107,30 @@ func spawn_random_weapon_to_hands():
 	print("[AI_WEAPON_SPAWN] %s: spawn_random_weapon_to_hands called (is_server: %s, has_multiplayer: %s)" % [name, multiplayer.is_server(), multiplayer.has_multiplayer_peer()])
 	print("[AI_WEAPON_SPAWN] %s: random_weapons array size: %d" % [name, random_weapons.size()])
 	
-	# Only server picks the random weapon to ensure synchronization
-	if multiplayer.is_server():
-		if random_weapons.is_empty():
-			print("[AI_WEAPON_SPAWN] %s: ERROR - random_weapons array is empty on server!" % name)
-			return
-		var weapon_index = randi() % random_weapons.size()
-		var weapon = random_weapons[weapon_index]
-		print("[AI_WEAPON_SPAWN] %s: Selected weapon index %d, weapon_resource: %s" % [name, weapon_index, weapon])
-		if weapon == null:
-			print("[AI_WEAPON_SPAWN] %s: ERROR - Selected weapon is null!" % name)
-			return
-		print("[AI_WEAPON_SPAWN] %s: Calling rpc_spawn_weapon.rpc()" % name)
-		# Serialize weapon resource for RPC
-		var weapon_data = GameManager.serialize_weapon_resource(weapon)
-		rpc_spawn_weapon.rpc(weapon_data)
-	else:
-		# If not server and not in multiplayer, spawn locally (for testing)
-		if not multiplayer.has_multiplayer_peer():
-			if random_weapons.is_empty():
-				print("[AI_WEAPON_SPAWN] %s: ERROR - random_weapons array is empty (single player mode)!" % name)
-				return
-			var weapon_index = randi() % random_weapons.size()
-			var weapon = random_weapons[weapon_index]
-			print("[AI_WEAPON_SPAWN] %s: Single player mode - spawning weapon directly, weapon_resource: %s" % [name, weapon])
-			_spawn_weapon(weapon)
-		else:
-			print("[AI_WEAPON_SPAWN] %s: Client waiting for server RPC (not spawning locally)" % name)
+	if random_weapons.is_empty():
+		print("[AI_WEAPON_SPAWN] %s: ERROR - random_weapons array is empty!" % name)
+		return
+	
+	# Use deterministic seed based on mob name and dungeon seed to ensure same weapon selection on all clients
+	# Mob name format is "Mob_{x}_{y}_{z}_{index}" which is consistent across all peers
+	# Combine dungeon_seed with name hash for more reliable determinism
+	var name_hash = name.hash()
+	var combined_seed = GameManager.dungeon_seed + name_hash
+	var weapon_rng = RandomNumberGenerator.new()
+	weapon_rng.seed = combined_seed
+	
+	# Pick weapon using seeded RNG (same result on all clients)
+	var weapon_index = weapon_rng.randi() % random_weapons.size()
+	var weapon = random_weapons[weapon_index]
+	print("[AI_WEAPON_SPAWN] %s: Selected weapon index %d (seed: %d), weapon_resource: %s" % [name, weapon_index, combined_seed, weapon])
+	
+	if weapon == null:
+		print("[AI_WEAPON_SPAWN] %s: ERROR - Selected weapon is null!" % name)
+		return
+	
+	# Spawn weapon directly on all clients (no RPC needed since selection is deterministic)
+	# This ensures all clients spawn the same weapon for the same mob
+	_spawn_weapon(weapon)
 
 @rpc("authority", "call_local", "reliable")
 func rpc_spawn_weapon(weapon_data: Dictionary):

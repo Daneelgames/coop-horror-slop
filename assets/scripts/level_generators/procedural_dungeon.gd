@@ -1215,9 +1215,7 @@ func _choose_weighted_prop(props_by_weight: Dictionary[StringName, float]) -> St
 
 func spawn_mobs():
 	# Use mobs_amount_to_spawn to spawn mobs in random tiles with floor in tunnels and in rooms except 1st room
-	# Only spawn on server in multiplayer
-	if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
-		return
+	# Spawn on all peers using seeded RNG for consistency (same as dungeon generation and pickups)
 	if mobs_amount_to_spawn <= 0:
 		return
 	
@@ -1262,7 +1260,7 @@ func spawn_mobs():
 	# Spawn mobs
 	var mobs_to_spawn: int = min(mobs_amount_to_spawn, available_tiles.size())
 	for i in range(mobs_to_spawn):
-		# Choose a random tile
+		# Choose a random tile using seeded RNG (ensures same selection on all clients)
 		var random_tile: DungeonTile = available_tiles[rng.randi() % available_tiles.size()]
 		
 		# Load and instantiate AI character
@@ -1270,7 +1268,7 @@ func spawn_mobs():
 		if mob == null:
 			continue
 		
-		# Randomize mob position within tile bounds
+		# Randomize mob position within tile bounds using seeded RNG
 		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 		var mob_position = random_tile.position + Vector3(random_offset_x, 1.0, random_offset_z)  # 1 unit above floor
@@ -1280,8 +1278,24 @@ func spawn_mobs():
 		if mob is AiCharacter:
 			mob.home_position = mob_position
 		
+		# Give mob a unique, consistent name based on spawn order and tile coordinate
+		# This ensures RPCs can find the correct mob on all peers
+		var mob_name = "Mob_%d_%d_%d_%d" % [
+			random_tile.coord.x,
+			random_tile.coord.y,
+			random_tile.coord.z,
+			i
+		]
+		mob.name = mob_name
+		
 		game_level.add_child(mob)
 		mob.owner = get_tree().edited_scene_root
+		
+		# Set multiplayer authority to server (peer ID 1) for AI control
+		# This ensures AI logic runs on server and is synchronized to clients
+		# Set after add_child() to override any authority set in _enter_tree()
+		if multiplayer.has_multiplayer_peer():
+			mob.set_multiplayer_authority(1, true)
 		
 		# Yield every 10 mobs to avoid frame drops
 		if i % 10 == 0:
