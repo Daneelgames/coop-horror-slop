@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://dgc26k7042vj7"]
+
+[ext_resource type="Script" uid="uid://2wx7u6ljrc5h" path="res://assets/scripts/voice_chat_manager.gd" id="1_aij60"]
+
+[node name="VoiceChatManager" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_aij60")
+
+[node name="MicrophonePlayer" type="AudioStreamPlayer" parent="."]
+bus = &"Voice"
+
+[node name="TalkFeedbackLabel" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_right = 67.0
+offset_bottom = 11.5
+grow_vertical = 2
+text = "[T]ALKING"
