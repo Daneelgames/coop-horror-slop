@@ -47,6 +47,36 @@ var seed_received: bool = false
 
 # Seed synchronization is now handled by GameManager
 
+# Helper function to get edited scene root (works in editor and game)
+func _get_edited_scene_root() -> Node:
+	if Engine.is_editor_hint():
+		# In editor, try to get edited scene root
+		# First try EditorInterface if available (requires EditorPlugin context)
+		if EditorInterface:
+			return EditorInterface.get_edited_scene_root()
+		# Fallback: try get_tree() which works in editor when scene is running
+		if get_tree():
+			return get_tree().edited_scene_root
+		# Last resort: try to find scene root by traversing up
+		var current = self
+		while current.get_parent():
+			current = current.get_parent()
+		return current
+	else:
+		# In game, use SceneTree
+		if get_tree():
+			return get_tree().edited_scene_root
+		return null
+
+# Helper function to await frame (works in editor and game)
+func _await_frame():
+	if Engine.is_editor_hint():
+		if Engine.get_main_loop():
+			await Engine.get_main_loop().process_frame
+	else:
+		if get_tree():
+			await get_tree().process_frame
+
 func _shuffle_array(arr: Array) -> void:
 	# Shuffle array using seeded RNG (Fisher-Yates algorithm)
 	for i in range(arr.size() - 1, 0, -1):
@@ -65,24 +95,36 @@ func clear():
 	tunnel_tiles_coords.clear()
 
 func generate_dungeon():
-	# Wait for seed synchronization in multiplayer
-	if multiplayer.has_multiplayer_peer():
-		if multiplayer.is_server():
-			# Host gets seed from GameManager (already generated)
-			dungeon_seed = GameManager.dungeon_seed
-			rng.seed = dungeon_seed
-			seed_received = true
-			print("ProceduralDungeon: Host using seed from GameManager: ", dungeon_seed)
+	# Generate seed - in editor use local seed, in game use GameManager if available
+	if Engine.is_editor_hint():
+		# Editor mode - generate seed from system datetime
+		dungeon_seed = int(Time.get_unix_time_from_system())
+		rng.seed = dungeon_seed
+		seed_received = true
+		print("ProceduralDungeon: Editor using local seed: ", dungeon_seed)
+	elif multiplayer.has_multiplayer_peer():
+		# Multiplayer mode - try to get seed from GameManager if available
+		if is_instance_valid(GameManager) and GameManager.dungeon_seed_received:
+			if multiplayer.is_server():
+				dungeon_seed = GameManager.dungeon_seed
+				rng.seed = dungeon_seed
+				seed_received = true
+				print("ProceduralDungeon: Host using seed from GameManager: ", dungeon_seed)
+			else:
+				# Client waits for seed from GameManager
+				seed_received = false
+				if not GameManager.dungeon_seed_received:
+					await GameManager.dungeon_seed_synced
+				dungeon_seed = GameManager.dungeon_seed
+				rng.seed = dungeon_seed
+				seed_received = true
+				print("ProceduralDungeon: Client using seed from GameManager: ", dungeon_seed)
 		else:
-			# Client waits for seed from GameManager
-			seed_received = false
-			# Wait for GameManager to receive seed (if not already received)
-			if not GameManager.dungeon_seed_received:
-				await GameManager.dungeon_seed_synced
-			dungeon_seed = GameManager.dungeon_seed
+			# GameManager not available - use local seed
+			dungeon_seed = int(Time.get_unix_time_from_system())
 			rng.seed = dungeon_seed
 			seed_received = true
-			print("ProceduralDungeon: Client using seed from GameManager: ", dungeon_seed)
+			print("ProceduralDungeon: GameManager not available, using local seed: ", dungeon_seed)
 	else:
 		# Single player - generate seed from system datetime
 		dungeon_seed = int(Time.get_unix_time_from_system())
@@ -175,7 +217,7 @@ func generate_dungeon():
 		tile.position = world_position
 		tile.coord = base_coord
 		dungeon_tiles.add_child(tile)
-		tile.owner = get_tree().edited_scene_root
+		tile.owner = _get_edited_scene_root()
 		all_spawned_tiles[tile] = room
 		# Store tile in spawned_room_tiles dictionary
 		if not spawned_room_tiles.has(room):
@@ -204,14 +246,16 @@ func generate_dungeon():
 	if enable_spawn_props:
 		await spawn_props()
 	
-	await get_tree().process_frame
+	await _await_frame()
 	level_generated.emit()
-	await get_tree().process_frame
+	await _await_frame()
 	
-	if enable_spawn_mobs:
-		await spawn_mobs()
-	if enable_spawn_pickups:
-		await spawn_pickups()
+	# Don't spawn mobs or pickups in editor
+	if not Engine.is_editor_hint():
+		if enable_spawn_mobs:
+			await spawn_mobs()
+		if enable_spawn_pickups:
+			await spawn_pickups()
 	
 
 func _is_coord_free(coord: Vector3i) -> bool:
@@ -255,7 +299,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				tiles_to_spawn -= 1
 				last_step_was_vertical = true
 				if counter % 10 == 0:
-					await get_tree().process_frame
+					await _await_frame()
 			else:
 				# Teleport to random spawned tile from this room
 				if spawned_room_tiles[room].size() > 0:
@@ -279,7 +323,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				tiles_to_spawn -= 1
 				last_step_was_vertical = false
 				if counter % 10 == 0:
-					await get_tree().process_frame
+					await _await_frame()
 			else:
 				# Teleport to random spawned tile from this room
 				if spawned_room_tiles[room].size() > 0:
@@ -336,7 +380,7 @@ func _apply_mirroring_for_room(room: ResourceDungeonRoom):
 		# Only spawn if coord is free
 		if _is_coord_free(mirrored_coord):
 			_spawn_tile_at_coord(room, mirrored_coord)
-			await get_tree().process_frame
+			await _await_frame()
 
 func _expand_rooms_vertically():
 	# Expand each room upward by spawning vertical wall tiles
@@ -364,7 +408,7 @@ func _expand_rooms_vertically():
 					t += 1
 					if t >= 100:
 						t = 0
-						await get_tree().process_frame
+						await _await_frame()
 
 func _configure_all_tiles_based_on_neighbours():
 	# Configure each tile based on its neighbors
@@ -444,7 +488,7 @@ func connect_rooms_with_tunnels():
 		# Await frame every 100 tiles
 		if tiles_spawned >= 100:
 			tiles_spawned = 0
-			await get_tree().process_frame
+			await _await_frame()
 	
 	# Connect last room back to first room (circular connection)
 	if rooms_resources.size() >= 2:
@@ -467,7 +511,7 @@ func connect_rooms_with_tunnels():
 				# Await frame every 100 tiles
 				if tiles_spawned >= 100:
 					tiles_spawned = 0
-					await get_tree().process_frame
+					await _await_frame()
 	
 	# Create extra tunnels based on rooms_indexes_to_make_extra_tunnels_to
 	for room_index in rooms_resources.size():
@@ -510,7 +554,7 @@ func connect_rooms_with_tunnels():
 			# Await frame every 100 tiles
 			if tiles_spawned >= 100:
 				tiles_spawned = 0
-				await get_tree().process_frame
+				await _await_frame()
 
 
 func _find_closest_tiles_between_rooms(room1: ResourceDungeonRoom, room2: ResourceDungeonRoom) -> Array:
@@ -770,7 +814,7 @@ func _spawn_stairs_at_coord(room: ResourceDungeonRoom, coord: Vector3i, tunnel_d
 	if island_idx_a >= 0 and island_idx_b >= 0:
 		stairs_name = "islands_" + str(island_idx_a) + "_" + str(island_idx_b) + "_" + stairs_name
 	stairs.name += "_" + stairs_name
-	stairs.owner = get_tree().edited_scene_root
+	stairs.owner = _get_edited_scene_root()
 
 @export var tiles_coords_islands: Dictionary[int, Array] #island index, array of tile coords Vector3i
 
@@ -858,7 +902,7 @@ func collect_tile_islands():
 					label.position = Vector3(0, 0, 0)  # Position above the tile
 					label.pixel_size = 0.01
 					current_tile.add_child(label)
-					label.owner = get_tree().edited_scene_root
+					label.owner = _get_edited_scene_root()
 				
 				# Check horizontal neighbors
 				for offset in horizontal_offsets:
@@ -1112,11 +1156,11 @@ func spawn_props():
 			prop.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
 			
 			dungeon_tiles.add_child(prop)
-			prop.owner = get_tree().edited_scene_root
+			prop.owner = _get_edited_scene_root()
 			
 			# Yield every 10 props to avoid frame drops
 			if i % 10 == 0:
-				await get_tree().process_frame
+				await _await_frame()
 	
 	# Spawn default props in tunnels (tiles that don't belong to any room)
 	if not default_props_in_tunnels.is_empty() and tunnel_props_amount > 0:
@@ -1162,11 +1206,11 @@ func spawn_props():
 			prop.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
 			
 			dungeon_tiles.add_child(prop)
-			prop.owner = get_tree().edited_scene_root
+			prop.owner = _get_edited_scene_root()
 			
 			# Yield every 10 props
 			if i % 10 == 0:
-				await get_tree().process_frame
+				await _await_frame()
 
 func _cache_tunnel_tiles():
 	# Cache all tunnel tiles (tiles that don't belong to any room) in tunnel_tiles_coords
@@ -1214,6 +1258,10 @@ func _choose_weighted_prop(props_by_weight: Dictionary[StringName, float]) -> St
 
 
 func spawn_mobs():
+	# Don't spawn mobs in editor
+	if Engine.is_editor_hint():
+		return
+	
 	# Use mobs_amount_to_spawn to spawn mobs in random tiles with floor in tunnels and in rooms except 1st room
 	# Spawn on all peers using seeded RNG for consistency (same as dungeon generation and pickups)
 	if mobs_amount_to_spawn <= 0:
@@ -1280,7 +1328,8 @@ func spawn_mobs():
 		# Spawn mob through MultiplayerSpawner for proper synchronization
 		# Only spawn on server - MultiplayerSpawner will replicate to all clients
 		if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
-			GameManager.spawn_mob(mob_name, mob_position, mob_position)
+			if is_instance_valid(GameManager):
+				GameManager.spawn_mob(mob_name, mob_position, mob_position)
 		elif not multiplayer.has_multiplayer_peer():
 			# Single player - spawn directly
 			var mob = AI_CHARACTER.instantiate()
@@ -1290,13 +1339,17 @@ func spawn_mobs():
 				if mob is AiCharacter:
 					mob.home_position = mob_position
 				game_level.add_child(mob)
-				mob.owner = get_tree().edited_scene_root
+				mob.owner = _get_edited_scene_root()
 		
 		# Yield every 10 mobs to avoid frame drops
 		if i % 10 == 0:
-			await get_tree().process_frame
+			await _await_frame()
 
 func spawn_pickups():
+	# Don't spawn pickups in editor
+	if Engine.is_editor_hint():
+		return
+	
 	# Use item amount dictionary pickup_items_to_spawn_dict to spawn pickups in random tiles with floor
 	# Spawn on all peers using seeded RNG for consistency (same as dungeon generation)
 	if pickup_items_to_spawn_dict.is_empty():
@@ -1380,10 +1433,10 @@ func spawn_pickups():
 			pickup.name = pickup_name
 			
 			dungeon_tiles.add_child(pickup)
-			pickup.owner = get_tree().edited_scene_root
+			pickup.owner = _get_edited_scene_root()
 			
 			total_pickups_spawned += 1
 			
 			# Yield every 10 pickups to avoid frame drops
 			if total_pickups_spawned % 10 == 0:
-				await get_tree().process_frame
+				await _await_frame()

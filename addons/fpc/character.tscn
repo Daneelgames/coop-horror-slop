@@ -1338,8 +1338,9 @@ script = ExtResource("7_4fv23")
 [node name="VBoxContainer" type="VBoxContainer" parent="UserInterface/InventorySlotsPanelContainer"]
 layout_mode = 2
 
-[node name="VoiceChatManager" parent="UserInterface" node_paths=PackedStringArray("character_node") instance=ExtResource("12_5d3cd")]
+[node name="VoiceChatManager" parent="UserInterface" node_paths=PackedStringArray("voice_player", "character_node") instance=ExtResource("12_5d3cd")]
 layout_mode = 1
+voice_player = NodePath("../../Head/VoicePlayer3D")
 character_node = NodePath("../..")
 
 [node name="CrouchCeilingDetection" type="ShapeCast3D" parent="."]

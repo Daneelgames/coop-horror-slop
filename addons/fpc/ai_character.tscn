@@ -422,7 +422,6 @@ base_speed = 2.0
 patrol_from_home_distance_min_max = Vector2(5, 10)
 combat_from_home_distance_max = 15.0
 navigation_agent_3d = NodePath("NavigationAgent3D")
-resurrect_after_death_seconds = 30.0
 team = 1
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])

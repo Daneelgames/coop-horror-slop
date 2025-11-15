@@ -1,13 +1,16 @@
 extends Control
 class_name PlayerVoiceChatManager
 
-# Ноды из сцены
+# Ноды из сценыv
+@export var voice_player: AudioStreamPlayer3D
 @onready var microphone_player: AudioStreamPlayer = $MicrophonePlayer
 @onready var talk_feedback_label: Label = $TalkFeedbackLabel
 
 # Настройки голосового чата
 const MAX_VOICE_DISTANCE: float = 60.0  # Максимальная дистанция слышимости
-const VOICE_UPDATE_RATE: float = 0.02  # Проверка каждые 20ms (50 раз в секунду для Opus chunks)
+const VOICE_UPDATE_RATE: float = 0.01  # Проверка каждые 10ms (100 раз в секунду) - уменьшено для меньшей задержки
+
+@export var disable_own_voice_playback: bool = false  # Если true - не воспроизводить свой собственный голос локально
 
 # Состояние
 var is_recording: bool = false
@@ -62,6 +65,10 @@ func _ready():
 	
 	# Запускаем процесс захвата голоса
 	_voice_capture_loop()
+	if character_node.is_multiplayer_authority():
+		voice_player.volume_db = -15
+		voice_player.max_db = -5
+		voice_player.unit_size = 2
 
 func _input(event):
 	# Проверяем что это локальный игрок (имеет authority)
@@ -155,6 +162,13 @@ func _voice_capture_loop():
 							if peer_id != local_id:
 								_send_voice_chunk_rpc.rpc_id(peer_id, opus_data)
 					
+					# Если отключена блокировка своего голоса или нет других пиров (соло режим)
+					# воспроизводим свой голос локально
+					if not disable_own_voice_playback or peers.size() == 0:
+						# Воспроизводим свой голос локально
+						var own_distance = 0.0  # Расстояние до себя = 0
+						_play_voice_chunk(local_id, opus_data, own_distance)
+					
 					packets_sent += 1
 					#if packets_sent == 1:  # Логируем только первый пакет в цикле
 						#print("VoiceChat: Sent Opus packet, size: %d bytes to %d peers" % [opus_data.size(), peers.size()])
@@ -172,9 +186,9 @@ func _send_voice_chunk_rpc(opus_data: PackedByteArray):
 		print("VoiceChat: WARNING - Received local RPC call (should not happen)")
 		return
 	
-	# Не воспроизводим свой собственный голос
-	if sender_id == local_id:
-		print("VoiceChat: Ignoring own voice packet (sender_id: %d == local_id: %d)" % [sender_id, local_id])
+	# Не воспроизводим свой собственный голос (если включено)
+	if disable_own_voice_playback and sender_id == local_id:
+		#print("VoiceChat: Ignoring own voice packet (sender_id: %d == local_id: %d)" % [sender_id, local_id])
 		return
 	
 	#print("VoiceChat: Received Opus packet from peer %d, size: %d bytes (local_id: %d)" % [sender_id, opus_data.size(), local_id])
@@ -202,7 +216,6 @@ func _get_player_distance(peer_id: int) -> float:
 
 func _play_voice_chunk(peer_id: int, opus_data: PackedByteArray, distance: float):
 	# Создаем или получаем AudioStreamPlayer3D и AudioStreamOpusChunked для этого игрока
-	var voice_player: AudioStreamPlayer3D
 	var opus_stream: AudioStreamOpusChunked
 	
 	if not player_voice_players.has(peer_id):
@@ -216,10 +229,6 @@ func _play_voice_chunk(peer_id: int, opus_data: PackedByteArray, distance: float
 			push_error("VoiceChat: Head node not found for peer %d" % peer_id)
 			return
 		
-		voice_player = head_node.get_node_or_null("VoicePlayer3D") as AudioStreamPlayer3D
-		if voice_player == null:
-			push_error("VoiceChat: VoicePlayer3D not found in Head node for peer %d" % peer_id)
-			return
 		
 		# Создаем AudioStreamOpusChunked для декодирования
 		opus_stream = AudioStreamOpusChunked.new()

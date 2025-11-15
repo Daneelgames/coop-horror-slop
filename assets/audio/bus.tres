@@ -6,9 +6,11 @@ resource_name = "Compressor"
 [sub_resource type="AudioEffectReverb" id="AudioEffectReverb_i8chi"]
 resource_name = "Reverb"
 room_size = 0.3
+damping = 0.33
 spread = 0.66
 hipass = 0.1
-dry = 0.8
+dry = 0.85
+wet = 0.33
 
 [sub_resource type="AudioEffectCompressor" id="AudioEffectCompressor_o33f2"]
 resource_name = "Compressor"
@@ -22,9 +24,11 @@ resource_name = "OpusChunked"
 [sub_resource type="AudioEffectReverb" id="AudioEffectReverb_ryeki"]
 resource_name = "Reverb"
 room_size = 0.3
+damping = 0.33
 spread = 0.66
 hipass = 0.1
-dry = 0.8
+dry = 0.85
+wet = 0.33
 
 [sub_resource type="AudioEffectCompressor" id="AudioEffectCompressor_ryeki"]
 resource_name = "Compressor"
@@ -62,7 +66,7 @@ bus/4/name = &"VoicePlayback"
 bus/4/solo = false
 bus/4/mute = false
 bus/4/bypass_fx = false
-bus/4/volume_db = 0.0
+bus/4/volume_db = 1.8537483
 bus/4/send = &"Master"
 bus/4/effect/0/effect = SubResource("AudioEffectReverb_ryeki")
 bus/4/effect/0/enabled = true
