@@ -141,10 +141,38 @@ func _cache_spawned_game_level() -> void:
 	for child in _game_spawner.get_children():
 		if child is Node and child.name == "GameLevel":
 			_game_level = child
-			# Update mob spawner path to point to GameLevel
+			# Set spawn_path now that GameLevel exists (on all clients)
 			if is_instance_valid(_mob_spawner):
-				var game_level_path = _mob_spawner.get_path_to(_game_level)
-				_mob_spawner.spawn_path = game_level_path
+				# Use relative path from MobSpawner to GameLevel
+				# Structure: GameRoot -> GameLevelSpawner -> GameLevel
+				# From MobSpawner (child of GameRoot): ../GameLevelSpawner/GameLevel
+				_mob_spawner.spawn_path = NodePath("../GameLevelSpawner/GameLevel")
+				# Verify the path is valid
+				var spawn_parent = _mob_spawner.get_node_or_null(_mob_spawner.spawn_path)
+				if is_instance_valid(spawn_parent):
+					print("GameManager: MobSpawner spawn_path set successfully to GameLevel (is_server: %s, path: %s, parent: %s)" % [
+						multiplayer.is_server(), 
+						_mob_spawner.spawn_path,
+						spawn_parent.get_path()
+					])
+					# Verify MultiplayerSpawner is configured correctly
+					print("GameManager: MobSpawner config - spawn_path: %s, spawn_function: %s" % [
+						_mob_spawner.spawn_path,
+						"set" if _mob_spawner.spawn_function != null else "null"
+					])
+				else:
+					# Fallback: use absolute path from scene root
+					var game_level_path = _mob_spawner.get_path_to(_game_level)
+					_mob_spawner.spawn_path = game_level_path
+					spawn_parent = _mob_spawner.get_node_or_null(_mob_spawner.spawn_path)
+					if is_instance_valid(spawn_parent):
+						print("GameManager: MobSpawner spawn_path set to absolute path: %s (is_server: %s, parent: %s)" % [
+							game_level_path, 
+							multiplayer.is_server(),
+							spawn_parent.get_path()
+						])
+					else:
+						push_error("GameManager: Failed to set MobSpawner spawn_path on %s!" % ("SERVER" if multiplayer.is_server() else "CLIENT"))
 			return
 
 func _ensure_player_root() -> void:
@@ -172,9 +200,13 @@ func _ensure_mob_spawner() -> void:
 		_mob_spawner.spawn_function = Callable(self, "_spawn_mob_scene")
 		# Add AI character scene to spawnable scenes
 		_mob_spawner.add_spawnable_scene(AI_CHARACTER_SCENE_PATH)
+		# Set spawn_path to GameLevel (will be set properly in _cache_spawned_game_level)
+		# Use relative path that should work once GameLevel exists
+		_mob_spawner.spawn_path = NodePath("../GameLevelSpawner/GameLevel")
 
 func _spawn_mob_scene(spawn_data_dict: Dictionary) -> Node:
 	# spawn_data_dict should contain: mob_name, position, home_position
+	# This function is called by MultiplayerSpawner on both server and clients
 	var mob := AI_CHARACTER_SCENE.instantiate()
 	var mob_name = spawn_data_dict.get("mob_name", "Mob_Unknown")
 	mob.name = mob_name
@@ -186,25 +218,59 @@ func _spawn_mob_scene(spawn_data_dict: Dictionary) -> Node:
 	if mob is AiCharacter:
 		mob.home_position = home_position
 	
+	var peer_id_str = str(multiplayer.get_unique_id()) if multiplayer.has_multiplayer_peer() else "N/A"
+	print("GameManager: _spawn_mob_scene called for %s (is_server: %s, peer_id: %s)" % [
+		mob_name, 
+		multiplayer.is_server(),
+		peer_id_str
+	])
+	
+	# Verify spawn_path is set on clients too
+	if !multiplayer.is_server() and is_instance_valid(_mob_spawner):
+		print("GameManager [CLIENT]: MobSpawner spawn_path: %s" % _mob_spawner.spawn_path)
+		var spawn_parent = _mob_spawner.get_node_or_null(_mob_spawner.spawn_path)
+		if is_instance_valid(spawn_parent):
+			print("GameManager [CLIENT]: Spawn parent is valid: %s" % spawn_parent.get_path())
+		else:
+			push_error("GameManager [CLIENT]: Spawn parent is INVALID! Path: %s" % _mob_spawner.spawn_path)
+	
 	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
 	return mob
 
 # Public function to spawn a mob through MultiplayerSpawner
+# This should ONLY be called on the server - uses RPC to ensure clients spawn too
 func spawn_mob(mob_name: String, position: Vector3, home_position: Vector3) -> void:
 	if !multiplayer.is_server():
+		push_error("spawn_mob called on client! This should only be called on server.")
 		return
 	
 	if !is_instance_valid(_mob_spawner):
 		push_error("MobSpawner not initialized!")
 		return
 	
-	# Ensure spawn_path is set correctly
+	# Verify that GameLevel exists
 	if !is_instance_valid(_game_level):
 		push_error("GameLevel not available for mob spawning!")
 		return
 	
-	var game_level_path = _mob_spawner.get_path_to(_game_level)
-	_mob_spawner.spawn_path = game_level_path
+	# Ensure spawn_path is set correctly (should already be set in _cache_spawned_game_level)
+	if _mob_spawner.spawn_path.is_empty() or _mob_spawner.spawn_path == NodePath():
+		# Set spawn_path if not already set
+		var game_level_path = _mob_spawner.get_path_to(_game_level)
+		_mob_spawner.spawn_path = game_level_path
+		print("GameManager [SERVER]: Setting MobSpawner spawn_path to: ", game_level_path)
+	
+	# Verify spawn_path points to a valid node
+	var spawn_parent = _mob_spawner.get_node_or_null(_mob_spawner.spawn_path)
+	if !is_instance_valid(spawn_parent):
+		push_error("MobSpawner spawn_path is invalid: %s (GameLevel exists: %s)" % [_mob_spawner.spawn_path, is_instance_valid(_game_level)])
+		# Try to fix it
+		var game_level_path = _mob_spawner.get_path_to(_game_level)
+		_mob_spawner.spawn_path = game_level_path
+		spawn_parent = _mob_spawner.get_node_or_null(_mob_spawner.spawn_path)
+		if !is_instance_valid(spawn_parent):
+			push_error("Failed to fix MobSpawner spawn_path!")
+			return
 	
 	# Create spawn data dictionary
 	var spawn_data = {
@@ -213,12 +279,74 @@ func spawn_mob(mob_name: String, position: Vector3, home_position: Vector3) -> v
 		"home_position": home_position
 	}
 	
-	# Spawn on all peers (use 1 as peer_id for server authority)
+	# Spawn on server first
+	print("GameManager [SERVER]: Spawning mob %s at %s" % [mob_name, position])
 	var mob = _mob_spawner.spawn(spawn_data) as Node
 	if mob:
+		var parent_path_str: String
+		if mob.get_parent():
+			parent_path_str = str(mob.get_parent().get_path())
+		else:
+			parent_path_str = "NO PARENT"
+		print("GameManager [SERVER]: Mob %s spawned successfully, node path: %s, parent: %s" % [
+			mob_name, 
+			mob.get_path(),
+			parent_path_str
+		])
 		# Set multiplayer authority to server (peer ID 1) for AI control
 		if multiplayer.has_multiplayer_peer():
 			mob.set_multiplayer_authority(1, true)
+			print("GameManager [SERVER]: Set authority for mob %s to server (1)" % mob_name)
+		
+		# Use RPC to spawn on all clients - this ensures spawn_path is set on clients
+		_rpc_spawn_mob_on_clients.rpc(mob_name, position, home_position)
+	else:
+		push_error("GameManager [SERVER]: Failed to spawn mob %s" % mob_name)
+
+# RPC function to spawn mobs on clients
+@rpc("authority", "call_local", "reliable")
+func _rpc_spawn_mob_on_clients(mob_name: String, position: Vector3, home_position: Vector3) -> void:
+	# This is called on all clients (and server) to spawn the mob
+	# Only spawn if we're a client (server already spawned it)
+	if multiplayer.is_server():
+		return
+	
+	if !is_instance_valid(_mob_spawner):
+		push_error("GameManager [CLIENT]: MobSpawner not initialized!")
+		return
+	
+	# Ensure spawn_path is set on client
+	if _mob_spawner.spawn_path.is_empty() or _mob_spawner.spawn_path == NodePath():
+		if is_instance_valid(_game_level):
+			var game_level_path = _mob_spawner.get_path_to(_game_level)
+			_mob_spawner.spawn_path = game_level_path
+			print("GameManager [CLIENT]: Setting MobSpawner spawn_path to: ", game_level_path)
+		else:
+			push_error("GameManager [CLIENT]: GameLevel not available for mob spawning!")
+			return
+	
+	# Verify spawn_path is valid
+	var spawn_parent = _mob_spawner.get_node_or_null(_mob_spawner.spawn_path)
+	if !is_instance_valid(spawn_parent):
+		push_error("GameManager [CLIENT]: MobSpawner spawn_path is invalid: %s" % _mob_spawner.spawn_path)
+		return
+	
+	# Create spawn data and spawn mob on client
+	var spawn_data = {
+		"mob_name": mob_name,
+		"position": position,
+		"home_position": home_position
+	}
+	
+	print("GameManager [CLIENT]: Spawning mob %s at %s via RPC" % [mob_name, position])
+	var mob = _mob_spawner.spawn(spawn_data) as Node
+	if mob:
+		print("GameManager [CLIENT]: Mob %s spawned successfully on client" % mob_name)
+		# Set multiplayer authority to server (peer ID 1) for AI control
+		if multiplayer.has_multiplayer_peer():
+			mob.set_multiplayer_authority(1, true)
+	else:
+		push_error("GameManager [CLIENT]: Failed to spawn mob %s" % mob_name)
 
 func _spawn_existing_players() -> void:
 	for peer_id in NetworkManager.players.keys():
