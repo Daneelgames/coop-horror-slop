@@ -16,6 +16,7 @@ enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 @export var spawned_room_tiles : Dictionary[ResourceDungeonRoom, Array] # value is Array[DungeonTile]
 @export var all_spawned_tiles : Dictionary[DungeonTile, ResourceDungeonRoom]
 @export var spawned_stairs_coords : Dictionary[Vector3i, Node] # coord, stairs node
+@export var spawned_doors_coords : Dictionary[Vector3i, Node] # coord, door node
 @export var tunnel_tiles_coords : Dictionary[Vector3i, DungeonTile] # coord, tile
 @export var debug_tile_islands : bool = false
 @export var mobs_amount_to_spawn = 30
@@ -92,6 +93,7 @@ func clear():
 	spawned_room_tiles.clear()
 	all_spawned_tiles.clear()
 	spawned_stairs_coords.clear()
+	spawned_doors_coords.clear()
 	tunnel_tiles_coords.clear()
 
 func generate_dungeon():
@@ -238,6 +240,7 @@ func generate_dungeon():
 	
 	# Configure all tiles based on their neighbors
 	await connect_rooms_with_tunnels()
+	await spawn_doors()
 	_configure_all_tiles_based_on_neighbours()
 	await get_tree().process_frame
 	await collect_tile_islands()
@@ -1080,6 +1083,13 @@ func connect_islands_with_stairs():
 							if is_instance_valid(bottom_tile.ceiling):
 								continue
 						
+						# Check if there's a door at this coordinate - if so, remove it
+						if spawned_doors_coords.has(bottom_coord):
+							var door_node: Node = spawned_doors_coords[bottom_coord]
+							if is_instance_valid(door_node):
+								door_node.queue_free()
+							spawned_doors_coords.erase(bottom_coord)
+						
 						# Get the room for the bottom tile
 						if bottom_tile != null and all_spawned_tiles.has(bottom_tile):
 							var room: ResourceDungeonRoom = all_spawned_tiles[bottom_tile]
@@ -1440,3 +1450,140 @@ func spawn_pickups():
 			# Yield every 10 pickups to avoid frame drops
 			if total_pickups_spawned % 10 == 0:
 				await _await_frame()
+
+const DOORS_PREFABS = [preload("uid://biuu4fqetp2o8"), preload("uid://cjnpfrr7t2bk3"), preload("uid://dupliirt4y6mj"), preload("uid://babsf5rvu3c2t"), preload("uid://bsn5a2g1besog")]
+func spawn_doors():
+	# find all tiles with floor that have only two opposite walls (along x or along z axis)
+	# add them to door tiles variants array, use DOORS_PREFABS to spawn doors on random tiles from list
+	var doors_to_spawn = 30
+	
+	# Collect all tiles with floors that have no neighbors in two opposite directions
+	# This is called BEFORE _configure_all_tiles_based_on_neighbours(), so we check neighbors directly
+	var candidate_tiles: Array[DungeonTile] = []
+	var tiles_checked: int = 0
+	var tiles_with_floor: int = 0
+	
+	for tile in all_spawned_tiles.keys():
+		tiles_checked += 1
+		if not is_instance_valid(tile):
+			continue
+		
+		# Check if there's no neighbor below (this means tile has floor/is bottom tile)
+		var neighbor_below: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, -1, 0))
+		if neighbor_below != null:
+			continue
+		
+		# Skip tiles that have stairs
+		if spawned_stairs_coords.has(tile.coord):
+			continue
+		
+		tiles_with_floor += 1
+		
+		# Check neighbors in all 4 horizontal directions (same Y level)
+		var neighbor_r: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(1, 0, 0))
+		var neighbor_l: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(-1, 0, 0))
+		var neighbor_f: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, -1))
+		var neighbor_b: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, 1))
+		
+		# Check if tile has neighbors in two opposite directions AND no neighbors in the other two directions
+		# This means the tile is a passage between two areas (perfect for door placement)
+		var is_valid_door_location: bool = false
+		
+		# Check X axis: neighbors on right AND left, but NO neighbors on forward AND back
+		if neighbor_r != null and neighbor_l != null and neighbor_f == null and neighbor_b == null:
+			is_valid_door_location = true
+		# Check Z axis: neighbors on forward AND back, but NO neighbors on right AND left
+		elif neighbor_f != null and neighbor_b != null and neighbor_r == null and neighbor_l == null:
+			is_valid_door_location = true
+		
+		if is_valid_door_location:
+			candidate_tiles.append(tile)
+	
+	print("spawn_doors: Checked ", tiles_checked, " tiles, ", tiles_with_floor, " with floors, ", candidate_tiles.size(), " candidates")
+	
+	if candidate_tiles.is_empty():
+		print("spawn_doors: No candidate tiles found for door placement")
+		return
+	
+	# Shuffle candidate tiles using seeded RNG
+	_shuffle_array(candidate_tiles)
+	
+	# Spawn doors on random tiles from the list
+	var actual_doors_to_spawn: int = min(doors_to_spawn, candidate_tiles.size())
+	var doors_spawned_count: int = 0
+	
+	print("spawn_doors: Attempting to spawn ", actual_doors_to_spawn, " doors")
+	
+	for i in range(actual_doors_to_spawn):
+		var tile: DungeonTile = candidate_tiles[i]
+		
+		# Check if there's a tile above (doors are 2 tiles tall)
+		var upper_coord: Vector3i = Vector3i(tile.coord.x, tile.coord.y + 1, tile.coord.z)
+		var upper_tile: DungeonTile = _get_tile_at_coord(upper_coord)
+		
+		# If no tile above, spawn one
+		if upper_tile == null:
+			# Get the room for this tile
+			var room: ResourceDungeonRoom = null
+			if all_spawned_tiles.has(tile):
+				room = all_spawned_tiles[tile]
+			else:
+				# Fallback: use first room if tile not found in dictionary
+				if rooms_resources.size() > 0:
+					room = rooms_resources[0]
+			
+			if room != null:
+				_spawn_tile_at_coord(room, upper_coord)
+				# Configure the new tile based on neighbors
+				upper_tile = _get_tile_at_coord(upper_coord)
+				if upper_tile != null:
+					var neighbors: Array[DungeonTile] = _get_neighbor_tiles(upper_tile)
+					upper_tile.configure_tile_based_on_neighbours(neighbors)
+			else:
+				print("spawn_doors: WARNING - Could not find room for tile at ", tile.coord)
+				continue
+		
+		# Choose a random door prefab
+		var door_prefab = DOORS_PREFABS[rng.randi() % DOORS_PREFABS.size()]
+		
+		# Instantiate door
+		var door = door_prefab.instantiate()
+		if door == null:
+			print("spawn_doors: WARNING - Failed to instantiate door prefab")
+			continue
+		
+		# Determine door orientation based on which directions have neighbors
+		# Check neighbors again to determine orientation
+		var neighbor_r: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(1, 0, 0))
+		var neighbor_l: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(-1, 0, 0))
+		var neighbor_f: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, -1))
+		var neighbor_b: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, 1))
+		
+		var door_rotation_y: float = 0.0
+		if neighbor_r != null and neighbor_l != null:
+			# Neighbors on X axis (right and left) - door should face along Z axis (0° or 180°)
+			# Default to 0° (facing forward)
+			door_rotation_y = 0.0
+		elif neighbor_f != null and neighbor_b != null:
+			# Neighbors on Z axis (forward and back) - door should face along X axis (90° or 270°)
+			# Default to 90° (facing right)
+			door_rotation_y = deg_to_rad(90)
+		
+		door.rotation.y = door_rotation_y
+		
+		# Position door at tile's position (tile origin is at bottom center)
+		door.position = tile.position
+		
+		dungeon_tiles.add_child(door)
+		door.owner = _get_edited_scene_root()
+		
+		# Cache door coord
+		spawned_doors_coords[tile.coord] = door
+		
+		doors_spawned_count += 1
+		
+		# Yield every 10 doors to avoid frame drops
+		if i % 10 == 0:
+			await _await_frame()
+	
+	print("spawn_doors: Successfully spawned ", doors_spawned_count, " doors out of ", actual_doors_to_spawn, " attempted")

@@ -14,7 +14,9 @@ class_name DungeonTile
 func configure_tile_based_on_neighbours(neighbor_tiles : Array[DungeonTile]):
 	# should check every direction - top for ceiling, bottom for floor, and walls
 	# no floor or ceiling or wall should be present between two neighboring tiles
-	tmp.queue_free()
+	if tmp:
+		tmp.queue_free()
+		tmp = null
 	
 	
 	for neighbor in neighbor_tiles:
