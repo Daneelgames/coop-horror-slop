@@ -348,7 +348,7 @@ func _rpc_spawn_mob_on_clients(mob_name: String, position: Vector3, home_positio
 			game_level_path_str
 		])
 		return
-	
+	 
 	print("GameManager [CLIENT]: MobSpawner spawn_path verified: %s -> %s" % [
 		_mob_spawner.spawn_path,
 		spawn_parent.get_path()
