@@ -686,15 +686,28 @@ func handle_interaction():
 		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
 			
 		if Input.is_action_just_pressed(controls.INTERACTION):
-			# Call RPC directly on the Interactive pickup node
-			# The pickup node handles the pickup logic itself
-			# Since pickups are spawned via MultiplayerSpawner, they're synchronized
+			# Determine pickup type: synchronized (dropped) or procedurally spawned
+			# Dropped pickups are synchronized via MultiplayerSpawner and can use direct RPC
+			# Procedurally spawned pickups aren't synchronized and need GameManager lookup
+			var is_synchronized_pickup = false
+			var parent_path = col.get_path()
+			# Check if pickup is under GameLevel (dropped items) vs ProceduralDungeon/DungeonTiles (procedurally spawned)
+			if "ProceduralDungeon/DungeonTiles" in str(parent_path):
+				is_synchronized_pickup = false  # Procedurally spawned, not synchronized
+			else:
+				is_synchronized_pickup = true  # Likely a dropped item, synchronized
+			
 			if multiplayer.is_server():
 				# If we're the server, process directly
 				col.rpc_request_pickup()
 			else:
-				# Otherwise send RPC to server (peer ID 1)
-				col.rpc_request_pickup.rpc_id(1)
+				if is_synchronized_pickup:
+					# For synchronized pickups (dropped items), call RPC directly
+					# The RPC will route to server automatically since pickup is synchronized
+					col.rpc_request_pickup.rpc_id(1)
+				else:
+					# For procedurally spawned pickups, use GameManager lookup
+					GameManager.rpc_request_pickup_by_name.rpc_id(1, col.name, col.global_position)
 	else:
 		interaction_feedback_label_3d.visible = false
 			

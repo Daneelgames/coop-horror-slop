@@ -225,6 +225,54 @@ func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
 	weapon_resource.in_hands_reduce_durability_speed = data.get("in_hands_reduce_durability_speed", 0.5)
 	return weapon_resource
 
+# RPC function to handle pickup requests from clients
+# This is needed for procedurally spawned pickups that aren't synchronized
+# Dropped pickups (synchronized via MultiplayerSpawner) should use direct RPC call instead
+@rpc("any_peer", "reliable")
+func rpc_request_pickup_by_name(pickup_name: String, pickup_position: Vector3) -> void:
+	# Only server processes this
+	if !multiplayer.is_server():
+		return
+	
+	# Find the pickup in the scene tree
+	# Check both ProceduralDungeon/DungeonTiles (procedurally spawned) and GameLevel (dropped items)
+	var pickup: Interactive = null
+	if is_instance_valid(_game_level):
+		# First check ProceduralDungeon/DungeonTiles for procedurally spawned pickups
+		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+		if dungeon_tiles != null:
+			pickup = dungeon_tiles.get_node_or_null(pickup_name) as Interactive
+		
+		# If not found, check GameLevel directly for dropped pickups
+		if pickup == null:
+			pickup = _game_level.get_node_or_null(pickup_name) as Interactive
+		
+		# Fallback: search by position in both locations
+		if pickup == null:
+			# Search in DungeonTiles
+			if dungeon_tiles != null:
+				for child in dungeon_tiles.get_children():
+					if child is Interactive:
+						var interactive = child as Interactive
+						if interactive.global_position.distance_to(pickup_position) < 1.0:
+							pickup = interactive
+							break
+			
+			# Search in GameLevel if still not found
+			if pickup == null:
+				for child in _game_level.get_children():
+					if child is Interactive:
+						var interactive = child as Interactive
+						if interactive.global_position.distance_to(pickup_position) < 1.0:
+							pickup = interactive
+							break
+	
+	if pickup != null:
+		# Call the pickup's RPC function to process the request
+		pickup.rpc_request_pickup()
+	else:
+		print("[GameManager] Could not find pickup '%s' at position %s" % [pickup_name, pickup_position])
+
 @rpc("authority", "call_local", "reliable")
 func _sync_dungeon_seed(seed_value: int) -> void:
 	dungeon_seed = seed_value

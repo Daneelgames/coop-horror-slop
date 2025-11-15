@@ -27,13 +27,37 @@ func deactivate_rigidbody_collisions():
 	set_collision_mask_value(2, false)
 	freeze = true
 
-# RPC function called by players to request picking up this item
+# RPC function called by players to request picking up this item by name
+# This allows clients to request pickup even when the node isn't synchronized
 @rpc("any_peer", "reliable")
-func rpc_request_pickup():
+func rpc_request_pickup_by_name(pickup_name: String, pickup_position: Vector3):
 	# Only server processes this
 	if !multiplayer.is_server():
 		return
 	
+	# Find the pickup by name (since pickups are spawned deterministically on all peers)
+	var pickup: Interactive = null
+	var root = get_tree().root
+	var pickup_path = root.get_node_or_null("Main/GameRoot/GameLevelSpawner/GameLevel/ProceduralDungeon/DungeonTiles/" + pickup_name)
+	if pickup_path != null and pickup_path is Interactive:
+		pickup = pickup_path as Interactive
+	else:
+		# Fallback: search by position (within tolerance)
+		var all_pickups = get_tree().get_nodes_in_group("pickups")
+		for node in all_pickups:
+			if node is Interactive and node.global_position.distance_to(pickup_position) < 1.0:
+				pickup = node as Interactive
+				break
+	
+	if pickup == null:
+		print("[PICKUP] Could not find pickup '%s' at position %s" % [pickup_name, pickup_position])
+		return
+	
+	# Process pickup using the found pickup node
+	pickup._process_pickup_request()
+
+# Internal function to process pickup request (called by rpc_request_pickup_by_name)
+func _process_pickup_request():
 	# Get requesting peer ID
 	var requesting_peer_id = multiplayer.get_unique_id()
 	if multiplayer.get_remote_sender_id() != 0:
@@ -79,8 +103,8 @@ func rpc_request_pickup():
 	# Clamp selected index if needed
 	requesting_player._clamp_selected_index()
 	
-	# Tell all clients to destroy this pickup
-	rpc_destroy_pickup.rpc()
+	# Tell all clients to destroy this pickup by name
+	rpc_destroy_pickup_by_name.rpc(name, global_position)
 	
 	# Tell requesting client to update their inventory UI
 	if requesting_peer_id == 1:
@@ -103,7 +127,48 @@ func rpc_request_pickup():
 	else:
 		requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
 
-# RPC to destroy this pickup on all clients
+# RPC function called by players to request picking up this item (kept for backward compatibility)
+@rpc("any_peer", "reliable")
+func rpc_request_pickup():
+	# Only server processes this
+	if !multiplayer.is_server():
+		return
+	_process_pickup_request()
+
+# RPC to destroy this pickup on all clients by name
+@rpc("any_peer", "call_local", "reliable")
+func rpc_destroy_pickup_by_name(pickup_name: String, pickup_position: Vector3):
+	# Only process if called from server (peer ID 1)
+	var sender_id = multiplayer.get_remote_sender_id()
+	if not multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+	
+	# Find the pickup by name or position
+	var pickup: Interactive = null
+	if name == pickup_name:
+		pickup = self
+	else:
+		# Try to find by name in scene tree
+		var root = get_tree().root
+		var pickup_path = root.get_node_or_null("Main/GameRoot/GameLevelSpawner/GameLevel/ProceduralDungeon/DungeonTiles/" + pickup_name)
+		if pickup_path != null and pickup_path is Interactive:
+			pickup = pickup_path as Interactive
+		else:
+			# Fallback: search by position
+			var all_pickups = get_tree().get_nodes_in_group("pickups")
+			for node in all_pickups:
+				if node is Interactive and node.global_position.distance_to(pickup_position) < 1.0:
+					pickup = node as Interactive
+					break
+	
+	if pickup != null:
+		print("[PICKUP] Destroying pickup: %s" % pickup.name)
+		pickup.queue_free()
+
+# RPC to destroy this pickup on all clients (kept for backward compatibility)
 @rpc("any_peer", "call_local", "reliable")
 func rpc_destroy_pickup():
 	# Only process if called from server (peer ID 1)

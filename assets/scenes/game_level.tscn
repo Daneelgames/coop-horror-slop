@@ -26,7 +26,7 @@ sky_material = SubResource("ProceduralSkyMaterial_8kkgg")
 background_mode = 1
 sky = SubResource("Sky_vcb5n")
 ambient_light_source = 2
-ambient_light_color = Color(0.2339418, 0.24146378, 0.29130077, 1)
+ambient_light_color = Color(0.5365946, 0.54884034, 0.61998665, 1)
 tonemap_mode = 2
 tonemap_exposure = 2.0
 tonemap_white = 2.0
@@ -36,7 +36,6 @@ glow_intensity = 1.0
 glow_mix = 0.2
 glow_bloom = 0.5
 glow_blend_mode = 4
-fog_enabled = true
 fog_light_color = Color(0, 0, 0, 1)
 fog_density = 0.2
 volumetric_fog_enabled = true
@@ -322,7 +321,8 @@ ExtResource("10_0ts1u"): 10
 })
 enable_spawn_props = true
 enable_spawn_mobs = null
-enable_spawn_pickups = null
+enable_spawn_pickups = true
+dungeon_seed = 54684
 tiles_coords_islands = Dictionary[int, Array]({
 0: Array[Vector3i]([Vector3i(7, 0, -3), Vector3i(10, 0, -1), Vector3i(8, 0, -8), Vector3i(10, 0, 0), Vector3i(9, 0, -2), Vector3i(13, 0, -3), Vector3i(8, 0, -6), Vector3i(13, 0, -2), Vector3i(8, 0, -2), Vector3i(8, 0, -4), Vector3i(8, 0, -10), Vector3i(8, 0, -5), Vector3i(7, 0, -2), Vector3i(7, 0, -8), Vector3i(7, 0, -7), Vector3i(9, 0, -6), Vector3i(9, 0, -7), Vector3i(8, 0, -3), Vector3i(9, 0, 0), Vector3i(11, 0, 0), Vector3i(9, 0, -8), Vector3i(8, 0, -9), Vector3i(12, 0, -3), Vector3i(11, 0, -1), Vector3i(11, 0, -2), Vector3i(7, 0, -6), Vector3i(8, 0, -7), Vector3i(12, 0, -2), Vector3i(9, 0, -1)]),
 1: Array[Vector3i]([Vector3i(-1, 0, 13), Vector3i(-4, 0, 9), Vector3i(-1, 0, 8), Vector3i(-4, 0, 10), Vector3i(-2, 0, 10), Vector3i(-3, 0, 9), Vector3i(3, 0, 10), Vector3i(0, 0, 8), Vector3i(6, 0, 10), Vector3i(6, 0, 11), Vector3i(7, 0, 10), Vector3i(0, 0, 13), Vector3i(6, 0, 13), Vector3i(0, 0, 12), Vector3i(7, 0, 13), Vector3i(0, 0, 11), Vector3i(-3, 0, 10), Vector3i(-3, 0, 11), Vector3i(7, 0, 11), Vector3i(-4, 0, 8), Vector3i(-2, 0, 9), Vector3i(-2, 0, 8), Vector3i(-5, 0, 11), Vector3i(-1, 0, 10), Vector3i(0, 0, 10), Vector3i(2, 0, 10), Vector3i(-2, 0, 11), Vector3i(5, 0, 10), Vector3i(-3, 0, 8), Vector3i(1, 0, 10), Vector3i(-4, 0, 11), Vector3i(4, 0, 10), Vector3i(6, 0, 12), Vector3i(-1, 0, 11)]),

@@ -42,7 +42,7 @@ enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 
 # Seeded random number generator for synchronized generation
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-var dungeon_seed: int = 0
+@export var dungeon_seed: int = 0
 var seed_received: bool = false
 
 # Seed synchronization is now handled by GameManager
@@ -1289,9 +1289,7 @@ func spawn_mobs():
 
 func spawn_pickups():
 	# Use item amount dictionary pickup_items_to_spawn_dict to spawn pickups in random tiles with floor
-	# Only spawn on server in multiplayer
-	if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
-		return
+	# Spawn on all peers using seeded RNG for consistency (same as dungeon generation)
 	if pickup_items_to_spawn_dict.is_empty():
 		return
 	
@@ -1360,6 +1358,17 @@ func spawn_pickups():
 			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 			pickup.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)  # Slightly above floor
+			
+			# Give pickup a unique, consistent name based on spawn order and tile coordinate
+			# This ensures RPCs can find the correct pickup on all peers
+			var pickup_name = "Pickup_%s_%d_%d_%d_%d" % [
+				weapon_resource.weapon_name,
+				random_tile.coord.x,
+				random_tile.coord.y,
+				random_tile.coord.z,
+				total_pickups_spawned
+			]
+			pickup.name = pickup_name
 			
 			dungeon_tiles.add_child(pickup)
 			pickup.owner = get_tree().edited_scene_root
