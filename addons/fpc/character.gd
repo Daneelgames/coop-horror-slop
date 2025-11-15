@@ -293,15 +293,19 @@ func await_for_levelgen_to_teleport_player_locally():
 		return
 	
 	# Filter tiles that have floors (so player can stand on them)
+	# Also exclude tiles that have stairs
 	var tiles_with_floors: Array = []
 	for tile in room_tiles:
 		if not is_instance_valid(tile):
 			continue
 		if is_instance_valid(tile.floor):
+			# Check if this tile has stairs - skip it if it does
+			if procedural_dungeon.spawned_stairs_coords.has(tile.coord):
+				continue
 			tiles_with_floors.append(tile)
 	
 	if tiles_with_floors.is_empty():
-		push_warning("await_for_levelgen_to_teleport_player_locally: No tiles with floors found in first room")
+		push_warning("await_for_levelgen_to_teleport_player_locally: No tiles with floors (without stairs) found in first room")
 		return
 	
 	# Shuffle tiles using seeded RNG to ensure consistent placement across all peers
