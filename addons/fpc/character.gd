@@ -698,16 +698,23 @@ func handle_interaction():
 				is_synchronized_pickup = true  # Likely a dropped item, synchronized
 			
 			if multiplayer.is_server():
-				# If we're the server, process directly
-				col.rpc_request_pickup()
+				# If we're the server
+				if is_synchronized_pickup:
+					# For synchronized pickups (dropped items), use RPC to broadcast to clients
+					col.rpc_request_pickup()
+				else:
+					# For procedurally spawned pickups, call internal function directly
+					# (no RPC needed since they're not synchronized and server processes directly)
+					col._process_pickup_request()
 			else:
+				# Client side
 				if is_synchronized_pickup:
 					# For synchronized pickups (dropped items), call RPC directly
 					# The RPC will route to server automatically since pickup is synchronized
 					col.rpc_request_pickup.rpc_id(1)
 				else:
 					# For procedurally spawned pickups, use GameManager lookup
-					GameManager.rpc_request_pickup_by_name.rpc_id(1, col.name, col.global_position)
+					GameManager.rpc_request_pickup_by_name.rpc_id(1, col.name)
 	else:
 		interaction_feedback_label_3d.visible = false
 			

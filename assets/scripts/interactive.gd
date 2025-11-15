@@ -30,27 +30,24 @@ func deactivate_rigidbody_collisions():
 # RPC function called by players to request picking up this item by name
 # This allows clients to request pickup even when the node isn't synchronized
 @rpc("any_peer", "reliable")
-func rpc_request_pickup_by_name(pickup_name: String, pickup_position: Vector3):
+func rpc_request_pickup_by_name(pickup_name: String):
 	# Only server processes this
 	if !multiplayer.is_server():
 		return
 	
-	# Find the pickup by name (since pickups are spawned deterministically on all peers)
+	# Find the pickup by name only - procedurally spawned pickups have consistent names
 	var pickup: Interactive = null
-	var root = get_tree().root
-	var pickup_path = root.get_node_or_null("Main/GameRoot/GameLevelSpawner/GameLevel/ProceduralDungeon/DungeonTiles/" + pickup_name)
-	if pickup_path != null and pickup_path is Interactive:
-		pickup = pickup_path as Interactive
-	else:
-		# Fallback: search by position (within tolerance)
-		var all_pickups = get_tree().get_nodes_in_group("pickups")
-		for node in all_pickups:
-			if node is Interactive and node.global_position.distance_to(pickup_position) < 1.0:
-				pickup = node as Interactive
-				break
+	if is_instance_valid(GameManager) and is_instance_valid(GameManager._game_level):
+		var dungeon_tiles = GameManager._game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+		if dungeon_tiles != null:
+			pickup = dungeon_tiles.get_node_or_null(pickup_name) as Interactive
+		
+		# If not found, check GameLevel directly for dropped pickups
+		if pickup == null:
+			pickup = GameManager._game_level.get_node_or_null(pickup_name) as Interactive
 	
 	if pickup == null:
-		print("[PICKUP] Could not find pickup '%s' at position %s" % [pickup_name, pickup_position])
+		print("[PICKUP] Could not find pickup '%s'" % pickup_name)
 		return
 	
 	# Process pickup using the found pickup node
@@ -103,8 +100,17 @@ func _process_pickup_request():
 	# Clamp selected index if needed
 	requesting_player._clamp_selected_index()
 	
-	# Tell all clients to destroy this pickup by name
-	rpc_destroy_pickup_by_name.rpc(name, global_position)
+	# Destroy this pickup locally first
+	var pickup_name = name
+	queue_free()
+	
+	# Tell all clients to destroy their local copy by name
+	# Use GameManager to broadcast since procedurally spawned pickups aren't synchronized
+	if is_instance_valid(GameManager):
+		GameManager.rpc_destroy_pickup_by_name.rpc(pickup_name)
+	else:
+		# Fallback: try direct RPC (works for synchronized pickups)
+		rpc_destroy_pickup_by_name.rpc(pickup_name)
 	
 	# Tell requesting client to update their inventory UI
 	if requesting_peer_id == 1:
@@ -135,9 +141,9 @@ func rpc_request_pickup():
 		return
 	_process_pickup_request()
 
-# RPC to destroy this pickup on all clients by name
+# RPC to destroy this pickup on all clients by name (kept for synchronized pickups)
 @rpc("any_peer", "call_local", "reliable")
-func rpc_destroy_pickup_by_name(pickup_name: String, pickup_position: Vector3):
+func rpc_destroy_pickup_by_name(pickup_name: String):
 	# Only process if called from server (peer ID 1)
 	var sender_id = multiplayer.get_remote_sender_id()
 	if not multiplayer.is_server():
@@ -146,27 +152,10 @@ func rpc_destroy_pickup_by_name(pickup_name: String, pickup_position: Vector3):
 			return
 	# On server, sender_id will be 0 (local call) which is fine
 	
-	# Find the pickup by name or position
-	var pickup: Interactive = null
+	# For synchronized pickups, destroy self if name matches
 	if name == pickup_name:
-		pickup = self
-	else:
-		# Try to find by name in scene tree
-		var root = get_tree().root
-		var pickup_path = root.get_node_or_null("Main/GameRoot/GameLevelSpawner/GameLevel/ProceduralDungeon/DungeonTiles/" + pickup_name)
-		if pickup_path != null and pickup_path is Interactive:
-			pickup = pickup_path as Interactive
-		else:
-			# Fallback: search by position
-			var all_pickups = get_tree().get_nodes_in_group("pickups")
-			for node in all_pickups:
-				if node is Interactive and node.global_position.distance_to(pickup_position) < 1.0:
-					pickup = node as Interactive
-					break
-	
-	if pickup != null:
-		print("[PICKUP] Destroying pickup: %s" % pickup.name)
-		pickup.queue_free()
+		print("[PICKUP] Destroying pickup: %s" % name)
+		queue_free()
 
 # RPC to destroy this pickup on all clients (kept for backward compatibility)
 @rpc("any_peer", "call_local", "reliable")

@@ -229,16 +229,15 @@ func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
 # This is needed for procedurally spawned pickups that aren't synchronized
 # Dropped pickups (synchronized via MultiplayerSpawner) should use direct RPC call instead
 @rpc("any_peer", "reliable")
-func rpc_request_pickup_by_name(pickup_name: String, pickup_position: Vector3) -> void:
+func rpc_request_pickup_by_name(pickup_name: String) -> void:
 	# Only server processes this
 	if !multiplayer.is_server():
 		return
 	
-	# Find the pickup in the scene tree
-	# Check both ProceduralDungeon/DungeonTiles (procedurally spawned) and GameLevel (dropped items)
+	# Find the pickup by name only - procedurally spawned pickups have consistent names
 	var pickup: Interactive = null
 	if is_instance_valid(_game_level):
-		# First check ProceduralDungeon/DungeonTiles for procedurally spawned pickups
+		# Check ProceduralDungeon/DungeonTiles for procedurally spawned pickups
 		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
 		if dungeon_tiles != null:
 			pickup = dungeon_tiles.get_node_or_null(pickup_name) as Interactive
@@ -246,32 +245,41 @@ func rpc_request_pickup_by_name(pickup_name: String, pickup_position: Vector3) -
 		# If not found, check GameLevel directly for dropped pickups
 		if pickup == null:
 			pickup = _game_level.get_node_or_null(pickup_name) as Interactive
-		
-		# Fallback: search by position in both locations
-		if pickup == null:
-			# Search in DungeonTiles
-			if dungeon_tiles != null:
-				for child in dungeon_tiles.get_children():
-					if child is Interactive:
-						var interactive = child as Interactive
-						if interactive.global_position.distance_to(pickup_position) < 1.0:
-							pickup = interactive
-							break
-			
-			# Search in GameLevel if still not found
-			if pickup == null:
-				for child in _game_level.get_children():
-					if child is Interactive:
-						var interactive = child as Interactive
-						if interactive.global_position.distance_to(pickup_position) < 1.0:
-							pickup = interactive
-							break
 	
 	if pickup != null:
-		# Call the pickup's RPC function to process the request
-		pickup.rpc_request_pickup()
+		# Call the pickup's internal function directly (no RPC needed on server)
+		pickup._process_pickup_request()
 	else:
-		print("[GameManager] Could not find pickup '%s' at position %s" % [pickup_name, pickup_position])
+		print("[GameManager] Could not find pickup '%s'" % pickup_name)
+
+# RPC function to destroy pickups by name (needed for procedurally spawned pickups)
+@rpc("any_peer", "call_local", "reliable")
+func rpc_destroy_pickup_by_name(pickup_name: String) -> void:
+	# Only process if called from server (peer ID 1)
+	var sender_id = multiplayer.get_remote_sender_id()
+	if not multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+	
+	# Find the pickup by name only - procedurally spawned pickups have consistent names
+	var pickup: Interactive = null
+	if is_instance_valid(_game_level):
+		# Check ProceduralDungeon/DungeonTiles for procedurally spawned pickups
+		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+		if dungeon_tiles != null:
+			pickup = dungeon_tiles.get_node_or_null(pickup_name) as Interactive
+		
+		# If not found, check GameLevel directly for dropped pickups
+		if pickup == null:
+			pickup = _game_level.get_node_or_null(pickup_name) as Interactive
+	
+	if pickup != null:
+		print("[GameManager] Destroying pickup: %s" % pickup.name)
+		pickup.queue_free()
+	else:
+		print("[GameManager] Could not find pickup '%s' to destroy" % pickup_name)
 
 @rpc("authority", "call_local", "reliable")
 func _sync_dungeon_seed(seed_value: int) -> void:
