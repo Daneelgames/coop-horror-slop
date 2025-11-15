@@ -1263,20 +1263,10 @@ func spawn_mobs():
 		# Choose a random tile using seeded RNG (ensures same selection on all clients)
 		var random_tile: DungeonTile = available_tiles[rng.randi() % available_tiles.size()]
 		
-		# Load and instantiate AI character
-		var mob = AI_CHARACTER.instantiate()
-		if mob == null:
-			continue
-		
 		# Randomize mob position within tile bounds using seeded RNG
 		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 		var mob_position = random_tile.position + Vector3(random_offset_x, 1.0, random_offset_z)  # 1 unit above floor
-		mob.position = mob_position
-		
-		# Set home position for patrol (AiCharacter has home_position property)
-		if mob is AiCharacter:
-			mob.home_position = mob_position
 		
 		# Give mob a unique, consistent name based on spawn order and tile coordinate
 		# This ensures RPCs can find the correct mob on all peers
@@ -1286,16 +1276,21 @@ func spawn_mobs():
 			random_tile.coord.z,
 			i
 		]
-		mob.name = mob_name
 		
-		game_level.add_child(mob)
-		mob.owner = get_tree().edited_scene_root
-		
-		# Set multiplayer authority to server (peer ID 1) for AI control
-		# This ensures AI logic runs on server and is synchronized to clients
-		# Set after add_child() to override any authority set in _enter_tree()
-		if multiplayer.has_multiplayer_peer():
-			mob.set_multiplayer_authority(1, true)
+		# Spawn mob through MultiplayerSpawner for proper synchronization
+		# Only spawn on server - MultiplayerSpawner will replicate to all clients
+		if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+			GameManager.spawn_mob(mob_name, mob_position, mob_position)
+		elif not multiplayer.has_multiplayer_peer():
+			# Single player - spawn directly
+			var mob = AI_CHARACTER.instantiate()
+			if mob != null:
+				mob.name = mob_name
+				mob.position = mob_position
+				if mob is AiCharacter:
+					mob.home_position = mob_position
+				game_level.add_child(mob)
+				mob.owner = get_tree().edited_scene_root
 		
 		# Yield every 10 mobs to avoid frame drops
 		if i % 10 == 0:

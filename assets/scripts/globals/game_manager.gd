@@ -2,8 +2,10 @@ extends Node
 
 const GAME_LEVEL_SCENE_PATH := "res://assets/scenes/game_level.tscn"
 const PLAYER_SCENE_PATH := "res://addons/fpc/character.tscn"
+const AI_CHARACTER_SCENE_PATH := "res://addons/fpc/ai_character.tscn"
 const GAME_LEVEL_SCENE : PackedScene = preload(GAME_LEVEL_SCENE_PATH)
 const PLAYER_SCENE : PackedScene = preload(PLAYER_SCENE_PATH)
+const AI_CHARACTER_SCENE : PackedScene = preload(AI_CHARACTER_SCENE_PATH)
 
 var main_menu : CanvasLayer
 var lobby : CanvasLayer
@@ -17,6 +19,7 @@ var _player_root : Node3D
 var _player_spawner : MultiplayerSpawner
 var _player_nodes : Dictionary = {}
 var _player_signals_connected : bool = false
+var _mob_spawner : MultiplayerSpawner
 var particles_manager : ParticlesManager
 var ai_visibility_manager : AiVisibilityManager
 var ai_hearing_manager : AiHearingManager
@@ -84,6 +87,7 @@ func _start_multiplayer_game() -> void:
 	_ensure_game_spawner()
 	_ensure_player_root()
 	_ensure_player_spawner()
+	_ensure_mob_spawner()
 	if multiplayer.is_server():
 		# Generate dungeon seed before spawning game level
 		dungeon_seed = int(Time.get_unix_time_from_system())
@@ -137,6 +141,10 @@ func _cache_spawned_game_level() -> void:
 	for child in _game_spawner.get_children():
 		if child is Node and child.name == "GameLevel":
 			_game_level = child
+			# Update mob spawner path to point to GameLevel
+			if is_instance_valid(_mob_spawner):
+				var game_level_path = _mob_spawner.get_path_to(_game_level)
+				_mob_spawner.spawn_path = game_level_path
 			return
 
 func _ensure_player_root() -> void:
@@ -154,6 +162,63 @@ func _ensure_player_spawner() -> void:
 		_player_root.add_child(_player_spawner)
 		# Set spawn function after spawner is created
 		_player_spawner.spawn_function = Callable(self, "_spawn_player_scene")
+
+func _ensure_mob_spawner() -> void:
+	if !is_instance_valid(_mob_spawner):
+		_mob_spawner = MultiplayerSpawner.new()
+		_mob_spawner.name = "MobSpawner"
+		_game_root.add_child(_mob_spawner)
+		# Set spawn function for mobs
+		_mob_spawner.spawn_function = Callable(self, "_spawn_mob_scene")
+		# Add AI character scene to spawnable scenes
+		_mob_spawner.add_spawnable_scene(AI_CHARACTER_SCENE_PATH)
+
+func _spawn_mob_scene(spawn_data_dict: Dictionary) -> Node:
+	# spawn_data_dict should contain: mob_name, position, home_position
+	var mob := AI_CHARACTER_SCENE.instantiate()
+	var mob_name = spawn_data_dict.get("mob_name", "Mob_Unknown")
+	mob.name = mob_name
+	
+	var position = spawn_data_dict.get("position", Vector3.ZERO)
+	var home_position = spawn_data_dict.get("home_position", Vector3.ZERO)
+	
+	mob.position = position
+	if mob is AiCharacter:
+		mob.home_position = home_position
+	
+	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
+	return mob
+
+# Public function to spawn a mob through MultiplayerSpawner
+func spawn_mob(mob_name: String, position: Vector3, home_position: Vector3) -> void:
+	if !multiplayer.is_server():
+		return
+	
+	if !is_instance_valid(_mob_spawner):
+		push_error("MobSpawner not initialized!")
+		return
+	
+	# Ensure spawn_path is set correctly
+	if !is_instance_valid(_game_level):
+		push_error("GameLevel not available for mob spawning!")
+		return
+	
+	var game_level_path = _mob_spawner.get_path_to(_game_level)
+	_mob_spawner.spawn_path = game_level_path
+	
+	# Create spawn data dictionary
+	var spawn_data = {
+		"mob_name": mob_name,
+		"position": position,
+		"home_position": home_position
+	}
+	
+	# Spawn on all peers (use 1 as peer_id for server authority)
+	var mob = _mob_spawner.spawn(spawn_data) as Node
+	if mob:
+		# Set multiplayer authority to server (peer ID 1) for AI control
+		if multiplayer.has_multiplayer_peer():
+			mob.set_multiplayer_authority(1, true)
 
 func _spawn_existing_players() -> void:
 	for peer_id in NetworkManager.players.keys():

@@ -339,7 +339,7 @@ bind/64/pose = Transform3D(-99.92396, -0.0001585168, 3.8993707, 3.899273, -0.710
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_uy03j"]
 radius = 0.4
-height = 1.65
+height = 1.6
 
 [sub_resource type="Animation" id="Animation_j8cx7"]
 resource_name = "RESET"
@@ -1247,7 +1247,7 @@ libraries = {
 autoplay = "idle"
 
 [node name="Collision" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.825, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("CapsuleShape3D_uy03j")
 
 [node name="CrouchAnimation" type="AnimationPlayer" parent="."]
