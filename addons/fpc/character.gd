@@ -169,6 +169,7 @@ var _cached_peer_id : int = -1
 var _cached_local_peer_id : int = -1
 
 #endregion
+@onready var dust_gpu_particles_3d: GPUParticles3D = %DustGPUParticles3D
 
 
 
@@ -193,6 +194,10 @@ func _ready():
 	# Cache local peer ID if in multiplayer
 	if multiplayer.has_multiplayer_peer():
 		_cached_local_peer_id = multiplayer.get_unique_id()
+	
+	# Register this character in GameManager._player_nodes
+	# This ensures all clients have all players registered, not just the server
+	_register_self_in_game_manager()
 
 	for key in carrying_items.keys():
 		carrying_items[key] = carrying_items[key].duplicate()
@@ -212,6 +217,205 @@ func _ready():
 	if OS.get_name() == "Web":
 		Input.set_use_accumulated_input(false)
 	super._ready()
+	if _has_input_authority == false:
+		dust_gpu_particles_3d.emitting = false
+		dust_gpu_particles_3d.visible = false
+	await_for_levelgen_to_teleport_player_locally()
+
+func _register_self_in_game_manager():
+	# Ensure GameManager exists
+	if not is_instance_valid(GameManager):
+		push_warning("Character._register_self_in_game_manager: GameManager is not valid")
+		return
+	
+	# Extract peer ID from character name format: "Player_{peer_id}"
+	var name_parts = name.split("_")
+	if name_parts.size() >= 2:
+		var peer_id = name_parts[1].to_int()
+		# Register this character in GameManager._player_nodes
+		# This ensures all clients have all players, not just the server
+		if not GameManager._player_nodes.has(peer_id):
+			GameManager._player_nodes[peer_id] = self
+			if debug_authority:
+				_debug_print("Registered self in GameManager._player_nodes with peer_id=%d" % peer_id)
+		elif GameManager._player_nodes[peer_id] != self:
+			# Update if it's a different instance (shouldn't happen, but just in case)
+			GameManager._player_nodes[peer_id] = self
+			if debug_authority:
+				_debug_print("Updated GameManager._player_nodes entry for peer_id=%d" % peer_id)
+		else:
+			# Already registered correctly
+			if debug_authority:
+				_debug_print("Already registered in GameManager._player_nodes with peer_id=%d" % peer_id)
+	else:
+		push_warning("Character._register_self_in_game_manager: Could not extract peer ID from name '%s'" % name)
+
+func await_for_levelgen_to_teleport_player_locally():
+	# Only teleport if this is the local player (has authority)
+	if not is_multiplayer_authority():
+		if debug_authority:
+			_debug_print("await_for_levelgen_to_teleport_player_locally: Not authority, skipping teleport")
+		return
+	
+	# Wait for game level to exist
+	if not is_instance_valid(GameManager._game_level):
+		await get_tree().process_frame
+		if not is_instance_valid(GameManager._game_level):
+			push_warning("await_for_levelgen_to_teleport_player_locally: GameManager._game_level is not valid")
+			return
+	
+	# Wait for level generation to complete
+	await GameManager._game_level.level_generator.level_generated
+	
+	# Check if level_generator is ProceduralDungeon
+	var level_gen = GameManager._game_level.level_generator
+	if not level_gen is ProceduralDungeon:
+		push_warning("await_for_levelgen_to_teleport_player_locally: level_generator is not ProceduralDungeon")
+		return
+	
+	var procedural_dungeon: ProceduralDungeon = level_gen as ProceduralDungeon
+	
+	# Get the first room
+	if procedural_dungeon.rooms_resources.is_empty():
+		push_warning("await_for_levelgen_to_teleport_player_locally: No rooms available")
+		return
+	
+	var first_room = procedural_dungeon.rooms_resources[0]
+	
+	# Get tiles from the first room
+	if not procedural_dungeon.spawned_room_tiles.has(first_room):
+		push_warning("await_for_levelgen_to_teleport_player_locally: First room has no tiles")
+		return
+	
+	var room_tiles: Array = procedural_dungeon.spawned_room_tiles[first_room]
+	if room_tiles.is_empty():
+		push_warning("await_for_levelgen_to_teleport_player_locally: First room tiles array is empty")
+		return
+	
+	# Filter tiles that have floors (so player can stand on them)
+	var tiles_with_floors: Array = []
+	for tile in room_tiles:
+		if not is_instance_valid(tile):
+			continue
+		if is_instance_valid(tile.floor):
+			tiles_with_floors.append(tile)
+	
+	if tiles_with_floors.is_empty():
+		push_warning("await_for_levelgen_to_teleport_player_locally: No tiles with floors found in first room")
+		return
+	
+	# Shuffle tiles using seeded RNG to ensure consistent placement across all peers
+	procedural_dungeon._shuffle_array(tiles_with_floors)
+	
+	# Wait for all players to be registered and spawned
+	# We need to wait for all players from NetworkManager.players to be in GameManager._player_nodes
+	# This ensures we have the complete player list for consistent index calculation
+	var max_wait_time = 5.0  # Maximum time to wait
+	var wait_interval = 0.1  # Check every 100ms
+	var waited_time = 0.0
+	var all_players_registered = false
+	
+	while not all_players_registered and waited_time < max_wait_time:
+		# Check if all players from NetworkManager are registered
+		var expected_player_count = NetworkManager.players.size() if is_instance_valid(NetworkManager) else 0
+		var registered_count = GameManager._player_nodes.size()
+		
+		# Also verify this player is registered
+		var self_registered = false
+		for peer_id in GameManager._player_nodes.keys():
+			var player = GameManager._player_nodes[peer_id]
+			if player == self:
+				self_registered = true
+				break
+		
+		# All players registered if we have the expected count and self is registered
+		if expected_player_count > 0 and registered_count >= expected_player_count and self_registered:
+			all_players_registered = true
+		else:
+			await get_tree().create_timer(wait_interval).timeout
+			waited_time += wait_interval
+	
+	if not all_players_registered:
+		push_warning("await_for_levelgen_to_teleport_player_locally: Not all players registered after %.1fs (expected=%d, registered=%d, name=%s, peer_id=%d)" % [
+			max_wait_time,
+			NetworkManager.players.size() if is_instance_valid(NetworkManager) else 0,
+			GameManager._player_nodes.size(),
+			name,
+			_cached_peer_id if _cached_peer_id != -1 else -1
+		])
+		# Continue anyway with what we have
+	
+	# Get all players to determine this player's index for consistent tile assignment
+	# Use NetworkManager.players to get all peer IDs, then find corresponding player nodes
+	# This ensures we use the same peer ID list on all clients
+	var all_players: Array = []
+	if is_instance_valid(NetworkManager) and NetworkManager.players.size() > 0:
+		# Get all peer IDs from NetworkManager and sort them for consistent ordering
+		var peer_ids: Array = []
+		for peer_id in NetworkManager.players.keys():
+			peer_ids.append(peer_id)
+		peer_ids.sort()  # Sort for consistent ordering across all clients
+		
+		# Find player nodes for each peer ID
+		for peer_id in peer_ids:
+			if GameManager._player_nodes.has(peer_id):
+				var player = GameManager._player_nodes[peer_id]
+				if is_instance_valid(player):
+					all_players.append(player)
+	else:
+		# Fallback: use GameManager._player_nodes directly and sort by name
+		for peer_id in GameManager._player_nodes.keys():
+			var player = GameManager._player_nodes[peer_id]
+			if is_instance_valid(player):
+				all_players.append(player)
+		# Sort players by name (peer ID) for consistent ordering
+		all_players.sort_custom(func(a, b): return a.name < b.name)
+	
+	# Find this player's index
+	var player_index = -1
+	for i in range(all_players.size()):
+		if all_players[i] == self:
+			player_index = i
+			break
+	
+	if player_index == -1:
+		push_warning("await_for_levelgen_to_teleport_player_locally: Could not find player index after registration")
+		return
+	
+	# Assign tile based on player index for consistent placement
+	var tile_index = player_index % tiles_with_floors.size()
+	var tile: DungeonTile = tiles_with_floors[tile_index]
+	
+	# Calculate circular offset based on player index and total player count
+	# This ensures players are spread in a circle around the tile center
+	var total_players = all_players.size()
+	var circle_radius = 2.0  # 1 unit radius
+	var angle_step = (2.0 * PI) / total_players if total_players > 0 else 0.0
+	var angle = player_index * angle_step
+	
+	# Calculate circular offset using sin/cos (X and Z axes for horizontal circle)
+	var offset_x = cos(angle) * circle_radius
+	var offset_z = sin(angle) * circle_radius
+	
+	offset_x = randf_range(-2,2)
+	offset_z = randf_range(-2,2)
+	# Place player on the tile's position (tile position is at bottom center)
+	# Add circular offset and height offset so player stands on the floor
+	var spawn_position = tile.position + Vector3(offset_x, 0.25, offset_z)
+	global_position = spawn_position
+	
+	var instance_type = "HOST" if multiplayer.is_server() else "CLIENT"
+	var my_peer_id = multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else 0
+	print("[%s] Character %s teleported to position %s (tile coord: %s, player_index=%d/%d, angle=%.2f) [peer_id=%d]" % [
+		instance_type,
+		name,
+		spawn_position,
+		tile.coord,
+		player_index,
+		total_players,
+		angle,
+		my_peer_id
+	])
 
 func _process(_delta):
 	if GameManager._game_level.is_game_level_ready == false:
@@ -447,7 +651,7 @@ func rpc_spawn_dropped_pickup(drop_position: Vector3, weapon_data: Dictionary):
 	var pickup = pickup_instance as Interactive
 	
 	# Reparent to game_level (this happens on server, clients will sync via MultiplayerSpawner)
-	if pickup.parent == null:
+	if pickup.get_parent() == null:
 		game_root.add_child(pickup)
 	pickup.global_position = drop_position
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=62 format=4 uid="uid://cc1m2a1obsyn4"]
+[gd_scene load_steps=70 format=4 uid="uid://cc1m2a1obsyn4"]
 
 [ext_resource type="Script" uid="uid://hutuis63hgev" path="res://addons/fpc/character.gd" id="1_0t4e8"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_gv6je"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://c8h1pphcyugu3" path="res://assets/scripts/player_inventory_slots_panel_container.gd" id="7_4fv23"]
 [ext_resource type="AudioStream" uid="uid://b7ys0ad0k7jx5" path="res://assets/audio/FootStepRun_1.wav" id="7_6wwgf"]
 [ext_resource type="AudioStream" uid="uid://bwkgkhr2wv6xn" path="res://assets/audio/FootStepRun_2.wav" id="8_6yc32"]
+[ext_resource type="Texture2D" uid="uid://b5fhcqr8k4xsc" path="res://assets/dust_particle.png" id="9_1ltnj"]
 [ext_resource type="AudioStream" uid="uid://bne603ivdekwc" path="res://assets/audio/FootStepRun_3.wav" id="9_xtbqr"]
 [ext_resource type="AudioStream" uid="uid://bivv20wktglii" path="res://assets/audio/FootStepRun_4.wav" id="10_bxhyc"]
 [ext_resource type="AudioStream" uid="uid://h1oyim2hlk1x" path="res://assets/audio/FootStepRun_5.wav" id="11_3p1au"]
@@ -33,6 +34,46 @@
 [ext_resource type="AudioStream" uid="uid://de2kpnugqk075" path="res://assets/audio/damage3.wav" id="27_sarb3"]
 [ext_resource type="AudioStream" uid="uid://cxsvcnhppd1sd" path="res://assets/audio/damage4.wav" id="28_8bp5q"]
 [ext_resource type="AudioStream" uid="uid://bfq5h7sd4x2nv" path="res://assets/audio/BloodSfx.wav" id="29_1ltnj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5d3cd"]
+transparency = 1
+blend_mode = 1
+albedo_texture = ExtResource("9_1ltnj")
+texture_filter = 2
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_xo647"]
+_data = [Vector2(0, 0.31430638), 0.0, 0.0, 0, 0, Vector2(1, 0.77456653), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_6pqx7"]
+curve = SubResource("Curve_xo647")
+
+[sub_resource type="Curve" id="Curve_kjvv1"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.5067961, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_ngpqw"]
+curve = SubResource("Curve_kjvv1")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_d4f47"]
+emission_shape = 3
+emission_box_extents = Vector3(5, 2, 5)
+angle_min = -89.99999
+angle_max = 90.000015
+angle_curve = SubResource("CurveTexture_6pqx7")
+spread = 180.0
+initial_velocity_max = 0.099999994
+gravity = Vector3(0, 0, 0)
+scale_min = 0.01
+scale_max = 0.02
+scale_curve = SubResource("CurveTexture_ngpqw")
+
+[sub_resource type="QuadMesh" id="QuadMesh_g5ywq"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kp17n"]
 albedo_color = Color(0.909804, 0.596078, 0, 1)
@@ -699,6 +740,16 @@ debug_authority = false
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])
 death_anims = Array[StringName]([&"death_0", &"death_1", &"death_2", &"death_3"])
+
+[node name="DustGPUParticles3D" type="GPUParticles3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
+material_override = SubResource("StandardMaterial3D_5d3cd")
+amount = 100
+lifetime = 5.0
+randomness = 0.5
+process_material = SubResource("ParticleProcessMaterial_d4f47")
+draw_pass_1 = SubResource("QuadMesh_g5ywq")
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13531351, 0, 0)

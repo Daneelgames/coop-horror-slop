@@ -39,6 +39,22 @@ enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 		clear()
 
 @onready var dungeon_tiles: Node3D = %DungeonTiles
+
+# Seeded random number generator for synchronized generation
+var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var dungeon_seed: int = 0
+var seed_received: bool = false
+
+# Seed synchronization is now handled by GameManager
+
+func _shuffle_array(arr: Array) -> void:
+	# Shuffle array using seeded RNG (Fisher-Yates algorithm)
+	for i in range(arr.size() - 1, 0, -1):
+		var j = rng.randi() % (i + 1)
+		var temp = arr[i]
+		arr[i] = arr[j]
+		arr[j] = temp
+
 func clear():
 	if is_instance_valid(dungeon_tiles):
 		for child in dungeon_tiles.get_children():
@@ -49,6 +65,30 @@ func clear():
 	tunnel_tiles_coords.clear()
 
 func generate_dungeon():
+	# Wait for seed synchronization in multiplayer
+	if multiplayer.has_multiplayer_peer():
+		if multiplayer.is_server():
+			# Host gets seed from GameManager (already generated)
+			dungeon_seed = GameManager.dungeon_seed
+			rng.seed = dungeon_seed
+			seed_received = true
+			print("ProceduralDungeon: Host using seed from GameManager: ", dungeon_seed)
+		else:
+			# Client waits for seed from GameManager
+			seed_received = false
+			# Wait for GameManager to receive seed (if not already received)
+			if not GameManager.dungeon_seed_received:
+				await GameManager.dungeon_seed_synced
+			dungeon_seed = GameManager.dungeon_seed
+			rng.seed = dungeon_seed
+			seed_received = true
+			print("ProceduralDungeon: Client using seed from GameManager: ", dungeon_seed)
+	else:
+		# Single player - generate seed from system datetime
+		dungeon_seed = int(Time.get_unix_time_from_system())
+		rng.seed = dungeon_seed
+		seed_received = true
+	
 	# Clear existing tiles
 	clear()
 	# Duplicate room resources
@@ -86,8 +126,8 @@ func generate_dungeon():
 			# Try to find a valid position
 			for attempt in range(max_attempts):
 				# Generate random tile coordinates
-				var x: int = randi_range(-50, 50)
-				var z: int = randi_range(-50, 50)
+				var x: int = rng.randi_range(-50, 50)
+				var z: int = rng.randi_range(-50, 50)
 				var y: int = room.base_room_height
 				base_coord = Vector3i(x, y, z)
 				
@@ -201,12 +241,12 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 		# Decide if walker moves vertically or horizontally
 		# Never make two vertical steps in a row
 		var should_move_vertically: bool = false
-		if not last_step_was_vertical and randf() < room.walker_change_floor_height_chance:
+		if not last_step_was_vertical and rng.randf() < room.walker_change_floor_height_chance:
 			should_move_vertically = true
 		
 		if should_move_vertically:
 			# Move vertically (up or down)
-			var direction: int = 1 if randf() < 0.5 else -1
+			var direction: int = 1 if rng.randf() < 0.5 else -1
 			var new_coord: Vector3i = Vector3i(walker_coord.x, walker_coord.y + direction, walker_coord.z)
 			
 			if _is_coord_free(new_coord):
@@ -219,7 +259,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 			else:
 				# Teleport to random spawned tile from this room
 				if spawned_room_tiles[room].size() > 0:
-					var random_tile: DungeonTile = spawned_room_tiles[room][randi() % spawned_room_tiles[room].size()]
+					var random_tile: DungeonTile = spawned_room_tiles[room][rng.randi() % spawned_room_tiles[room].size()]
 					walker_coord = random_tile.coord
 					last_step_was_vertical = false  # Reset on teleport
 		else:
@@ -230,7 +270,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				Vector3i(0, 0, 1),   # Forward
 				Vector3i(0, 0, -1)   # Backward
 			]
-			var direction: Vector3i = directions[randi() % directions.size()]
+			var direction: Vector3i = directions[rng.randi() % directions.size()]
 			var new_coord: Vector3i = walker_coord + direction
 			
 			if _is_coord_free(new_coord):
@@ -243,7 +283,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 			else:
 				# Teleport to random spawned tile from this room
 				if spawned_room_tiles[room].size() > 0:
-					var random_tile: DungeonTile = spawned_room_tiles[room][randi() % spawned_room_tiles[room].size()]
+					var random_tile: DungeonTile = spawned_room_tiles[room][rng.randi() % spawned_room_tiles[room].size()]
 					walker_coord = random_tile.coord
 					last_step_was_vertical = false  # Reset on teleport
 
@@ -687,13 +727,8 @@ func _spawn_stairs_at_coord(room: ResourceDungeonRoom, coord: Vector3i, tunnel_d
 	if tile_at_coord != null:
 		tile_position = tile_at_coord.position
 		tile_has_floor = is_instance_valid(tile_at_coord.floor)
-		print("DEBUG _spawn_stairs_at_coord: Tile at coord ", coord, " - position: ", tile_position, ", has_floor: ", tile_has_floor)
-	else:
-		print("DEBUG _spawn_stairs_at_coord: WARNING - No tile found at coord ", coord)
 	
 	# Compare positions
-	var position_difference: Vector3 = world_position - tile_position
-	print("DEBUG _spawn_stairs_at_coord: Stair world_position: ", world_position, ", tile_position: ", tile_position, ", difference: ", position_difference)
 	
 	var stairs = STAIRS_1.instantiate()
 	
@@ -721,7 +756,6 @@ func _spawn_stairs_at_coord(room: ResourceDungeonRoom, coord: Vector3i, tunnel_d
 	stairs.rotation.y = rotation_y
 	stairs.rotation_degrees.y += 180
 	
-	print('DEBUG _spawn_stairs_at_coord: tunnel_direction: %s, vertical_direction: %s, rotation_y: %.2f' % [tunnel_direction, vertical_direction, rad_to_deg(rotation_y)])
 
 	
 	
@@ -737,9 +771,6 @@ func _spawn_stairs_at_coord(room: ResourceDungeonRoom, coord: Vector3i, tunnel_d
 		stairs_name = "islands_" + str(island_idx_a) + "_" + str(island_idx_b) + "_" + stairs_name
 	stairs.name += "_" + stairs_name
 	stairs.owner = get_tree().edited_scene_root
-	
-	# Final verification after spawning
-	print("DEBUG _spawn_stairs_at_coord: Stair spawned at ", stairs.position, " for coord ", coord, ", tile has floor: ", tile_has_floor, ", connects islands ", island_idx_a, " and ", island_idx_b)
 
 @export var tiles_coords_islands: Dictionary[int, Array] #island index, array of tile coords Vector3i
 
@@ -873,7 +904,6 @@ func collect_tile_islands():
 		print("DEBUG collect_tile_islands: OK - No duplicate coordinates found across islands")
 
 func connect_islands_with_stairs():
-	print("DEBUG connect_islands_with_stairs: Starting, total islands: ", tiles_coords_islands.size())
 	var total_connections_attempted: int = 0
 	var total_connections_found: int = 0
 	var total_stairs_spawned: int = 0
@@ -892,7 +922,6 @@ func connect_islands_with_stairs():
 			# Only connect islands on adjacent floors (Y difference must be exactly 1)
 			var height_difference: int = abs(island_height_a - island_height_b)
 			if height_difference != 1:
-				print("DEBUG connect_islands_with_stairs: SKIP - Island ", island_idx_a, " (Y=", island_height_a, ") and island ", island_idx_b, " (Y=", island_height_b, ") are not on adjacent floors (difference: ", height_difference, ")")
 				continue
 			
 			# Create a unique key for this island pair (always use smaller index first to avoid duplicates)
@@ -904,12 +933,10 @@ func connect_islands_with_stairs():
 			
 			# Skip if this island pair has already been connected
 			if connected_island_pairs.has(pair_key):
-				print("DEBUG connect_islands_with_stairs: SKIP - Island pair ", pair_key, " already connected")
 				continue
 			
-			print("DEBUG connect_islands_with_stairs: Checking island ", island_idx_a, " (Y=", island_height_a, ", ", tiles_coords_islands[island_idx_a].size(), " tiles) vs island ", island_idx_b, " (Y=", island_height_b, ", ", tiles_coords_islands[island_idx_b].size(), " tiles)")
 			
-			tiles_coords_islands[island_idx_a].shuffle()
+			_shuffle_array(tiles_coords_islands[island_idx_a])
 
 			# loop over tiles coords in island_idx_a
 			# loop over tiles coords in island_idx_b
@@ -940,7 +967,6 @@ func connect_islands_with_stairs():
 							break
 					
 					if same_island:
-						print("DEBUG connect_islands_with_stairs: SKIP - coord_a ", coord_a, " and coord_b ", coord_b, " both in same island ", found_in_island_idx)
 						continue  # Skip if coordinates belong to the same island
 					
 					# Check if tiles are neighboring in horizontal plane (adjacent X or Z, different Y)
@@ -956,7 +982,6 @@ func connect_islands_with_stairs():
 					
 					if is_horizontally_adjacent:
 						total_connections_found += 1
-						print("DEBUG connect_islands_with_stairs: Found adjacent pair - coord_a ", coord_a, " coord_b ", coord_b)
 						
 						# Get tiles at both coordinates and verify they have floors
 						var tile_a: DungeonTile = _get_tile_at_coord(coord_a)
@@ -964,23 +989,18 @@ func connect_islands_with_stairs():
 						
 						# Only spawn stairs if both tiles exist and have floors
 						if tile_a == null:
-							print("DEBUG connect_islands_with_stairs: SKIP - tile_a is null at ", coord_a)
 							continue
 						if tile_b == null:
-							print("DEBUG connect_islands_with_stairs: SKIP - tile_b is null at ", coord_b)
 							continue
 						
 						var tile_a_has_floor: bool = is_instance_valid(tile_a.floor)
 						var tile_b_has_floor: bool = is_instance_valid(tile_b.floor)
 						
 						if not tile_a_has_floor:
-							print("DEBUG connect_islands_with_stairs: SKIP - tile_a at ", coord_a, " has no floor")
 							continue
 						if not tile_b_has_floor:
-							print("DEBUG connect_islands_with_stairs: SKIP - tile_b at ", coord_b, " has no floor")
 							continue
 						
-						print("DEBUG connect_islands_with_stairs: Both tiles have floors - proceeding to spawn stairs")
 						
 						# Determine which tile is the bottom one
 						var bottom_coord: Vector3i
@@ -1009,20 +1029,17 @@ func connect_islands_with_stairs():
 						
 						# Check if stairs already spawned at this coordinate
 						if spawned_stair_coords.has(bottom_coord):
-							print("DEBUG connect_islands_with_stairs: SKIP - stairs already spawned at ", bottom_coord)
 							continue
 						
 						# Check if bottom tile has a ceiling - if it does, skip this pair (ceiling would block stairs)
 						if bottom_tile != null:
 							if is_instance_valid(bottom_tile.ceiling):
-								print("DEBUG connect_islands_with_stairs: SKIP - bottom tile at ", bottom_coord, " has ceiling, would block stairs")
 								continue
 						
 						# Get the room for the bottom tile
 						if bottom_tile != null and all_spawned_tiles.has(bottom_tile):
 							var room: ResourceDungeonRoom = all_spawned_tiles[bottom_tile]
 							
-							print("DEBUG connect_islands_with_stairs: SPAWNING STAIRS at ", bottom_coord, " (bottom), top at ", top_coord, " tunnel_dir=", tunnel_direction, " vert_dir=", vertical_direction, " connecting islands ", island_idx_a, " and ", island_idx_b)
 							
 							# Spawn stairs prefab in center of the bottom tile
 							_spawn_stairs_at_coord(room, bottom_coord, tunnel_direction, vertical_direction, island_idx_a, island_idx_b)
@@ -1031,15 +1048,8 @@ func connect_islands_with_stairs():
 							total_stairs_spawned += 1
 							found_connection = true
 							break
-						else:
-							print("DEBUG connect_islands_with_stairs: SKIP - bottom_tile is null or not in all_spawned_tiles")
-			
-			if found_connection:
-				print("DEBUG connect_islands_with_stairs: Found connection between island ", island_idx_a, " and ", island_idx_b, " (checked ", adjacent_pairs_checked, " pairs)")
-			else:
-				print("DEBUG connect_islands_with_stairs: No connection found between island ", island_idx_a, " and ", island_idx_b, " (checked ", adjacent_pairs_checked, " pairs)")
-	
-	print("DEBUG connect_islands_with_stairs: COMPLETE - Attempted: ", total_connections_attempted, ", Found adjacent: ", total_connections_found, ", Spawned stairs: ", total_stairs_spawned)
+
+
 
 @export var tunnel_props_amount : int = 400
 @export var default_props_in_tunnels : Dictionary[StringName, float] # , prop path, drop weight
@@ -1076,7 +1086,7 @@ func spawn_props():
 		# Spawn props for this room
 		for i in range(room.props_to_spawn_amount):
 			# Choose a random tile with floor (multiple props can occupy same tile)
-			var random_tile: DungeonTile = tiles_with_floors[randi() % tiles_with_floors.size()]
+			var random_tile: DungeonTile = tiles_with_floors[rng.randi() % tiles_with_floors.size()]
 			
 			# Choose prop using weighted random selection
 			var prop_path: StringName = _choose_weighted_prop(room.props_by_weight)
@@ -1097,8 +1107,8 @@ func spawn_props():
 			# TILE_SIZE is Vector3i(4, 2, 4) and tile's origin is at its bottom center
 			# So we randomize X and Z in range [-TILE_SIZE.x/2, TILE_SIZE.x/2] = [-2, 2]
 			# And Y is slightly above floor (0.1 to account for floor height)
-			var random_offset_x: float = randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
-			var random_offset_z: float = randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 			prop.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
 			
 			dungeon_tiles.add_child(prop)
@@ -1129,7 +1139,7 @@ func spawn_props():
 		
 		for i in range(tunnel_props_to_spawn):
 			# Choose a random tunnel tile with floor (multiple props can occupy same tile)
-			var random_tile: DungeonTile = tunnel_tiles_with_floors[randi() % tunnel_tiles_with_floors.size()]
+			var random_tile: DungeonTile = tunnel_tiles_with_floors[rng.randi() % tunnel_tiles_with_floors.size()]
 			
 			# Choose prop using weighted random selection
 			var prop_path: StringName = _choose_weighted_prop(default_props_in_tunnels)
@@ -1147,8 +1157,8 @@ func spawn_props():
 				continue
 			
 			# Randomize prop position within tile bounds
-			var random_offset_x: float = randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
-			var random_offset_z: float = randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 			prop.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
 			
 			dungeon_tiles.add_child(prop)
@@ -1190,7 +1200,7 @@ func _choose_weighted_prop(props_by_weight: Dictionary[StringName, float]) -> St
 		return StringName()
 	
 	# Choose random value
-	var random_value: float = randf() * total_weight
+	var random_value: float = rng.randf() * total_weight
 	var current_weight: float = 0.0
 	
 	# Find which prop corresponds to the random value
@@ -1253,7 +1263,7 @@ func spawn_mobs():
 	var mobs_to_spawn: int = min(mobs_amount_to_spawn, available_tiles.size())
 	for i in range(mobs_to_spawn):
 		# Choose a random tile
-		var random_tile: DungeonTile = available_tiles[randi() % available_tiles.size()]
+		var random_tile: DungeonTile = available_tiles[rng.randi() % available_tiles.size()]
 		
 		# Load and instantiate AI character
 		var mob = AI_CHARACTER.instantiate()
@@ -1261,8 +1271,8 @@ func spawn_mobs():
 			continue
 		
 		# Randomize mob position within tile bounds
-		var random_offset_x: float = randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
-		var random_offset_z: float = randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 		var mob_position = random_tile.position + Vector3(random_offset_x, 1.0, random_offset_z)  # 1 unit above floor
 		mob.position = mob_position
 		
@@ -1335,7 +1345,7 @@ func spawn_pickups():
 		# Spawn the specified amount of this pickup
 		for i in range(amount):
 			# Choose a random tile
-			var random_tile: DungeonTile = available_tiles[randi() % available_tiles.size()]
+			var random_tile: DungeonTile = available_tiles[rng.randi() % available_tiles.size()]
 			
 			# Instantiate pickup
 			var pickup = pickup_scene.instantiate()
@@ -1347,8 +1357,8 @@ func spawn_pickups():
 				pickup.weapon_resource = weapon_resource.duplicate()
 			
 			# Randomize pickup position within tile bounds
-			var random_offset_x: float = randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
-			var random_offset_z: float = randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 			pickup.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)  # Slightly above floor
 			
 			dungeon_tiles.add_child(pickup)

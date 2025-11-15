@@ -7,7 +7,7 @@ size = Vector3(3.895502, 0.27947998, 4)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_np182"]
 radius = 0.390625
-height = 4.154297
+height = 4.583008
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_mkwa8"]
 _surfaces = [{
@@ -49,7 +49,7 @@ transform = Transform3D(-3.92651e-08, -1.9207741e-08, 1, -0.53999066, 0.8416711,
 shape = SubResource("BoxShape3D_np182")
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
-transform = Transform3D(-4.3711392e-08, -1.0000001, 0, 1.0000001, -4.3711392e-08, 0, 0, 0, 1, 0, -0.09304896, -1.0401192)
+transform = Transform3D(-4.3711392e-08, -1.0000001, 0, 1.0000001, -4.3711392e-08, 0, 0, 0, 1, 0, 0.0053666234, -0.8924961)
 shape = SubResource("CapsuleShape3D_np182")
 
 [node name="Stairs1" type="MeshInstance3D" parent="."]

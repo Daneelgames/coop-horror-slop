@@ -21,6 +21,11 @@ var particles_manager : ParticlesManager
 var ai_visibility_manager : AiVisibilityManager
 var ai_hearing_manager : AiHearingManager
 
+# Dungeon seed synchronization
+var dungeon_seed: int = 0
+var dungeon_seed_received: bool = false
+signal dungeon_seed_synced(seed_value: int)
+
 func _ready() -> void:
 	_check_launch_args()
 
@@ -80,9 +85,18 @@ func _start_multiplayer_game() -> void:
 	_ensure_player_root()
 	_ensure_player_spawner()
 	if multiplayer.is_server():
+		# Generate dungeon seed before spawning game level
+		dungeon_seed = int(Time.get_unix_time_from_system())
+		dungeon_seed_received = true
+		print("GameManager: Host generated dungeon seed: ", dungeon_seed)
+		# Send seed to all clients
+		_sync_dungeon_seed.rpc(dungeon_seed)
 		_spawn_game_level()
 		_setup_player_multiplayer_signals()
 		_spawn_existing_players()
+	else:
+		# Client waits for seed
+		dungeon_seed_received = false
 	call_deferred("_cache_spawned_game_level")
 
 func _teardown_lobby() -> void:
@@ -210,3 +224,10 @@ func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
 	weapon_resource.reducing_durability_when_in_hands = data.get("reducing_durability_when_in_hands", false)
 	weapon_resource.in_hands_reduce_durability_speed = data.get("in_hands_reduce_durability_speed", 0.5)
 	return weapon_resource
+
+@rpc("authority", "call_local", "reliable")
+func _sync_dungeon_seed(seed_value: int) -> void:
+	dungeon_seed = seed_value
+	dungeon_seed_received = true
+	print("GameManager: Synced dungeon seed: ", dungeon_seed)
+	dungeon_seed_synced.emit(dungeon_seed)

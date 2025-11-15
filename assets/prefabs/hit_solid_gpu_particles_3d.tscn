@@ -27,3 +27,8 @@ lifetime = 0.2
 one_shot = true
 process_material = SubResource("ParticleProcessMaterial_mnhhx")
 draw_pass_1 = SubResource("QuadMesh_6wwgf")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+light_color = Color(1, 1, 0.69803923, 1)
+shadow_enabled = true
+omni_attenuation = 0.33
