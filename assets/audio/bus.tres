@@ -1,4 +1,18 @@
-[gd_resource type="AudioBusLayout" format=3 uid="uid://cxm5q5xewt0xu"]
+[gd_resource type="AudioBusLayout" load_steps=5 format=3 uid="uid://cxm5q5xewt0xu"]
+
+[sub_resource type="AudioEffectReverb" id="AudioEffectReverb_i8chi"]
+resource_name = "Reverb"
+room_size = 0.3
+
+[sub_resource type="AudioEffectOpusChunked" id="AudioEffectOpusChunked_ryeki"]
+resource_name = "OpusChunked"
+
+[sub_resource type="AudioEffectReverb" id="AudioEffectReverb_ryeki"]
+resource_name = "Reverb"
+room_size = 0.3
+
+[sub_resource type="AudioEffectCompressor" id="AudioEffectCompressor_ryeki"]
+resource_name = "Compressor"
 
 [resource]
 bus/1/name = &"Music"
@@ -13,11 +27,23 @@ bus/2/mute = false
 bus/2/bypass_fx = false
 bus/2/volume_db = 0.0
 bus/2/send = &"Master"
+bus/2/effect/0/effect = SubResource("AudioEffectReverb_i8chi")
+bus/2/effect/0/enabled = true
 bus/3/name = &"Voice"
 bus/3/solo = false
-bus/3/mute = false
+bus/3/mute = true
 bus/3/bypass_fx = false
 bus/3/volume_db = 0.0
 bus/3/send = &"Master"
-effect/3/0/type = "AudioEffectCapture"
-effect/3/0/buffer_length = 0.5
+bus/3/effect/0/effect = SubResource("AudioEffectOpusChunked_ryeki")
+bus/3/effect/0/enabled = true
+bus/4/name = &"VoicePlayback"
+bus/4/solo = false
+bus/4/mute = false
+bus/4/bypass_fx = false
+bus/4/volume_db = 0.0
+bus/4/send = &"Master"
+bus/4/effect/0/effect = SubResource("AudioEffectReverb_ryeki")
+bus/4/effect/0/enabled = true
+bus/4/effect/1/effect = SubResource("AudioEffectCompressor_ryeki")
+bus/4/effect/1/enabled = true

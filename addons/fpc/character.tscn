@@ -1259,6 +1259,10 @@ libraries = {
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
 
+[node name="VoicePlayer3D" type="AudioStreamPlayer3D" parent="Head"]
+max_distance = 60.0
+bus = &"VoicePlayback"
+
 [node name="Camera" type="Camera3D" parent="Head"]
 near = 0.001
 

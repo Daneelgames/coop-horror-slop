@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://dgc26k7042vj7"]
+[gd_scene load_steps=3 format=3 uid="uid://dgc26k7042vj7"]
 
 [ext_resource type="Script" uid="uid://2wx7u6ljrc5h" path="res://assets/scripts/voice_chat_manager.gd" id="1_aij60"]
+
+[sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_aij60"]
 
 [node name="VoiceChatManager" type="Control"]
 layout_mode = 3
@@ -13,6 +15,8 @@ mouse_filter = 2
 script = ExtResource("1_aij60")
 
 [node name="MicrophonePlayer" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamMicrophone_aij60")
+autoplay = true
 bus = &"Voice"
 
 [node name="TalkFeedbackLabel" type="Label" parent="."]
