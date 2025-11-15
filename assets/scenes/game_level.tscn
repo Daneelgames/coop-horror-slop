@@ -26,7 +26,7 @@ sky_material = SubResource("ProceduralSkyMaterial_8kkgg")
 background_mode = 1
 sky = SubResource("Sky_vcb5n")
 ambient_light_source = 2
-ambient_light_color = Color(0.22035873, 0.22710598, 0.2741551, 1)
+ambient_light_color = Color(0.2339418, 0.24146378, 0.29130077, 1)
 tonemap_mode = 2
 tonemap_exposure = 2.0
 tonemap_white = 2.0
@@ -60,7 +60,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -88,7 +87,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -113,7 +111,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -139,7 +136,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -159,6 +155,22 @@ walker_change_floor_height_chance = 0.0101
 mirror_x = true
 default_vertical_wall_tiles_amount = 0
 props_to_spawn_amount = 0
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_08.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn": 1.0
+})
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
 [sub_resource type="Resource" id="Resource_q5pb2"]
@@ -173,7 +185,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -198,7 +209,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -223,7 +233,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -249,7 +258,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -273,7 +281,6 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
@@ -313,7 +320,7 @@ ExtResource("8_bk6l6"): 2,
 ExtResource("9_dc4xw"): 5,
 ExtResource("10_0ts1u"): 10
 })
-enable_spawn_props = null
+enable_spawn_props = true
 enable_spawn_mobs = null
 enable_spawn_pickups = null
 tiles_coords_islands = Dictionary[int, Array]({
@@ -344,7 +351,6 @@ default_props_in_tunnels = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/candle.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn": 1.0,
