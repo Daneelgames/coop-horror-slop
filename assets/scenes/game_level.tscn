@@ -47,7 +47,7 @@ volumetric_fog_gi_inject = 0.0
 volumetric_fog_anisotropy = 0.25
 adjustment_enabled = true
 
-[sub_resource type="Resource" id="Resource_0ts1u"]
+[sub_resource type="Resource" id="Resource_bk6l6"]
 script = ExtResource("6_0aogx")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
@@ -72,7 +72,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_jbp4y"]
+[sub_resource type="Resource" id="Resource_dc4xw"]
 script = ExtResource("6_0aogx")
 base_room_height = 2
 target_tiles_amount = 20
@@ -100,7 +100,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_58q7l"]
+[sub_resource type="Resource" id="Resource_0ts1u"]
 script = ExtResource("6_0aogx")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
@@ -125,7 +125,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_q5pb2"]
+[sub_resource type="Resource" id="Resource_jbp4y"]
 script = ExtResource("6_0aogx")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
@@ -151,7 +151,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_roc3w"]
+[sub_resource type="Resource" id="Resource_58q7l"]
 script = ExtResource("6_0aogx")
 base_room_height = 8
 target_tiles_amount = 30
@@ -161,7 +161,7 @@ default_vertical_wall_tiles_amount = 0
 props_to_spawn_amount = 0
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_s1m6h"]
+[sub_resource type="Resource" id="Resource_q5pb2"]
 script = ExtResource("6_0aogx")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
@@ -185,7 +185,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_adyel"]
+[sub_resource type="Resource" id="Resource_roc3w"]
 script = ExtResource("6_0aogx")
 base_room_height = 4
 walker_change_floor_height_chance = 0.0101
@@ -210,7 +210,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_l2gu8"]
+[sub_resource type="Resource" id="Resource_s1m6h"]
 script = ExtResource("6_0aogx")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
@@ -235,7 +235,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_w8vy0"]
+[sub_resource type="Resource" id="Resource_adyel"]
 script = ExtResource("6_0aogx")
 base_room_height = 2
 target_tiles_amount = 50
@@ -261,7 +261,7 @@ props_by_weight = Dictionary[StringName, float]({
 })
 metadata/_custom_type_script = "uid://chssve2spif5p"
 
-[sub_resource type="Resource" id="Resource_j62y2"]
+[sub_resource type="Resource" id="Resource_l2gu8"]
 script = ExtResource("6_0aogx")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
@@ -307,33 +307,36 @@ script = ExtResource("5_slvmx")
 room_spawn_type = 1
 min_distance_between_rooms_in_tiles = 5
 max_distance_between_rooms_in_tiles = 5
-rooms_resources = Array[ExtResource("6_0aogx")]([SubResource("Resource_0ts1u"), SubResource("Resource_jbp4y"), SubResource("Resource_58q7l"), SubResource("Resource_q5pb2"), SubResource("Resource_roc3w"), SubResource("Resource_s1m6h"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8"), SubResource("Resource_w8vy0"), SubResource("Resource_j62y2")])
+rooms_resources = Array[ExtResource("6_0aogx")]([SubResource("Resource_bk6l6"), SubResource("Resource_dc4xw"), SubResource("Resource_0ts1u"), SubResource("Resource_jbp4y"), SubResource("Resource_58q7l"), SubResource("Resource_q5pb2"), SubResource("Resource_roc3w"), SubResource("Resource_s1m6h"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
 pickup_items_to_spawn_dict = Dictionary[ExtResource("6_ax1lr"), int]({
 ExtResource("8_bk6l6"): 2,
 ExtResource("9_dc4xw"): 5,
 ExtResource("10_0ts1u"): 10
 })
+enable_spawn_props = null
+enable_spawn_mobs = null
+enable_spawn_pickups = null
 tiles_coords_islands = Dictionary[int, Array]({
-0: Array[Vector3i]([Vector3i(10, 0, -2), Vector3i(5, 0, -7), Vector3i(11, 0, -2), Vector3i(8, 0, -5), Vector3i(9, 0, -9), Vector3i(7, 0, 0), Vector3i(11, 0, -1), Vector3i(8, 0, -6), Vector3i(10, 0, 0), Vector3i(7, 0, -8), Vector3i(10, 0, -7), Vector3i(8, 0, -1), Vector3i(6, 0, -6), Vector3i(7, 0, -7), Vector3i(9, 0, -2), Vector3i(10, 0, -1), Vector3i(9, 0, 0), Vector3i(10, 0, -6), Vector3i(8, 0, -2), Vector3i(12, 0, 0), Vector3i(6, 0, 0), Vector3i(8, 0, -4), Vector3i(7, 0, -10), Vector3i(11, 0, -6), Vector3i(9, 0, -6), Vector3i(10, 0, -8), Vector3i(9, 0, -7), Vector3i(5, 0, -6), Vector3i(8, 0, -3), Vector3i(6, 0, -7), Vector3i(11, 0, 0), Vector3i(12, 0, -1), Vector3i(7, 0, -6), Vector3i(9, 0, -1), Vector3i(9, 0, -10), Vector3i(6, 0, -8), Vector3i(12, 0, -2), Vector3i(7, 0, -9), Vector3i(9, 0, -8), Vector3i(8, 0, 0)]),
-1: Array[Vector3i]([Vector3i(0, 0, 11), Vector3i(-4, 0, 13), Vector3i(4, 0, 11), Vector3i(4, 0, 10), Vector3i(-5, 0, 14), Vector3i(1, 0, 12), Vector3i(2, 0, 8), Vector3i(-4, 0, 9), Vector3i(-2, 0, 11), Vector3i(-3, 0, 9), Vector3i(-4, 0, 8), Vector3i(-1, 0, 13), Vector3i(3, 0, 9), Vector3i(-1, 0, 12), Vector3i(0, 0, 12), Vector3i(4, 0, 12), Vector3i(6, 0, 11), Vector3i(2, 0, 11), Vector3i(-2, 0, 9), Vector3i(3, 0, 8), Vector3i(-4, 0, 10), Vector3i(5, 0, 12), Vector3i(6, 0, 12), Vector3i(-5, 0, 13), Vector3i(-4, 0, 11), Vector3i(-2, 0, 10), Vector3i(4, 0, 8), Vector3i(-3, 0, 10), Vector3i(-1, 0, 14), Vector3i(3, 0, 10), Vector3i(2, 0, 10), Vector3i(-4, 0, 12), Vector3i(-2, 0, 12), Vector3i(2, 0, 12), Vector3i(-2, 0, 13)]),
-2: Array[Vector3i]([Vector3i(-13, 0, 1), Vector3i(-10, 0, 0), Vector3i(-6, 0, 3), Vector3i(-6, 0, 1), Vector3i(-9, 0, 1), Vector3i(-5, 0, 3), Vector3i(-5, 0, 2), Vector3i(-15, 0, 2), Vector3i(-6, 0, 2), Vector3i(-15, 0, 3), Vector3i(-12, 0, 1), Vector3i(-10, 0, -1), Vector3i(-14, 0, 1), Vector3i(-10, 0, -2), Vector3i(-11, 0, 1), Vector3i(-7, 0, 1), Vector3i(-14, 0, 2), Vector3i(-8, 0, 1), Vector3i(-14, 0, 3), Vector3i(-11, 0, 0), Vector3i(-9, 0, 0)]),
-3: Array[Vector3i]([Vector3i(-2, 0, -11), Vector3i(1, 0, -11), Vector3i(1, 0, -15), Vector3i(-1, 0, -11), Vector3i(5, 0, -12), Vector3i(-3, 0, -10), Vector3i(-5, 0, -10), Vector3i(-3, 0, -11), Vector3i(5, 0, -15), Vector3i(5, 0, -17), Vector3i(2, 0, -11), Vector3i(-4, 0, -9), Vector3i(3, 0, -10), Vector3i(4, 0, -11), Vector3i(0, 0, -16), Vector3i(-5, 0, -9), Vector3i(-5, 0, -11), Vector3i(0, 0, -11), Vector3i(5, 0, -16), Vector3i(-1, 0, -9), Vector3i(-4, 0, -11), Vector3i(-2, 0, -9), Vector3i(-1, 0, -10), Vector3i(6, 0, -15), Vector3i(0, 0, -15), Vector3i(1, 0, -17), Vector3i(3, 0, -12), Vector3i(-2, 0, -10), Vector3i(3, 0, -11), Vector3i(-6, 0, -11), Vector3i(1, 0, -16), Vector3i(2, 0, -12), Vector3i(0, 0, -10), Vector3i(2, 0, -10), Vector3i(4, 0, -10), Vector3i(1, 0, -14), Vector3i(5, 0, -13), Vector3i(6, 0, -16), Vector3i(4, 0, -12), Vector3i(-4, 0, -10), Vector3i(1, 0, -13), Vector3i(5, 0, -14), Vector3i(-6, 0, -10), Vector3i(1, 0, -12)]),
-4: Array[Vector3i]([Vector3i(6, 2, 3), Vector3i(6, 2, 8), Vector3i(7, 2, 8), Vector3i(9, 2, 4), Vector3i(7, 2, 3), Vector3i(4, 2, 12), Vector3i(4, 2, 0), Vector3i(4, 2, 11), Vector3i(5, 2, 10), Vector3i(5, 2, 1), Vector3i(7, 2, 4), Vector3i(3, 2, 12), Vector3i(6, 2, 9), Vector3i(7, 2, 5), Vector3i(6, 2, 10), Vector3i(9, 2, 6), Vector3i(4, 2, 1), Vector3i(8, 2, 8), Vector3i(9, 2, 7), Vector3i(10, 2, 8), Vector3i(8, 2, 7), Vector3i(8, 2, 4), Vector3i(7, 2, 6), Vector3i(10, 2, 4), Vector3i(5, 2, 2), Vector3i(5, 2, 11), Vector3i(5, 2, 12), Vector3i(6, 2, 2), Vector3i(8, 2, 5), Vector3i(7, 2, 9), Vector3i(9, 2, 5), Vector3i(8, 2, 6), Vector3i(9, 2, 8), Vector3i(7, 2, 7)]),
-5: Array[Vector3i]([Vector3i(2, 2, -14), Vector3i(3, 2, -14), Vector3i(4, 2, -13), Vector3i(4, 2, -14), Vector3i(4, 2, -12), Vector3i(2, 2, -12), Vector3i(2, 2, -13), Vector3i(3, 2, -13), Vector3i(3, 2, -12), Vector3i(1, 2, -12), Vector3i(5, 2, -13), Vector3i(1, 2, -13), Vector3i(5, 2, -12)]),
-6: Array[Vector3i]([Vector3i(0, 2, -9), Vector3i(0, 2, -8)]),
-7: Array[Vector3i]([Vector3i(6, 2, -9)]),
-8: Array[Vector3i]([Vector3i(-10, 8, 6), Vector3i(-6, 8, 4), Vector3i(-11, 8, 5), Vector3i(-5, 8, 4), Vector3i(-10, 8, 8), Vector3i(-7, 8, 3), Vector3i(-7, 8, 7), Vector3i(-6, 8, 7), Vector3i(-9, 8, 8), Vector3i(-7, 8, 6), Vector3i(-6, 8, 6), Vector3i(-10, 8, 5), Vector3i(-10, 8, 4), Vector3i(-9, 8, 4), Vector3i(-8, 8, 4), Vector3i(-11, 8, 4), Vector3i(-11, 8, 7), Vector3i(-9, 8, 6), Vector3i(-8, 8, 5), Vector3i(-6, 8, 5), Vector3i(-7, 8, 4), Vector3i(-7, 8, 5), Vector3i(-7, 8, 8), Vector3i(-9, 8, 3), Vector3i(-10, 8, 3), Vector3i(-10, 8, 2), Vector3i(-10, 8, 1), Vector3i(-8, 8, 7), Vector3i(-9, 8, 5), Vector3i(-11, 8, 3), Vector3i(-11, 8, 6), Vector3i(-10, 8, 7), Vector3i(-5, 8, 3), Vector3i(-5, 8, 6), Vector3i(-9, 8, 7), Vector3i(-6, 8, 8), Vector3i(-5, 8, 5), Vector3i(-8, 8, 6)]),
-9: Array[Vector3i]([Vector3i(-6, 8, 1)]),
-10: Array[Vector3i]([Vector3i(-9, 4, -5), Vector3i(-6, 4, -5), Vector3i(-6, 4, -6), Vector3i(-9, 4, -4), Vector3i(-7, 4, -6), Vector3i(-8, 4, -5), Vector3i(-6, 4, -7), Vector3i(-6, 4, -4), Vector3i(-9, 4, -6), Vector3i(-7, 4, -5), Vector3i(-7, 4, -4), Vector3i(-10, 4, -6), Vector3i(-10, 4, -5), Vector3i(-8, 4, -6)]),
-11: Array[Vector3i]([Vector3i(-4, 1, -2), Vector3i(4, 1, -9), Vector3i(5, 1, -10), Vector3i(0, 1, -5), Vector3i(5, 1, -9), Vector3i(2, 1, -7), Vector3i(-4, 1, -1), Vector3i(1, 1, -10), Vector3i(5, 1, -11), Vector3i(1, 1, -7), Vector3i(-2, 1, -4), Vector3i(1, 1, -6), Vector3i(1, 1, -9), Vector3i(-5, 1, -1), Vector3i(2, 1, -8), Vector3i(1, 1, -8), Vector3i(4, 1, -7), Vector3i(3, 1, -9), Vector3i(5, 1, -8), Vector3i(-5, 1, 0), Vector3i(0, 1, -6), Vector3i(2, 1, -9), Vector3i(-1, 1, -5), Vector3i(-5, 1, 1), Vector3i(-1, 1, -4), Vector3i(-3, 1, -3), Vector3i(-3, 1, -2), Vector3i(4, 1, -8), Vector3i(-2, 1, -3)]),
-12: Array[Vector3i]([Vector3i(5, 1, 0)]),
-13: Array[Vector3i]([Vector3i(5, 1, 8)]),
-14: Array[Vector3i]([Vector3i(-5, 1, 5), Vector3i(-5, 1, 8), Vector3i(-5, 1, 4), Vector3i(-5, 1, 7), Vector3i(-5, 1, 6)]),
-15: Array[Vector3i]([Vector3i(-10, 1, -3), Vector3i(-10, 1, -4)]),
-16: Array[Vector3i]([Vector3i(-6, 7, 3)]),
-17: Array[Vector3i]([Vector3i(-5, 3, -8), Vector3i(-6, 3, -8)])
+0: Array[Vector3i]([Vector3i(7, 0, -3), Vector3i(10, 0, -1), Vector3i(8, 0, -8), Vector3i(10, 0, 0), Vector3i(9, 0, -2), Vector3i(13, 0, -3), Vector3i(8, 0, -6), Vector3i(13, 0, -2), Vector3i(8, 0, -2), Vector3i(8, 0, -4), Vector3i(8, 0, -10), Vector3i(8, 0, -5), Vector3i(7, 0, -2), Vector3i(7, 0, -8), Vector3i(7, 0, -7), Vector3i(9, 0, -6), Vector3i(9, 0, -7), Vector3i(8, 0, -3), Vector3i(9, 0, 0), Vector3i(11, 0, 0), Vector3i(9, 0, -8), Vector3i(8, 0, -9), Vector3i(12, 0, -3), Vector3i(11, 0, -1), Vector3i(11, 0, -2), Vector3i(7, 0, -6), Vector3i(8, 0, -7), Vector3i(12, 0, -2), Vector3i(9, 0, -1)]),
+1: Array[Vector3i]([Vector3i(-1, 0, 13), Vector3i(-4, 0, 9), Vector3i(-1, 0, 8), Vector3i(-4, 0, 10), Vector3i(-2, 0, 10), Vector3i(-3, 0, 9), Vector3i(3, 0, 10), Vector3i(0, 0, 8), Vector3i(6, 0, 10), Vector3i(6, 0, 11), Vector3i(7, 0, 10), Vector3i(0, 0, 13), Vector3i(6, 0, 13), Vector3i(0, 0, 12), Vector3i(7, 0, 13), Vector3i(0, 0, 11), Vector3i(-3, 0, 10), Vector3i(-3, 0, 11), Vector3i(7, 0, 11), Vector3i(-4, 0, 8), Vector3i(-2, 0, 9), Vector3i(-2, 0, 8), Vector3i(-5, 0, 11), Vector3i(-1, 0, 10), Vector3i(0, 0, 10), Vector3i(2, 0, 10), Vector3i(-2, 0, 11), Vector3i(5, 0, 10), Vector3i(-3, 0, 8), Vector3i(1, 0, 10), Vector3i(-4, 0, 11), Vector3i(4, 0, 10), Vector3i(6, 0, 12), Vector3i(-1, 0, 11)]),
+2: Array[Vector3i]([Vector3i(-13, 0, 3), Vector3i(-11, 0, 2), Vector3i(-6, 0, 3), Vector3i(-14, 0, 3), Vector3i(-9, 0, 2), Vector3i(-11, 0, 1), Vector3i(-9, 0, 0), Vector3i(-9, 0, -2), Vector3i(-10, 0, 0), Vector3i(-7, 0, 3), Vector3i(-8, 0, 3), Vector3i(-9, 0, -1), Vector3i(-10, 0, -1), Vector3i(-12, 0, 3), Vector3i(-11, 0, 0), Vector3i(-9, 0, 1), Vector3i(-8, 0, 2), Vector3i(-12, 0, 2), Vector3i(-9, 0, -3), Vector3i(-11, 0, -1)]),
+3: Array[Vector3i]([Vector3i(-4, 0, -9), Vector3i(-1, 0, -8), Vector3i(-3, 0, -10), Vector3i(-3, 0, -9), Vector3i(-6, 0, -9), Vector3i(-5, 0, -8), Vector3i(-3, 0, -8), Vector3i(-5, 0, -9), Vector3i(0, 0, -8), Vector3i(-2, 0, -9), Vector3i(0, 0, -9), Vector3i(-4, 0, -8), Vector3i(-1, 0, -9), Vector3i(1, 0, -8), Vector3i(-2, 0, -8), Vector3i(-6, 0, -8)]),
+4: Array[Vector3i]([Vector3i(8, 2, 9), Vector3i(5, 2, 7), Vector3i(5, 2, 6), Vector3i(7, 2, 4), Vector3i(5, 2, 5), Vector3i(7, 2, 7), Vector3i(8, 2, 8), Vector3i(6, 2, 9), Vector3i(8, 2, 3), Vector3i(8, 2, 6), Vector3i(4, 2, 5), Vector3i(6, 2, 6), Vector3i(4, 2, 4), Vector3i(4, 2, 6), Vector3i(7, 2, 3), Vector3i(8, 2, 4), Vector3i(8, 2, 2), Vector3i(4, 2, 7), Vector3i(6, 2, 3), Vector3i(4, 2, 8), Vector3i(7, 2, 9), Vector3i(7, 2, 8), Vector3i(7, 2, 6), Vector3i(7, 2, 5), Vector3i(3, 2, 8)]),
+5: Array[Vector3i]([Vector3i(7, 2, -12), Vector3i(-1, 2, -9), Vector3i(5, 2, -9), Vector3i(4, 2, -8), Vector3i(1, 2, -11), Vector3i(-3, 2, -5), Vector3i(3, 2, -9), Vector3i(5, 2, -11), Vector3i(4, 2, -10), Vector3i(5, 2, -8), Vector3i(-1, 2, -12), Vector3i(1, 2, -10), Vector3i(4, 2, -11), Vector3i(-2, 2, -5), Vector3i(0, 2, -12), Vector3i(1, 2, -7), Vector3i(2, 2, -10), Vector3i(-1, 2, -8), Vector3i(6, 2, -12), Vector3i(2, 2, -9), Vector3i(0, 2, -9), Vector3i(-3, 2, -8), Vector3i(-3, 2, -6), Vector3i(3, 2, -10), Vector3i(1, 2, -9), Vector3i(-3, 2, -7), Vector3i(-2, 2, -6), Vector3i(3, 2, -11), Vector3i(-1, 2, -6), Vector3i(-1, 2, -7), Vector3i(5, 2, -10), Vector3i(5, 2, -7), Vector3i(2, 2, -11), Vector3i(4, 2, -9), Vector3i(6, 2, -7), Vector3i(0, 2, -11), Vector3i(0, 2, -7), Vector3i(6, 2, -11), Vector3i(6, 2, -9), Vector3i(3, 2, -8), Vector3i(-2, 2, -7), Vector3i(6, 2, -8)]),
+6: Array[Vector3i]([Vector3i(-2, 2, 5), Vector3i(-1, 2, 1), Vector3i(-2, 2, 6), Vector3i(2, 2, -4), Vector3i(1, 2, -2), Vector3i(1, 2, -1), Vector3i(-2, 2, 3), Vector3i(-1, 2, 0), Vector3i(2, 2, -2), Vector3i(0, 2, 0), Vector3i(2, 2, -5), Vector3i(-2, 2, 4), Vector3i(0, 2, -1), Vector3i(-2, 2, 1), Vector3i(2, 2, -3), Vector3i(-2, 2, 2), Vector3i(-2, 2, 7)]),
+7: Array[Vector3i]([Vector3i(9, 2, -5)]),
+8: Array[Vector3i]([Vector3i(4, 2, -4), Vector3i(4, 2, -3), Vector3i(4, 2, -5)]),
+9: Array[Vector3i]([Vector3i(-6, 8, 7), Vector3i(-7, 8, 8), Vector3i(-7, 8, 5), Vector3i(-6, 8, 6), Vector3i(-4, 8, 7), Vector3i(-8, 8, 8), Vector3i(-11, 8, 4), Vector3i(-6, 8, 3), Vector3i(-5, 8, 6), Vector3i(-9, 8, 3), Vector3i(-8, 8, 5), Vector3i(-9, 8, 8), Vector3i(-8, 8, 6), Vector3i(-10, 8, 5), Vector3i(-11, 8, 6), Vector3i(-8, 8, 7), Vector3i(-9, 8, 4), Vector3i(-10, 8, 7), Vector3i(-6, 8, 4), Vector3i(-6, 8, 5), Vector3i(-12, 8, 2), Vector3i(-10, 8, 6), Vector3i(-10, 8, 3), Vector3i(-7, 8, 7), Vector3i(-9, 8, 7), Vector3i(-4, 8, 6), Vector3i(-5, 8, 4), Vector3i(-9, 8, 6), Vector3i(-12, 8, 6), Vector3i(-7, 8, 4), Vector3i(-4, 8, 3), Vector3i(-5, 8, 3), Vector3i(-10, 8, 4), Vector3i(-9, 8, 5), Vector3i(-4, 8, 2), Vector3i(-7, 8, 6), Vector3i(-7, 8, 3), Vector3i(-11, 8, 3), Vector3i(-12, 8, 3)]),
+10: Array[Vector3i]([Vector3i(-8, 4, -6), Vector3i(-7, 4, -6), Vector3i(-7, 4, -5), Vector3i(-9, 4, -8), Vector3i(-9, 4, -7), Vector3i(-8, 4, -7), Vector3i(-7, 4, -7), Vector3i(-7, 4, -8), Vector3i(-8, 4, -5), Vector3i(-9, 4, -5), Vector3i(-9, 4, -6), Vector3i(-8, 4, -8)]),
+11: Array[Vector3i]([Vector3i(9, 1, 8), Vector3i(9, 1, 9), Vector3i(8, 1, 10), Vector3i(9, 1, 10)]),
+12: Array[Vector3i]([Vector3i(4, 1, -6), Vector3i(2, 1, -6), Vector3i(2, 1, -8), Vector3i(4, 1, -7), Vector3i(3, 1, -6), Vector3i(2, 1, -7), Vector3i(3, 1, -7)]),
+13: Array[Vector3i]([Vector3i(9, 1, 3), Vector3i(9, 1, 2), Vector3i(9, 1, 4), Vector3i(9, 1, 1)]),
+14: Array[Vector3i]([Vector3i(-8, 1, -3), Vector3i(-8, 1, -4)]),
+15: Array[Vector3i]([Vector3i(7, 1, -9)]),
+16: Array[Vector3i]([Vector3i(2, 1, 8), Vector3i(1, 1, 8)]),
+17: Array[Vector3i]([Vector3i(-8, 7, 4)]),
+18: Array[Vector3i]([Vector3i(-6, 3, -8)])
 })
-tunnel_props_amount = null
 default_props_in_tunnels = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,

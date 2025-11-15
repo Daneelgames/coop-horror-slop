@@ -20,6 +20,9 @@ enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 @export var debug_tile_islands : bool = false
 @export var mobs_amount_to_spawn = 30
 @export var pickup_items_to_spawn_dict : Dictionary[ResourceWeapon, int] # item, amount
+@export var enable_spawn_props : bool = false
+@export var enable_spawn_mobs : bool = false
+@export var enable_spawn_pickups : bool = false
 
 @export var gen : bool = false:
 	set(v):
@@ -157,14 +160,18 @@ func generate_dungeon():
 	await get_tree().process_frame
 	await collect_tile_islands()
 	await connect_islands_with_stairs()
-	await spawn_props()
+	
+	if enable_spawn_props:
+		await spawn_props()
 	
 	await get_tree().process_frame
 	level_generated.emit()
 	await get_tree().process_frame
 	
-	await spawn_mobs()
-	await spawn_pickups()
+	if enable_spawn_mobs:
+		await spawn_mobs()
+	if enable_spawn_pickups:
+		await spawn_pickups()
 	
 
 func _is_coord_free(coord: Vector3i) -> bool:

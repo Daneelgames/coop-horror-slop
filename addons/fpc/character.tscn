@@ -669,6 +669,7 @@ stream_0/stream = ExtResource("29_1ltnj")
 [node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("HEAD", "CAMERA", "HEADBOB_ANIMATION", "JUMP_ANIMATION", "CROUCH_ANIMATION", "COLLISION_MESH", "visual_node_3d", "skeleton_3d", "mesh_animation_player")]
 collision_layer = 2
 collision_mask = 3
+floor_max_angle = 1.0471976
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_0t4e8")
