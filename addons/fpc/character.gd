@@ -144,6 +144,7 @@ var current_speed : float = 0.0
 @export var state : String = "normal"
 var low_ceiling : bool = false # This is for when the ceiling is too low and the player needs to crouch.
 var was_on_floor : bool = true # Was the player on the floor last frame (for landing animation)
+var attack_push_velocity : Vector3 = Vector3.ZERO  # Store push velocity from attacks
 
 # The reticle should always have a Control node as the root
 var RETICLE : Control
@@ -809,8 +810,9 @@ func handle_attacking():
 @rpc("call_local")
 func rpc_melee_attack(attack_string: String):
 	
-	# Apply forward push when attacking (only on server)
-	if multiplayer.is_server() and item_in_hands != null and item_in_hands.weapon_resource != null:
+	# Apply forward push when attacking (on the client that has authority over this character)
+	# Store push velocity to apply it after movement handling (so it doesn't get dampened)
+	if is_multiplayer_authority() and item_in_hands != null and item_in_hands.weapon_resource != null:
 		var push_force = item_in_hands.weapon_resource.push_forward_on_attack_force
 		if push_force > 0:
 			# Get forward direction from camera/head (where player is looking)
@@ -823,7 +825,8 @@ func rpc_melee_attack(attack_string: String):
 			# Ignore Y component for horizontal push
 			forward_direction.y = 0
 			forward_direction = forward_direction.normalized()
-			velocity += forward_direction * push_force
+			# Store push velocity to apply after movement handling (don't apply it here to avoid double application)
+			attack_push_velocity = forward_direction * push_force
 	
 	mesh_animation_player.play(attack_string, 0.1)
 
@@ -857,6 +860,12 @@ func handle_movement(delta, input_dir):
 
 	var direction = input_dir.rotated(-rotation.y)
 	if is_attacking or is_blocking:
+		# Apply attack push velocity first (only once per attack, before dampening)
+		if attack_push_velocity.length() > 0:
+			velocity += attack_push_velocity
+			# Clear it after applying so it's only applied once
+			attack_push_velocity = Vector3.ZERO
+		# Dampen velocity (this will reduce the push velocity naturally over time)
 		velocity.x = lerpf(velocity.x, velocity.x * 0.1, 10 * get_process_delta_time())
 		velocity.z = lerpf(velocity.z, velocity.z * 0.1, 10 * get_process_delta_time())
 		move_and_slide()

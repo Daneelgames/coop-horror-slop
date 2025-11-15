@@ -9,3 +9,4 @@ weapon_type = 2
 pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_axe_p.tscn"
 weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_axe_w.tscn"
 damage_min_max = Vector2i(40, 60)
+push_forward_on_attack_force = 10.0

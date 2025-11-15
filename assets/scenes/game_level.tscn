@@ -36,6 +36,7 @@ glow_intensity = 1.0
 glow_mix = 0.2
 glow_bloom = 0.5
 glow_blend_mode = 4
+fog_enabled = true
 fog_light_color = Color(0, 0, 0, 1)
 fog_density = 0.2
 volumetric_fog_enabled = true
