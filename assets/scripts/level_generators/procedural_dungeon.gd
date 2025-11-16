@@ -56,24 +56,7 @@ func _ready() -> void:
 
 # Helper function to get edited scene root (works in editor and game)
 func _get_edited_scene_root() -> Node:
-	if Engine.is_editor_hint():
-		# In editor, try to get edited scene root
-		# First try EditorInterface if available (requires EditorPlugin context)
-		if EditorInterface:
-			return EditorInterface.get_edited_scene_root()
-		# Fallback: try get_tree() which works in editor when scene is running
-		if get_tree():
-			return get_tree().edited_scene_root
-		# Last resort: try to find scene root by traversing up
-		var current = self
-		while current.get_parent():
-			current = current.get_parent()
-		return current
-	else:
-		# In game, use SceneTree
-		if get_tree():
-			return get_tree().edited_scene_root
-		return null
+		return get_tree().edited_scene_root
 
 # Helper function to await frame (works in editor and game)
 func _await_frame():
