@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c544ue0hixahl"
-path.s3tc="res://.godot/imported/T_Flame_D.png-63b74f84ca307f0132c58f43bdc3e683.s3tc.ctex"
+uid="uid://drpvrdr1w27p6"
+path.s3tc="res://.godot/imported/elevator_all_elevator_AO.png-329410e761208759cfebc3fecfa13ffa.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/meshes/modularDungeon/textures/T_Flame_D.png"
-dest_files=["res://.godot/imported/T_Flame_D.png-63b74f84ca307f0132c58f43bdc3e683.s3tc.ctex"]
+source_file="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_AO.png"
+dest_files=["res://.godot/imported/elevator_all_elevator_AO.png-329410e761208759cfebc3fecfa13ffa.s3tc.ctex"]
 
 [params]
 

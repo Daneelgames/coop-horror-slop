@@ -97,6 +97,21 @@ func _spawn_prop_scene(prop_prefab_path: String) -> Node:
 	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
 	return prop
 
+func _spawn_elevator_scene(elevator_prefab_path: String) -> Node:
+	if elevator_prefab_path.is_empty():
+		push_error("GameManager._spawn_elevator_scene: Empty elevator_prefab_path!")
+		return null
+	var elevator_scene = load(elevator_prefab_path)
+	if elevator_scene == null:
+		push_error("GameManager._spawn_elevator_scene: Failed to load scene from path: %s" % elevator_prefab_path)
+		return null
+	var elevator: Node = elevator_scene.instantiate()
+	if elevator == null:
+		push_error("GameManager._spawn_elevator_scene: Failed to instantiate scene from path: %s" % elevator_prefab_path)
+		return null
+	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
+	return elevator
+
 func start_multiplayer_game():
 	if !multiplayer.is_server():
 		push_warning("start_multiplayer_game called on a non-authority peer.")
@@ -177,6 +192,8 @@ func _spawn_game_object(spawn_data) -> Node:
 		var result: Node = null
 		if obj_type == "prop":
 			result = _spawn_prop_scene(path_str)
+		elif obj_type == "elevator":
+			result = _spawn_elevator_scene(path_str)
 		else:
 			result = _spawn_pickup_scene(path_str)
 		if result == null:
@@ -189,8 +206,22 @@ func _spawn_game_object(spawn_data) -> Node:
 func _spawn_game_level() -> void:
 	if is_instance_valid(_game_level):
 		return
+	
+	# Instantiate the scene first to check its structure
 	_game_level = GAME_LEVEL_SCENE.instantiate()
+	print("GameManager._spawn_game_level: Instantiated GameLevel, children count: ", _game_level.get_child_count())
+	for child in _game_level.get_children():
+		print("GameManager._spawn_game_level: Child: ", child.name, " (", child.get_class(), ")")
+	
+	# Add to spawner - MultiplayerSpawner will sync it to all clients
+	# Note: When using add_spawnable_scene, we should use spawn() method, but for root level scenes
+	# that are added directly, add_child() should work. However, all children must be properly synced.
 	_game_spawner.add_child(_game_level)
+	
+	# Verify after adding
+	print("GameManager._spawn_game_level: After add_child, children count: ", _game_level.get_child_count())
+	if _game_level.get_child_count() == 0:
+		push_error("GameManager._spawn_game_level: WARNING - GameLevel has no children after instantiation!")
 
 func _cache_spawned_game_level() -> void:
 	if !is_instance_valid(_game_spawner):

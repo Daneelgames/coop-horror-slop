@@ -996,4 +996,3 @@ bus = &"SFX"
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 unique_name_in_owner = true
 path_postprocessing = 1
-debug_enabled = true

@@ -9,4 +9,3 @@ script = ExtResource("1_m8bhc")
 [node name="MainMenu" parent="." instance=ExtResource("2_kpi06")]
 
 [node name="MusicAudio" type="AudioStreamPlayer" parent="."]
-bus = &"Music"

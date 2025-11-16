@@ -1,6 +1,8 @@
-@tool
+#@tool
 extends LevelGenerator
 class_name ProceduralDungeon
+
+const ELEVATOR = preload("uid://d1fhekbr7wjf3")
 
 const DUNGEON_TILE = preload("uid://cefhqgvoa83r2")
 const STAIRS_1 = preload("res://assets/prefabs/environment/dungeon_walls/stairs_1.tscn")
@@ -48,6 +50,9 @@ var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var seed_received: bool = false
 
 # Seed synchronization is now handled by GameManager
+
+func _ready() -> void:
+	print("ProceduralDungeon ready - node: ", name, ", path: ", get_path(), ", is_inside_tree: ", is_inside_tree())
 
 # Helper function to get edited scene root (works in editor and game)
 func _get_edited_scene_root() -> Node:
@@ -98,6 +103,9 @@ func clear():
 	tunnel_tiles_coords.clear()
 
 func generate_dungeon():
+	var parent_name: String = String(get_parent().name) if get_parent() else "null"
+	print("ProceduralDungeon.generate_dungeon() called - node: ", name, ", path: ", get_path(), ", is_inside_tree: ", is_inside_tree(), ", parent: ", parent_name)
+	
 	# Generate seed - in editor use local seed, in game use GameManager if available
 	if Engine.is_editor_hint():
 		# Editor mode - generate seed from system datetime
@@ -1601,3 +1609,78 @@ func spawn_doors():
 			await _await_frame()
 	
 	print("spawn_doors: Successfully spawned ", doors_spawned_count, " doors out of ", actual_doors_to_spawn, " attempted")
+
+func find_elevator_spawn_location() -> Vector3i:
+	# Найти тайлы с полом и самой высокой Y позицией
+	var tiles_with_floors_by_y: Dictionary = {}  # Dictionary[int, Array]
+	var max_y: int = -2147483648  # INT_MIN equivalent
+	
+	# Собрать все тайлы с полом, сгруппированные по Y координате
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile):
+			continue
+		if not is_instance_valid(tile.floor):
+			continue
+		
+		var y_coord: int = tile.coord.y
+		if not tiles_with_floors_by_y.has(y_coord):
+			tiles_with_floors_by_y[y_coord] = []
+		tiles_with_floors_by_y[y_coord].append(tile)
+		
+		if y_coord > max_y:
+			max_y = y_coord
+	
+	if tiles_with_floors_by_y.is_empty() or not tiles_with_floors_by_y.has(max_y):
+		push_warning("find_elevator_spawn_location: No tiles with floors found")
+		return Vector3i.ZERO
+	
+	# Получить тайлы с максимальной Y позицией
+	var tiles_at_max_y = tiles_with_floors_by_y[max_y]
+	
+	# Для каждого тайла посчитать количество соседних тайлов с полом по горизонтали
+	var tiles_with_neighbor_counts: Dictionary[DungeonTile, int] = {}
+	
+	for tile in tiles_at_max_y:
+		var neighbor_count: int = 0
+		# Проверяем только горизонтальных соседей (X и Z направления)
+		var horizontal_offsets: Array[Vector3i] = [
+			Vector3i(1, 0, 0),   # Right
+			Vector3i(-1, 0, 0),  # Left
+			Vector3i(0, 0, 1),   # Forward
+			Vector3i(0, 0, -1)   # Backward
+		]
+		
+		for offset in horizontal_offsets:
+			var neighbor_coord: Vector3i = tile.coord + offset
+			var neighbor_tile: DungeonTile = _get_tile_at_coord(neighbor_coord)
+			if neighbor_tile != null and is_instance_valid(neighbor_tile.floor):
+				neighbor_count += 1
+		
+		tiles_with_neighbor_counts[tile] = neighbor_count
+	
+	# Найти минимальное количество соседей
+	var min_neighbor_count: int = 2147483647  # INT_MAX equivalent
+	for neighbor_count in tiles_with_neighbor_counts.values():
+		if neighbor_count < min_neighbor_count:
+			min_neighbor_count = neighbor_count
+	
+	# Выбрать все тайлы с минимальным количеством соседей
+	var candidate_tiles: Array[DungeonTile] = []
+	for tile in tiles_with_neighbor_counts.keys():
+		if tiles_with_neighbor_counts[tile] == min_neighbor_count:
+			candidate_tiles.append(tile)
+	
+	if candidate_tiles.is_empty():
+		push_warning("find_elevator_spawn_location: No candidate tiles found")
+		return Vector3i.ZERO
+	
+	# Выбрать случайный тайл из кандидатов
+	var selected_tile: DungeonTile = candidate_tiles[rng.randi() % candidate_tiles.size()]
+	
+	print("find_elevator_spawn_location: Selected tile at coord %s (Y=%d, neighbors=%d)" % [
+		selected_tile.coord,
+		max_y,
+		tiles_with_neighbor_counts[selected_tile]
+	])
+	
+	return selected_tile.coord
