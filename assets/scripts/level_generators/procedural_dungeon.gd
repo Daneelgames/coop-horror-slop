@@ -1,4 +1,4 @@
-#@tool
+@tool
 extends LevelGenerator
 class_name ProceduralDungeon
 

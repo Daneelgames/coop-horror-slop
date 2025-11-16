@@ -22,6 +22,7 @@ var should_move: bool = false
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
 @onready var ai_state_machine: AiStateMachine = %AiStateMachine
+@onready var interaction_ray_cast_3d: RayCast3D = %InteractionRayCast3D
 
 func _enter_tree():
 	# Set multiplayer authority to server (peer ID 1) for AI characters
@@ -45,6 +46,19 @@ func _ready():
 	if GameManager.ai_visibility_manager:
 		GameManager.ai_visibility_manager.register_ai_character(self)
 	super._ready()
+	interaction_raycast_coroutine()
+	
+func interaction_raycast_coroutine():
+	if is_dead() == false and is_attacking == false and is_taking_damage == false and is_blocking == false:
+		interaction_ray_cast_3d.force_raycast_update()
+		if interaction_ray_cast_3d.is_colliding():
+			var col = interaction_ray_cast_3d.get_collider()
+			if col is InteractiveDoor:
+				if col.state == InteractiveDoor.STATE.CLOSED:
+					col.rpc_request_toggle.rpc(global_position)
+	await get_tree().create_timer(1).timeout
+	interaction_raycast_coroutine()
+	pass
 
 var _last_position: Vector3 = Vector3.ZERO
 var _smoothed_input_dir: Vector2 = Vector2.ZERO

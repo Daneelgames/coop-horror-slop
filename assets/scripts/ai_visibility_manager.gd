@@ -90,8 +90,8 @@ func _is_visible(observer: AiCharacter, target: Unit) -> bool:
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(observer_pos, target_pos)
 	
-	# Set collision layers: layer 1 (solids) and layer 2 (units)
-	query.collision_mask = (1 << 0) | (1 << 1)  # layers 1 and 2
+	# Set collision layers: layer 1 (solids), layer 2 (units), and layer 3
+	query.collision_mask = (1 << 0) | (1 << 1) | (1 << 2)  # layers 1, 2, and 3
 	
 	# Exclude the observer and its weapon from collision check
 	var exclude: Array[RID] = []
@@ -125,13 +125,12 @@ func _is_visible(observer: AiCharacter, target: Unit) -> bool:
 		return true
 	
 	# Check if collider is a child/descendant of the target
-	if collider is Node:
-		var node = collider as Node
-		var parent = node.get_parent()
-		while parent != null:
-			if parent == target:
-				return true
-			parent = parent.get_parent()
-	
+	# if collider is Node:
+	# 	var node = collider as Node
+	# 	var parent = node.get_parent()
+	# 	while parent != null:
+	# 		if parent == target:
+	# 			return true
+	# 		parent = parent.get_parent()
 	# If we hit something else (like a wall), the target is not visible
 	return false

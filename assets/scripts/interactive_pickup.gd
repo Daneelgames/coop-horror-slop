@@ -7,6 +7,7 @@ class_name InteractivePickup
 func _ready() -> void:
 	if weapon_resource:
 		weapon_resource = weapon_resource.duplicate()
+	snap_visual()
 
 func _process(delta: float) -> void:
 	visual_parent.global_position = visual_parent.global_position.lerp(global_position, 10 * delta)

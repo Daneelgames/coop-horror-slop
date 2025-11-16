@@ -8,10 +8,30 @@ enum STATE {CLOSED, OPENED_INSIDE, OPENED_OUTSIDE}
 var state : STATE = STATE.CLOSED
 @onready var open_audio_stream_player_3d: AudioStreamPlayer3D = $OpenAudioStreamPlayer3D
 @onready var close_audio_stream_player_3d: AudioStreamPlayer3D = $CloseAudioStreamPlayer3D
+@export var auto_close_timer_min_max :Vector2 = Vector2(5,90)
+var current_auto_close_timer : float = 0.0
 
 func _ready() -> void:
 	# Set initial state
 	_play_door_animation(state)
+
+func _process(delta: float) -> void:
+	# Only server manages auto-close timer (or single player mode)
+	if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
+		return
+	
+	# Decrease timer if door is open
+	if state != STATE.CLOSED:
+		current_auto_close_timer -= delta
+		
+		# Auto-close door when timer reaches zero
+		if current_auto_close_timer <= 0.0:
+			set_door_state(STATE.CLOSED)
+			current_auto_close_timer = 0.0
+
+# Reset auto-close timer to random value between min and max
+func _reset_auto_close_timer():
+	current_auto_close_timer = randf_range(auto_close_timer_min_max.x, auto_close_timer_min_max.y)
 
 # Determine which side of the door the player is on
 func get_player_side(player_position: Vector3) -> STATE:
@@ -38,6 +58,14 @@ func toggle_door(player_position: Vector3):
 	else:
 		# Close the door
 		new_state = STATE.CLOSED
+	
+	# Reset auto-close timer on every interaction (mob or player)
+	# This ensures door stays open longer when actively used
+	if new_state != STATE.CLOSED:
+		_reset_auto_close_timer()
+	else:
+		# Reset timer when closing
+		current_auto_close_timer = 0.0
 	
 	set_door_state(new_state)
 
