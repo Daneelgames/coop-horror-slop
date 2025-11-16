@@ -12,6 +12,7 @@ enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 @export var rooms_circle_spawn_radius_in_tiles : int = 10
 @export var min_distance_between_rooms_in_tiles : int = 10
 @export var max_distance_between_rooms_in_tiles : int = 20
+@export var doors_to_spawn = 30
 @export var rooms_resources : Array[ResourceDungeonRoom]
 @export var spawned_room_tiles : Dictionary[ResourceDungeonRoom, Array] # value is Array[DungeonTile]
 @export var all_spawned_tiles : Dictionary[DungeonTile, ResourceDungeonRoom]
@@ -1422,8 +1423,8 @@ func spawn_pickups():
 			if pickup == null:
 				continue
 			
-			# Set weapon_resource on the pickup (Interactive class)
-			if pickup is Interactive:
+			# Set weapon_resource on the pickup (InteractivePickup class)
+			if pickup is InteractivePickup:
 				pickup.weapon_resource = weapon_resource.duplicate()
 			
 			# Randomize pickup position within tile bounds
@@ -1451,11 +1452,11 @@ func spawn_pickups():
 			if total_pickups_spawned % 10 == 0:
 				await _await_frame()
 
-const DOORS_PREFABS = [preload("uid://biuu4fqetp2o8"), preload("uid://cjnpfrr7t2bk3"), preload("uid://dupliirt4y6mj"), preload("uid://babsf5rvu3c2t"), preload("uid://bsn5a2g1besog")]
+#const DOORS_PREFABS = [preload("uid://biuu4fqetp2o8"), preload("uid://cjnpfrr7t2bk3"), preload("uid://dupliirt4y6mj"), preload("uid://babsf5rvu3c2t"), preload("uid://bsn5a2g1besog")]
+const DOORS_PREFABS = [preload("uid://biuu4fqetp2o8")]
 func spawn_doors():
 	# find all tiles with floor that have only two opposite walls (along x or along z axis)
 	# add them to door tiles variants array, use DOORS_PREFABS to spawn doors on random tiles from list
-	var doors_to_spawn = 30
 	
 	# Collect all tiles with floors that have no neighbors in two opposite directions
 	# This is called BEFORE _configure_all_tiles_based_on_neighbours(), so we check neighbors directly
@@ -1563,16 +1564,21 @@ func spawn_doors():
 		if neighbor_r != null and neighbor_l != null:
 			# Neighbors on X axis (right and left) - door should face along Z axis (0° or 180°)
 			# Default to 0° (facing forward)
-			door_rotation_y = 0.0
+			door_rotation_y = deg_to_rad(90)
 		elif neighbor_f != null and neighbor_b != null:
 			# Neighbors on Z axis (forward and back) - door should face along X axis (90° or 270°)
 			# Default to 90° (facing right)
-			door_rotation_y = deg_to_rad(90)
+			door_rotation_y = 0.0
 		
 		door.rotation.y = door_rotation_y
 		
 		# Position door at tile's position (tile origin is at bottom center)
 		door.position = tile.position
+		
+		# Give door a unique, consistent name based on coordinates
+		# This ensures all clients can find the same door by name
+		var door_name = "Door_%d_%d_%d" % [tile.coord.x, tile.coord.y, tile.coord.z]
+		door.name = door_name
 		
 		dungeon_tiles.add_child(door)
 		door.owner = _get_edited_scene_root()

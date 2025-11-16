@@ -649,11 +649,11 @@ func rpc_spawn_dropped_pickup(drop_position: Vector3, weapon_data: Dictionary):
 	# The spawner will add it to its spawn_path (which is "."), then we reparent it
 	var pickup_instance = game_spawner.spawn(pickup_prefab_path)
 	
-	if pickup_instance == null or not pickup_instance is Interactive:
+	if pickup_instance == null or not pickup_instance is InteractivePickup:
 		print("[DROP ITEM] Failed to spawn pickup!")
 		return
 	
-	var pickup = pickup_instance as Interactive
+	var pickup = pickup_instance as InteractivePickup
 	
 	# Reparent to game_level (this happens on server, clients will sync via MultiplayerSpawner)
 	if pickup.get_parent() == null:
@@ -682,7 +682,7 @@ func handle_interaction():
 	if is_instance_valid(col) == false:
 		return
 	
-	if col is Interactive:
+	if col is InteractivePickup:
 		if col.weapon_resource:
 			interaction_feedback_label_3d.text = col.weapon_resource.weapon_name
 		else:
@@ -720,6 +720,29 @@ func handle_interaction():
 				else:
 					# For procedurally spawned pickups, use GameManager lookup
 					GameManager.rpc_request_pickup_by_name.rpc_id(1, col.name)
+	elif col is InteractiveDoor:
+		# Show interaction feedback for door
+		var door_state_text = ""
+		match col.state:
+			InteractiveDoor.STATE.CLOSED:
+				door_state_text = "OPEN"
+			InteractiveDoor.STATE.OPENED_INSIDE, InteractiveDoor.STATE.OPENED_OUTSIDE:
+				door_state_text = "CLOSE"
+		
+		interaction_feedback_label_3d.text = door_state_text
+		interaction_feedback_label_3d.visible = true
+		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
+		
+		if Input.is_action_just_pressed(controls.INTERACTION):
+			# Get player position for door to determine which side to open
+			var player_position = global_position
+			
+			if multiplayer.is_server():
+				# Server can directly call toggle on the door
+				col.rpc_request_toggle(player_position)
+			else:
+				# Client sends RPC directly to the door (will route to server)
+				col.rpc_request_toggle.rpc_id(1, player_position)
 	else:
 		interaction_feedback_label_3d.visible = false
 			
@@ -754,7 +777,7 @@ func rpc_destroy_weapon_by_position(weapon_position: Vector3):
 	
 	var search_radius = 0.5  # Search within 0.5 units
 	for child in game_root.get_children():
-		if child is Interactive:
+		if child is InteractivePickup:
 			var distance = child.global_position.distance_to(weapon_position)
 			if distance < search_radius:
 				print("[DESTROY WEAPON] Destroying pickup at position %s" % weapon_position)

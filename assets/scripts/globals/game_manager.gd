@@ -451,16 +451,16 @@ func rpc_request_pickup_by_name(pickup_name: String) -> void:
 		return
 	
 	# Find the pickup by name only - procedurally spawned pickups have consistent names
-	var pickup: Interactive = null
+	var pickup: InteractivePickup = null
 	if is_instance_valid(_game_level):
 		# Check ProceduralDungeon/DungeonTiles for procedurally spawned pickups
 		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
 		if dungeon_tiles != null:
-			pickup = dungeon_tiles.get_node_or_null(pickup_name) as Interactive
+			pickup = dungeon_tiles.get_node_or_null(pickup_name) as InteractivePickup
 		
 		# If not found, check GameLevel directly for dropped pickups
 		if pickup == null:
-			pickup = _game_level.get_node_or_null(pickup_name) as Interactive
+			pickup = _game_level.get_node_or_null(pickup_name) as InteractivePickup
 	
 	if pickup != null:
 		# Call the pickup's internal function directly (no RPC needed on server)
@@ -480,16 +480,16 @@ func rpc_destroy_pickup_by_name(pickup_name: String) -> void:
 	# On server, sender_id will be 0 (local call) which is fine
 	
 	# Find the pickup by name only - procedurally spawned pickups have consistent names
-	var pickup: Interactive = null
+	var pickup: InteractivePickup = null
 	if is_instance_valid(_game_level):
 		# Check ProceduralDungeon/DungeonTiles for procedurally spawned pickups
 		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
 		if dungeon_tiles != null:
-			pickup = dungeon_tiles.get_node_or_null(pickup_name) as Interactive
+			pickup = dungeon_tiles.get_node_or_null(pickup_name) as InteractivePickup
 		
 		# If not found, check GameLevel directly for dropped pickups
 		if pickup == null:
-			pickup = _game_level.get_node_or_null(pickup_name) as Interactive
+			pickup = _game_level.get_node_or_null(pickup_name) as InteractivePickup
 	
 	if pickup != null:
 		print("[GameManager] Destroying pickup: %s" % pickup.name)

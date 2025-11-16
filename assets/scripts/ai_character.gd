@@ -389,6 +389,10 @@ func _get_closest_visible_enemy() -> Unit:
 
 func death():
 	super.death()
+	set_collision_layer_value(4, true)
+	set_collision_layer_value(2, false)
+	set_collision_mask_value(2, false)
+	set_collision_mask_value(3, false)
 	if resurrect_after_death_seconds > 0:
 		await get_tree().create_timer(resurrect_after_death_seconds).timeout
 		# Only server can call this RPC since AI has server authority

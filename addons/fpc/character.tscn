@@ -710,7 +710,7 @@ stream_0/stream = ExtResource("29_1ltnj")
 
 [node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("HEAD", "CAMERA", "HEADBOB_ANIMATION", "JUMP_ANIMATION", "CROUCH_ANIMATION", "COLLISION_MESH", "visual_node_3d", "skeleton_3d", "mesh_animation_player")]
 collision_layer = 2
-collision_mask = 3
+collision_mask = 7
 floor_max_angle = 1.0471976
 platform_on_leave = 2
 platform_floor_layers = 4294965247
@@ -1297,6 +1297,10 @@ libraries = {
 &"": SubResource("AnimationLibrary_qeg5r")
 }
 speed_scale = 4.0
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Head"]
+omni_range = 1.0
+omni_attenuation = 0.0
 
 [node name="UserInterface" type="Control" parent="."]
 layout_mode = 3

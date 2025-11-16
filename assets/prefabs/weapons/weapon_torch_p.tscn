@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=4 uid="uid://ynnk72nh4l5i"]
 
-[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive.gd" id="1_bssr6"]
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive_pickup.gd" id="1_bssr6"]
 [ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="2_78pyd"]
 [ext_resource type="Texture2D" uid="uid://b8g5m5cnsljqy" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Base_Color.png" id="3_uku80"]
 [ext_resource type="Texture2D" uid="uid://ctnnkvpk7lavk" path="res://assets/meshes/MeleeWeaponsPack#1/Rusty_pipe/RustyPipe_Normal_DirectX.png" id="4_o0mbo"]

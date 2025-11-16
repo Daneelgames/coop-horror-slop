@@ -5,6 +5,8 @@ resource_name = "Compressor"
 
 [sub_resource type="AudioEffectReverb" id="AudioEffectReverb_i8chi"]
 resource_name = "Reverb"
+predelay_msec = 100.0
+predelay_feedback = 0.3
 room_size = 0.3
 damping = 0.33
 spread = 0.66
@@ -23,6 +25,8 @@ resource_name = "OpusChunked"
 
 [sub_resource type="AudioEffectReverb" id="AudioEffectReverb_ryeki"]
 resource_name = "Reverb"
+predelay_msec = 100.0
+predelay_feedback = 0.3
 room_size = 0.3
 damping = 0.33
 spread = 0.66

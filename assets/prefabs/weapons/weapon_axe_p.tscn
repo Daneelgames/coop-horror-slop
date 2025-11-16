@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=4 uid="uid://ddvcpahdpbvc"]
 
-[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive.gd" id="1_j7cmu"]
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive_pickup.gd" id="1_j7cmu"]
 [ext_resource type="Texture2D" uid="uid://bl4b3i30mcmxs" path="res://assets/meshes/MeleeWeaponsPack#1/FireAxe/FireAxe_Base_Color.png" id="2_8w7u7"]
 [ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="2_072hg"]
 [ext_resource type="Texture2D" uid="uid://deu3nsf5aeh8s" path="res://assets/meshes/MeleeWeaponsPack#1/FireAxe/FireAxe_Normal.png" id="3_072hg"]
