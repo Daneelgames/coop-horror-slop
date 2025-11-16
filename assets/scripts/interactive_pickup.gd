@@ -133,10 +133,13 @@ func _process_pickup_request():
 	else:
 		requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
 
-# RPC function called by players to request picking up this item (kept for backward compatibility)
-@rpc("any_peer", "reliable")
+# RPC function called by players to request picking up this item
+# Uses call_local so it executes on all clients, but only server processes the actual pickup
+@rpc("any_peer", "call_local", "reliable")
 func rpc_request_pickup():
-	# Only server processes this
+	# Only server processes the actual pickup logic
+	# This ensures the RPC can find the object on all clients (via call_local)
+	# but only server executes the pickup logic
 	if !multiplayer.is_server():
 		return
 	_process_pickup_request()
@@ -170,6 +173,20 @@ func rpc_destroy_pickup():
 	
 	print("[PICKUP] Destroying pickup: %s" % name)
 	queue_free()
+
+# RPC to synchronize pickup name across all clients
+@rpc("any_peer", "call_local", "reliable")
+func rpc_set_pickup_name(new_name: String):
+	# Only process if called from server (peer ID 1)
+	var sender_id = multiplayer.get_remote_sender_id()
+	if not multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+	
+	name = new_name
+	print("[PICKUP] Set pickup name to '%s' on %s" % [new_name, "SERVER" if multiplayer.is_server() else "CLIENT"])
 
 func snap_visual():
 	if visual_parent == null:

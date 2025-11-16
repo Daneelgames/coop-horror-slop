@@ -643,29 +643,50 @@ func rpc_spawn_dropped_pickup(drop_position: Vector3, weapon_data: Dictionary):
 	# Register the pickup prefab with the spawner
 	# The spawn function should already be set in GameManager._ensure_game_spawner()
 	var pickup_prefab_path = weapon_resource.pickup_prefab_path
+	if pickup_prefab_path == null or pickup_prefab_path == "":
+		print("[DROP ITEM] ERROR: pickup_prefab_path is empty!")
+		return
+	
 	game_spawner.add_spawnable_scene(pickup_prefab_path)
 	
+	# Temporarily set spawn_path to GameLevel for dropped items
+	# (procedurally spawned items use DungeonTiles)
+	var original_spawn_path = game_spawner.spawn_path
+	var game_level_path = game_spawner.get_path_to(game_root)
+	if game_level_path == NodePath():
+		print("[DROP ITEM] ERROR: Failed to get path to game_root!")
+		return
+	game_spawner.spawn_path = game_level_path
+	
 	# Spawn using MultiplayerSpawner - this ensures all clients get synchronized copies
-	# The spawner will add it to its spawn_path (which is "."), then we reparent it
+	# Use string path directly - _spawn_game_object handles both String and Dictionary
+	print("[DROP ITEM] Spawning pickup from path: %s" % pickup_prefab_path)
+	
+	# Spawn the pickup - MultiplayerSpawner will call _spawn_game_object
+	# The spawn function creates it with a name like "Pickup_%d_%d" which is consistent across clients
 	var pickup_instance = game_spawner.spawn(pickup_prefab_path)
 	
-	if pickup_instance == null or not pickup_instance is InteractivePickup:
-		print("[DROP ITEM] Failed to spawn pickup!")
+	# Restore original spawn_path immediately after spawn
+	game_spawner.spawn_path = original_spawn_path
+	
+	if pickup_instance == null:
+		print("[DROP ITEM] ERROR: spawn() returned null!")
+		return
+	
+	if not pickup_instance is InteractivePickup:
+		print("[DROP ITEM] ERROR: Spawned object is not InteractivePickup! Type: %s" % pickup_instance.get_class())
 		return
 	
 	var pickup = pickup_instance as InteractivePickup
 	
-	# Reparent to game_level (this happens on server, clients will sync via MultiplayerSpawner)
-	if pickup.get_parent() == null:
-		game_root.add_child(pickup)
-	pickup.global_position = drop_position
-
-	pickup.snap_visual()
+	# Configure pickup properties
 	pickup.weapon_resource = weapon_resource.duplicate()
-	
-	# Set multiplayer authority to server so RPCs work
+	pickup.global_position = drop_position
 	pickup.set_multiplayer_authority(1)
+	pickup.snap_visual()
 	
+	# Don't rename - use the name that was set during spawn (Pickup_%d_%d)
+	# This name is consistent across all clients because it's set before the object is added to scene tree
 	print("[DROP ITEM] Pickup spawned successfully: %s at %s" % [pickup.name, drop_position])
 
 @onready var interaction_feedback_label_3d: Label3D = %InteractionFeedbackLabel3D
@@ -691,35 +712,20 @@ func handle_interaction():
 		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
 			
 		if Input.is_action_just_pressed(controls.INTERACTION):
-			# Determine pickup type: synchronized (dropped) or procedurally spawned
-			# Dropped pickups are synchronized via MultiplayerSpawner and can use direct RPC
-			# Procedurally spawned pickups aren't synchronized and need GameManager lookup
-			var is_synchronized_pickup = false
-			var parent_path = col.get_path()
-			# Check if pickup is under GameLevel (dropped items) vs ProceduralDungeon/DungeonTiles (procedurally spawned)
-			if "ProceduralDungeon/DungeonTiles" in str(parent_path):
-				is_synchronized_pickup = false  # Procedurally spawned, not synchronized
-			else:
-				is_synchronized_pickup = true  # Likely a dropped item, synchronized
-			
+			# Use GameManager to avoid path resolution issues
+			# The pickup name might not be synchronized yet, so we use the current name
+			# GameManager will search for the pickup by name in multiple locations
+			# Also pass pickup position as fallback for better matching
+			var pickup_name = col.name
+			var pickup_position = col.global_position
 			if multiplayer.is_server():
-				# If we're the server
-				if is_synchronized_pickup:
-					# For synchronized pickups (dropped items), use RPC to broadcast to clients
-					col.rpc_request_pickup()
-				else:
-					# For procedurally spawned pickups, call internal function directly
-					# (no RPC needed since they're not synchronized and server processes directly)
-					col._process_pickup_request()
+				# Server can call directly through GameManager
+				if is_instance_valid(GameManager):
+					GameManager.rpc_request_pickup_by_name_and_position(pickup_name, pickup_position)
 			else:
-				# Client side
-				if is_synchronized_pickup:
-					# For synchronized pickups (dropped items), call RPC directly
-					# The RPC will route to server automatically since pickup is synchronized
-					col.rpc_request_pickup.rpc_id(1)
-				else:
-					# For procedurally spawned pickups, use GameManager lookup
-					GameManager.rpc_request_pickup_by_name.rpc_id(1, col.name)
+				# Client sends RPC to server via GameManager (which always exists)
+				if is_instance_valid(GameManager):
+					GameManager.rpc_request_pickup_by_name_and_position.rpc_id(1, pickup_name, pickup_position)
 	elif col is InteractiveDoor:
 		# Show interaction feedback for door
 		var door_state_text = ""
@@ -1164,6 +1170,23 @@ func _unhandled_input(event : InputEvent):
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			change_selected_item_index(1)
 	elif event is InputEventKey:
+		# Handle number keys 1-5 for direct item selection
+		if event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			var target_index = -1
+			match event.keycode:
+				KEY_1:
+					target_index = 0
+				KEY_2:
+					target_index = 1
+				KEY_3:
+					target_index = 2
+				KEY_4:
+					target_index = 3
+				KEY_5:
+					target_index = 4
+			
+			if target_index >= 0:
+				set_selected_item_index(target_index)
 		# Toggle debug menu
 		if event.is_released():
 			# Where we're going, we don't need InputMap
@@ -1230,6 +1253,46 @@ func change_selected_item_index(delta: int):
 		current_selected_item_index = item_count - 1
 	elif current_selected_item_index >= item_count:
 		current_selected_item_index = 0
+	
+	# Update UI locally first
+	if inventory_slots_panel_container:
+		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+	
+	# Send request to server to update item in hands for all clients
+	if multiplayer.is_server():
+		# Server processes directly
+		_rpc_update_item_in_hands_server(current_selected_item_index)
+	else:
+		# Client sends request to server
+		rpc_request_change_item.rpc(current_selected_item_index)
+
+func set_selected_item_index(target_index: int):
+	if !_has_input_authority:
+		return
+	if on_change_item_cooldown:
+		return
+	var item_count = carrying_items.size()
+	if item_count == 0:
+		current_selected_item_index = 0
+		return
+	
+	# Check if target index is valid
+	if target_index < 0 or target_index >= item_count:
+		return
+	
+	# Don't switch if already on this item
+	if current_selected_item_index == target_index:
+		return
+	
+	on_change_item_cooldown = true
+	await get_tree().create_timer(0.15).timeout
+	on_change_item_cooldown = false
+	
+	# Sync durability from currently equipped weapon back to inventory before switching
+	if item_in_hands != null and item_in_hands.weapon_resource != null:
+		_sync_weapon_durability_to_inventory()
+	
+	current_selected_item_index = target_index
 	
 	# Update UI locally first
 	if inventory_slots_panel_container:

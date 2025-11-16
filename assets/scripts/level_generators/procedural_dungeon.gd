@@ -1113,6 +1113,13 @@ func spawn_props():
 	# For each resource room - spawn amount of props to spawn amount, choosing props from props by weight
 	# Spawn props to random tiles with floor
 	
+	# Ensure GameSpawner spawn_path is set to DungeonTiles
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		var dungeon_tiles_node = GameManager._game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+		if dungeon_tiles_node != null:
+			var dungeon_tiles_path = GameManager._game_spawner.get_path_to(dungeon_tiles_node)
+			GameManager._game_spawner.spawn_path = dungeon_tiles_path
+	
 	# Cache tunnel tiles first
 	_cache_tunnel_tiles()
 	
@@ -1148,26 +1155,24 @@ func spawn_props():
 			if prop_path.is_empty():
 				continue
 			
-			# Load and instantiate prop
-			var prop_scene = load(str(prop_path))
-			if prop_scene == null:
-				push_warning("Failed to load prop scene: " + str(prop_path))
-				continue
-			
-			var prop = prop_scene.instantiate()
-			if prop == null:
-				continue
-			
 			# Randomize prop position within tile bounds
 			# TILE_SIZE is Vector3i(4, 2, 4) and tile's origin is at its bottom center
 			# So we randomize X and Z in range [-TILE_SIZE.x/2, TILE_SIZE.x/2] = [-2, 2]
 			# And Y is slightly above floor (0.1 to account for floor height)
 			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
-			prop.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+			var prop_position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
 			
-			dungeon_tiles.add_child(prop)
-			prop.owner = _get_edited_scene_root()
+			# Spawn prop through MultiplayerSpawner for synchronization
+			if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+				var spawn_data = {"type": "prop", "path": str(prop_path)}
+				var prop = GameManager._game_spawner.spawn(spawn_data)
+				if prop != null:
+					# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+					prop.position = prop_position
+					prop.owner = _get_edited_scene_root()
+					# Set multiplayer authority to server
+					prop.set_multiplayer_authority(1)
 			
 			# Yield every 10 props to avoid frame drops
 			if i % 10 == 0:
@@ -1201,23 +1206,21 @@ func spawn_props():
 			if prop_path.is_empty():
 				continue
 			
-			# Load and instantiate prop
-			var prop_scene = load(str(prop_path))
-			if prop_scene == null:
-				push_warning("Failed to load tunnel prop scene: " + str(prop_path))
-				continue
-			
-			var prop = prop_scene.instantiate()
-			if prop == null:
-				continue
-			
 			# Randomize prop position within tile bounds
 			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
-			prop.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+			var prop_position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
 			
-			dungeon_tiles.add_child(prop)
-			prop.owner = _get_edited_scene_root()
+			# Spawn prop through MultiplayerSpawner for synchronization
+			if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+				var spawn_data = {"type": "prop", "path": str(prop_path)}
+				var prop = GameManager._game_spawner.spawn(spawn_data)
+				if prop != null:
+					# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+					prop.position = prop_position
+					prop.owner = _get_edited_scene_root()
+					# Set multiplayer authority to server
+					prop.set_multiplayer_authority(1)
 			
 			# Yield every 10 props
 			if i % 10 == 0:
@@ -1361,6 +1364,13 @@ func spawn_pickups():
 	if Engine.is_editor_hint():
 		return
 	
+	# Ensure GameSpawner spawn_path is set to DungeonTiles
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		var dungeon_tiles_node = GameManager._game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+		if dungeon_tiles_node != null:
+			var dungeon_tiles_path = GameManager._game_spawner.get_path_to(dungeon_tiles_node)
+			GameManager._game_spawner.spawn_path = dungeon_tiles_path
+	
 	# Use item amount dictionary pickup_items_to_spawn_dict to spawn pickups in random tiles with floor
 	# Spawn on all peers using seeded RNG for consistency (same as dungeon generation)
 	if pickup_items_to_spawn_dict.is_empty():
@@ -1418,33 +1428,31 @@ func spawn_pickups():
 			# Choose a random tile
 			var random_tile: DungeonTile = available_tiles[rng.randi() % available_tiles.size()]
 			
-			# Instantiate pickup
-			var pickup = pickup_scene.instantiate()
-			if pickup == null:
-				continue
-			
-			# Set weapon_resource on the pickup (InteractivePickup class)
-			if pickup is InteractivePickup:
-				pickup.weapon_resource = weapon_resource.duplicate()
-			
 			# Randomize pickup position within tile bounds
 			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
-			pickup.position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)  # Slightly above floor
+			var pickup_position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)  # Slightly above floor
 			
-			# Give pickup a unique, consistent name based on spawn order and tile coordinate
-			# This ensures RPCs can find the correct pickup on all peers
-			var pickup_name = "Pickup_%s_%d_%d_%d_%d" % [
-				weapon_resource.weapon_name,
-				random_tile.coord.x,
-				random_tile.coord.y,
-				random_tile.coord.z,
-				total_pickups_spawned
-			]
-			pickup.name = pickup_name
+			# Pickup name is set automatically during spawn (_spawn_pickup_scene creates "Pickup_%d_%d")
+			# No need to rename - the name from spawn is consistent across all clients
 			
-			dungeon_tiles.add_child(pickup)
-			pickup.owner = _get_edited_scene_root()
+			# Spawn pickup through MultiplayerSpawner for synchronization
+			if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+				var spawn_data = {"type": "pickup", "path": str(weapon_resource.pickup_prefab_path)}
+				var pickup = GameManager._game_spawner.spawn(spawn_data)
+				if pickup != null:
+					# Set weapon_resource on the pickup (InteractivePickup class)
+					if pickup is InteractivePickup:
+						pickup.weapon_resource = weapon_resource.duplicate()
+					
+					# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+					pickup.position = pickup_position
+					pickup.owner = _get_edited_scene_root()
+					# Set multiplayer authority to server
+					pickup.set_multiplayer_authority(1)
+					
+					# Don't rename - use the name that was set during spawn (Pickup_%d_%d)
+					# The name pickup_name is only used for logging, actual name comes from _spawn_pickup_scene
 			
 			total_pickups_spawned += 1
 			

@@ -9,4 +9,5 @@ pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_torch_p.tscn"
 weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_torch_w.tscn"
 damage_min_max = Vector2i(1, 10)
 weapon_blocking_angle = 10
+push_forward_on_attack_force = 1.0
 reducing_durability_when_in_hands = true

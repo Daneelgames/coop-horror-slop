@@ -10,3 +10,4 @@ pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_rusty_pipe_p.tscn"
 weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_rusty_pipe_w.tscn"
 damage_min_max = Vector2i(10, 40)
 weapon_blocking_angle = 120
+push_forward_on_attack_force = 4.0

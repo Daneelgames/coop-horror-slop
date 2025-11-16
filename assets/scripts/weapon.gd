@@ -132,7 +132,7 @@ func melee_raycast(point: Vector3, prev_point: Vector3):
 	# Set collision layers: layer 1 (solids) and layer 2 (units)
 	# In Godot, layers are 1-indexed in editor but 0-indexed in code
 	# Layer 1 = bit 0, Layer 2 = bit 1
-	query.collision_mask = (1 << 0) | (1 << 1)  # layers 1 and 2
+	query.collision_mask = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4)  # layers 1, 2, 3, 5
 	
 	# Exclude weapon owner (CharacterBody3D has get_rid())
 	var exclude: Array[RID] = []
@@ -196,6 +196,20 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 		print("[MELEE HIT] Hit solid object: ", collider.name, " at position: ", hit_result.get("position"))
 		GameManager.particles_manager.spawn_solid_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
 		weapon_owner.rpc_play_hit_solid.rpc()
+		
+		# Check if hit RigidBody3D on layer 5 (PhysicalProp)
+		if collider is PhysicalPropRigidbody3D:
+			# Check if prop is still valid and not dead
+			if is_instance_valid(collider) and not collider.is_dead:
+				# Calculate damage (use average or random)
+				var damage = randi_range(weapon_resource.damage_min_max.x, weapon_resource.damage_min_max.y)
+				# Call take_damage RPC method (works like mobs - any player can damage)
+				if multiplayer.is_server():
+					# Server can directly call take_damage
+					collider.rpc_take_damage(damage, hit_position, owner_position)
+				else:
+					# Client sends RPC to server
+					collider.rpc_take_damage.rpc_id(1, damage, hit_position, owner_position)
 		
 	hit_objects_this_attack.append(collider)
 

@@ -21,7 +21,7 @@ script = ExtResource("6_0aogx")
 walker_change_floor_height_chance = 0.0101
 mirror_x = true
 default_vertical_wall_tiles_amount = 3
-props_to_spawn_amount = 200
+props_to_spawn_amount = 100
 props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
@@ -124,7 +124,7 @@ walker_change_floor_height_chance = 0.0101
 mirror_x = true
 default_vertical_wall_tiles_amount = 0
 rooms_indexes_to_make_extra_tunnels_to = Array[int]([9])
-props_to_spawn_amount = 0
+props_to_spawn_amount = 20
 props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
@@ -296,6 +296,7 @@ ExtResource("9_dc4xw"): 5,
 ExtResource("10_0ts1u"): 10
 })
 enable_spawn_props = true
+enable_spawn_mobs = true
 enable_spawn_pickups = true
 dungeon_seed = 1763284221
 tiles_coords_islands = Dictionary[int, Array]({
@@ -332,6 +333,7 @@ tiles_coords_islands = Dictionary[int, Array]({
 30: Array[Vector3i]([Vector3i(-5, 3, -8)]),
 31: Array[Vector3i]([Vector3i(2, 3, 1), Vector3i(2, 3, 0)])
 })
+tunnel_props_amount = 200
 default_props_in_tunnels = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,

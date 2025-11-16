@@ -64,12 +64,38 @@ func _spawn_player_scene(peer_id: int) -> Node:
 	return player
 
 func _spawn_pickup_scene(pickup_prefab_path: String) -> Node:
+	if pickup_prefab_path.is_empty():
+		push_error("GameManager._spawn_pickup_scene: Empty pickup_prefab_path!")
+		return null
 	var pickup_scene = load(pickup_prefab_path)
 	if pickup_scene == null:
+		push_error("GameManager._spawn_pickup_scene: Failed to load scene from path: %s" % pickup_prefab_path)
 		return null
 	var pickup: Node = pickup_scene.instantiate()
+	if pickup == null:
+		push_error("GameManager._spawn_pickup_scene: Failed to instantiate scene from path: %s" % pickup_prefab_path)
+		return null
+	# Set a temporary unique name to avoid conflicts when MultiplayerSpawner adds it to tree
+	# This name will be used for synchronization - caller can rename it after spawn if needed
+	# Using a more unique name to avoid conflicts
+	pickup.name = "Pickup_%d_%d" % [Time.get_ticks_msec(), randi()]
 	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
 	return pickup
+
+func _spawn_prop_scene(prop_prefab_path: String) -> Node:
+	if prop_prefab_path.is_empty():
+		push_error("GameManager._spawn_prop_scene: Empty prop_prefab_path!")
+		return null
+	var prop_scene = load(prop_prefab_path)
+	if prop_scene == null:
+		push_error("GameManager._spawn_prop_scene: Failed to load scene from path: %s" % prop_prefab_path)
+		return null
+	var prop: Node = prop_scene.instantiate()
+	if prop == null:
+		push_error("GameManager._spawn_prop_scene: Failed to instantiate scene from path: %s" % prop_prefab_path)
+		return null
+	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
+	return prop
 
 func start_multiplayer_game():
 	if !multiplayer.is_server():
@@ -123,11 +149,42 @@ func _ensure_game_spawner() -> void:
 		_game_spawner = MultiplayerSpawner.new()
 		_game_spawner.name = "GameLevelSpawner"
 		_game_spawner.spawn_path = NodePath(".")
-		_game_spawner.spawn_function = Callable(self, "_spawn_pickup_scene")
+		_game_spawner.spawn_function = Callable(self, "_spawn_game_object")
 		_game_root.add_child(_game_spawner)
 	if !_spawner_has_game_level:
 		_game_spawner.add_spawnable_scene(GAME_LEVEL_SCENE_PATH)
 		_spawner_has_game_level = true
+
+# Universal spawn function for game objects (pickups, props, etc.)
+func _spawn_game_object(spawn_data) -> Node:
+	# spawn_data can be a String/StringName (prefab path) or Dictionary with "type" and "path"
+	# MultiplayerSpawner may pass StringName instead of String
+	if spawn_data is String or spawn_data is StringName:
+		# Simple string path - treat as pickup (backward compatibility)
+		var path_str = str(spawn_data)  # Convert StringName to String
+		var result = _spawn_pickup_scene(path_str)
+		if result == null:
+			push_error("GameManager._spawn_game_object: Failed to spawn pickup from path: %s" % path_str)
+		return result
+	elif spawn_data is Dictionary:
+		var obj_type = spawn_data.get("type", "pickup")
+		var obj_path = spawn_data.get("path", "")
+		if obj_path.is_empty():
+			push_error("GameManager._spawn_game_object: Empty path in spawn_data: %s" % spawn_data)
+			return null
+		# Convert StringName to String if needed
+		var path_str = str(obj_path)
+		var result: Node = null
+		if obj_type == "prop":
+			result = _spawn_prop_scene(path_str)
+		else:
+			result = _spawn_pickup_scene(path_str)
+		if result == null:
+			push_error("GameManager._spawn_game_object: Failed to spawn %s from path: %s" % [obj_type, path_str])
+		return result
+	else:
+		push_error("GameManager._spawn_game_object: Invalid spawn_data type: %s (value: %s)" % [typeof(spawn_data), spawn_data])
+		return null
 
 func _spawn_game_level() -> void:
 	if is_instance_valid(_game_level):
@@ -141,6 +198,16 @@ func _cache_spawned_game_level() -> void:
 	for child in _game_spawner.get_children():
 		if child is Node and child.name == "GameLevel":
 			_game_level = child
+			# Set spawn_path for GameSpawner to DungeonTiles (for props and pickups)
+			var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+			if dungeon_tiles != null and is_instance_valid(_game_spawner):
+				var dungeon_tiles_path = _game_spawner.get_path_to(dungeon_tiles)
+				_game_spawner.spawn_path = dungeon_tiles_path
+				print("GameManager: GameSpawner spawn_path set to DungeonTiles (is_server: %s, path: %s)" % [
+					multiplayer.is_server(),
+					dungeon_tiles_path
+				])
+			
 			# Set spawn_path now that GameLevel exists (on all clients)
 			if is_instance_valid(_mob_spawner):
 				# Use relative path from MobSpawner to GameLevel
@@ -441,17 +508,26 @@ func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
 	weapon_resource.in_hands_reduce_durability_speed = data.get("in_hands_reduce_durability_speed", 0.5)
 	return weapon_resource
 
+# RPC function to handle pickup requests from clients (backward compatibility)
+@rpc("any_peer", "reliable")
+func rpc_request_pickup_by_name(pickup_name: String) -> void:
+	rpc_request_pickup_by_name_and_position(pickup_name, Vector3.ZERO)
+
 # RPC function to handle pickup requests from clients
 # This is needed for procedurally spawned pickups that aren't synchronized
 # Dropped pickups (synchronized via MultiplayerSpawner) should use direct RPC call instead
+# Updated to avoid path resolution issues by searching in multiple locations
+# Position is used as fallback when name doesn't match (e.g., client sees old name but server renamed it)
 @rpc("any_peer", "reliable")
-func rpc_request_pickup_by_name(pickup_name: String) -> void:
+func rpc_request_pickup_by_name_and_position(pickup_name: String, pickup_position: Vector3) -> void:
 	# Only server processes this
 	if !multiplayer.is_server():
 		return
 	
-	# Find the pickup by name only - procedurally spawned pickups have consistent names
+	# Find the pickup by name - procedurally spawned pickups have consistent names
 	var pickup: InteractivePickup = null
+	
+	# First, try to find by exact name in all locations
 	if is_instance_valid(_game_level):
 		# Check ProceduralDungeon/DungeonTiles for procedurally spawned pickups
 		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
@@ -462,11 +538,56 @@ func rpc_request_pickup_by_name(pickup_name: String) -> void:
 		if pickup == null:
 			pickup = _game_level.get_node_or_null(pickup_name) as InteractivePickup
 	
-	if pickup != null:
-		# Call the pickup's internal function directly (no RPC needed on server)
-		pickup._process_pickup_request()
-	else:
-		print("[GameManager] Could not find pickup '%s'" % pickup_name)
+	# Also check GameLevelSpawner in case pickups were spawned before spawn_path was set
+	if pickup == null and is_instance_valid(_game_spawner):
+		pickup = _game_spawner.get_node_or_null(pickup_name) as InteractivePickup
+	
+	# Last resort: search recursively in GameRoot
+	if pickup == null and is_instance_valid(_game_root):
+		pickup = _find_pickup_recursive(_game_root, pickup_name)
+	
+	# If still not found and we have a position, try to find by position
+	# This handles the case where client sees old name but server already renamed it
+	if pickup == null and pickup_position != Vector3.ZERO:
+		if is_instance_valid(_game_root):
+			var all_pickups = _find_all_pickups_recursive(_game_root)
+			var closest_pickup: InteractivePickup = null
+			var closest_distance = INF
+			for p in all_pickups:
+				var distance = p.global_position.distance_to(pickup_position)
+				# If pickup is very close (within 0.5 units), it's likely the right one
+				if distance < 0.5 and distance < closest_distance:
+					closest_pickup = p
+					closest_distance = distance
+			if closest_pickup != null:
+				pickup = closest_pickup
+				print("[GameManager] Found pickup by position: '%s' at distance %.2f (was looking for '%s')" % [pickup.name, closest_distance, pickup_name])
+	
+	if pickup == null:
+		print("[GameManager] Could not find pickup '%s' for pickup request (position: %s)" % [pickup_name, pickup_position])
+		return
+	
+	# Process pickup using the found pickup node
+	pickup._process_pickup_request()
+
+# Helper function to recursively search for a pickup by name
+func _find_pickup_recursive(node: Node, pickup_name: String) -> InteractivePickup:
+	if node.name == pickup_name and node is InteractivePickup:
+		return node as InteractivePickup
+	for child in node.get_children():
+		var result = _find_pickup_recursive(child, pickup_name)
+		if result != null:
+			return result
+	return null
+
+# Helper function to find all pickups recursively
+func _find_all_pickups_recursive(node: Node) -> Array[InteractivePickup]:
+	var pickups: Array[InteractivePickup] = []
+	if node is InteractivePickup:
+		pickups.append(node as InteractivePickup)
+	for child in node.get_children():
+		pickups.append_array(_find_all_pickups_recursive(child))
+	return pickups
 
 # RPC function to destroy pickups by name (needed for procedurally spawned pickups)
 @rpc("any_peer", "call_local", "reliable")
@@ -490,6 +611,14 @@ func rpc_destroy_pickup_by_name(pickup_name: String) -> void:
 		# If not found, check GameLevel directly for dropped pickups
 		if pickup == null:
 			pickup = _game_level.get_node_or_null(pickup_name) as InteractivePickup
+	
+	# Also check GameLevelSpawner in case pickups were spawned before spawn_path was set
+	if pickup == null and is_instance_valid(_game_spawner):
+		pickup = _game_spawner.get_node_or_null(pickup_name) as InteractivePickup
+	
+	# Last resort: search recursively in GameRoot
+	if pickup == null and is_instance_valid(_game_root):
+		pickup = _find_pickup_recursive(_game_root, pickup_name)
 	
 	if pickup != null:
 		print("[GameManager] Destroying pickup: %s" % pickup.name)
