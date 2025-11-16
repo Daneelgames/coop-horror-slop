@@ -44,11 +44,12 @@ func take_damage(damage: float, hit_position: Vector3, attacker_position: Vector
 	# Check if prop died
 	if health <= 0:
 		health = 0
-		# Call death directly - RPC will sync to all clients automatically
+		# Call death directly on server
 		death(hit_position)
-		# Sync death to all clients via RPC
-		if multiplayer.is_server():
-			rpc_death.rpc(hit_position)
+		# Sync death to all clients via GameManager to avoid path resolution issues
+		if multiplayer.is_server() and is_instance_valid(GameManager):
+			var prop_name = name
+			GameManager.rpc_prop_death.rpc(prop_name, hit_position)
 		return
 	
 	# Apply impulse based on damage and mass
@@ -78,8 +79,11 @@ func death(death_position: Vector3):
 		visual_node.visible = false
 
 	# Disable collisions
+	set_collision_layer_value(1, false)
+	set_collision_layer_value(2, false)
+	set_collision_layer_value(3, false)
+	set_collision_layer_value(4, false)
 	set_collision_layer_value(5, false)
-	set_collision_mask_value(0, false)
 	set_collision_mask_value(1, false)
 	set_collision_mask_value(2, false)
 	set_collision_mask_value(3, false)

@@ -100,17 +100,19 @@ func _process_pickup_request():
 	# Clamp selected index if needed
 	requesting_player._clamp_selected_index()
 	
-	# Destroy this pickup locally first
+	# Destroy this pickup - use call_deferred to let MultiplayerSpawner process despawn properly
 	var pickup_name = name
-	queue_free()
 	
-	# Tell all clients to destroy their local copy by name
+	# Tell all clients to destroy their local copy by name first
 	# Use GameManager to broadcast since procedurally spawned pickups aren't synchronized
 	if is_instance_valid(GameManager):
 		GameManager.rpc_destroy_pickup_by_name.rpc(pickup_name)
 	else:
 		# Fallback: try direct RPC (works for synchronized pickups)
 		rpc_destroy_pickup_by_name.rpc(pickup_name)
+	
+	# Destroy locally after RPC is sent (deferred to let MultiplayerSpawner process despawn)
+	call_deferred("queue_free")
 	
 	# Tell requesting client to update their inventory UI
 	if requesting_peer_id == 1:
@@ -158,7 +160,8 @@ func rpc_destroy_pickup_by_name(pickup_name: String):
 	# For synchronized pickups, destroy self if name matches
 	if name == pickup_name:
 		print("[PICKUP] Destroying pickup: %s" % name)
-		queue_free()
+		# Use call_deferred to let MultiplayerSpawner process despawn properly
+		call_deferred("queue_free")
 
 # RPC to destroy this pickup on all clients (kept for backward compatibility)
 @rpc("any_peer", "call_local", "reliable")
@@ -172,7 +175,8 @@ func rpc_destroy_pickup():
 	# On server, sender_id will be 0 (local call) which is fine
 	
 	print("[PICKUP] Destroying pickup: %s" % name)
-	queue_free()
+	# Use call_deferred to let MultiplayerSpawner process despawn properly
+	call_deferred("queue_free")
 
 # RPC to synchronize pickup name across all clients
 @rpc("any_peer", "call_local", "reliable")

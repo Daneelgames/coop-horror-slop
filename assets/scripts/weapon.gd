@@ -203,13 +203,17 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 			if is_instance_valid(collider) and not collider.is_dead:
 				# Calculate damage (use average or random)
 				var damage = randi_range(weapon_resource.damage_min_max.x, weapon_resource.damage_min_max.y)
-				# Call take_damage RPC method (works like mobs - any player can damage)
+				# Use GameManager to avoid path resolution issues
+				var prop_name = collider.name
+				var prop_position = collider.global_position
 				if multiplayer.is_server():
-					# Server can directly call take_damage
-					collider.rpc_take_damage(damage, hit_position, owner_position)
+					# Server can call directly through GameManager
+					if is_instance_valid(GameManager):
+						GameManager.rpc_prop_take_damage(prop_name, prop_position, damage, hit_position, owner_position)
 				else:
-					# Client sends RPC to server
-					collider.rpc_take_damage.rpc_id(1, damage, hit_position, owner_position)
+					# Client sends RPC to server via GameManager
+					if is_instance_valid(GameManager):
+						GameManager.rpc_prop_take_damage.rpc_id(1, prop_name, prop_position, damage, hit_position, owner_position)
 		
 	hit_objects_this_attack.append(collider)
 

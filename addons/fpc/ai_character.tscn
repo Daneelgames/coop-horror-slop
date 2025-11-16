@@ -300,6 +300,7 @@ bind/64/bone = -1
 bind/64/pose = Transform3D(-99.92396, -0.0001585168, 3.8993707, 3.899273, -0.7102333, 99.92143, 0.027536277, 99.9975, 0.7097078, 10.220509, -18.325436, -0.15309562)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cf55f"]
+radius = 0.33
 height = 1.65
 
 [sub_resource type="Animation" id="Animation_j8cx7"]
@@ -994,3 +995,5 @@ bus = &"SFX"
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 unique_name_in_owner = true
+path_postprocessing = 1
+debug_enabled = true

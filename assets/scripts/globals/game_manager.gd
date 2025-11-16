@@ -622,9 +622,107 @@ func rpc_destroy_pickup_by_name(pickup_name: String) -> void:
 	
 	if pickup != null:
 		print("[GameManager] Destroying pickup: %s" % pickup.name)
-		pickup.queue_free()
+		# Use call_deferred to let MultiplayerSpawner process despawn properly
+		pickup.call_deferred("queue_free")
 	else:
 		print("[GameManager] Could not find pickup '%s' to destroy" % pickup_name)
+
+# RPC function to handle prop damage requests from clients
+# Position is used as fallback when name doesn't match
+@rpc("any_peer", "reliable")
+func rpc_prop_take_damage(prop_name: String, prop_position: Vector3, damage: float, hit_position: Vector3, attacker_position: Vector3) -> void:
+	# Only server processes this
+	if !multiplayer.is_server():
+		return
+	
+	# Find the prop by name
+	var prop: PhysicalPropRigidbody3D = null
+	if is_instance_valid(_game_level):
+		# Check ProceduralDungeon/DungeonTiles for procedurally spawned props
+		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+		if dungeon_tiles != null:
+			prop = dungeon_tiles.get_node_or_null(prop_name) as PhysicalPropRigidbody3D
+	
+	# If not found by name and we have a position, try to find by position
+	if prop == null and prop_position != Vector3.ZERO:
+		if is_instance_valid(_game_root):
+			var all_props = _find_all_props_recursive(_game_root)
+			var closest_prop: PhysicalPropRigidbody3D = null
+			var closest_distance = INF
+			for p in all_props:
+				if p.is_dead:
+					continue
+				var distance = p.global_position.distance_to(prop_position)
+				# If prop is very close (within 0.5 units), it's likely the right one
+				if distance < 0.5 and distance < closest_distance:
+					closest_prop = p
+					closest_distance = distance
+			if closest_prop != null:
+				prop = closest_prop
+				print("[GameManager] Found prop by position: '%s' at distance %.2f (was looking for '%s')" % [prop.name, closest_distance, prop_name])
+	
+	if prop == null:
+		print("[GameManager] Could not find prop '%s' for damage request (position: %s)" % [prop_name, prop_position])
+		return
+	
+	# Call take_damage on the prop
+	prop.rpc_take_damage(damage, hit_position, attacker_position)
+
+# RPC function to handle prop death requests from server
+# This ensures death particles spawn on all clients
+@rpc("any_peer", "call_local", "reliable")
+func rpc_prop_death(prop_name: String, death_position: Vector3) -> void:
+	# Find the prop by name
+	var prop: PhysicalPropRigidbody3D = null
+	if is_instance_valid(_game_level):
+		# Check ProceduralDungeon/DungeonTiles for procedurally spawned props
+		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
+		if dungeon_tiles != null:
+			prop = dungeon_tiles.get_node_or_null(prop_name) as PhysicalPropRigidbody3D
+	
+	# If not found by name, try to find by position
+	if prop == null and death_position != Vector3.ZERO:
+		if is_instance_valid(_game_root):
+			var all_props = _find_all_props_recursive(_game_root)
+			var closest_prop: PhysicalPropRigidbody3D = null
+			var closest_distance = INF
+			for p in all_props:
+				if p.is_dead:
+					continue
+				var distance = p.global_position.distance_to(death_position)
+				# If prop is very close (within 1.0 units), it's likely the right one
+				if distance < 1.0 and distance < closest_distance:
+					closest_prop = p
+					closest_distance = distance
+			if closest_prop != null:
+				prop = closest_prop
+				print("[GameManager] Found prop by position for death: '%s' at distance %.2f (was looking for '%s')" % [prop.name, closest_distance, prop_name])
+	
+	if prop == null:
+		print("[GameManager] Could not find prop '%s' for death (position: %s)" % [prop_name, death_position])
+		# Spawn particles anyway at the death position
+		if is_instance_valid(_game_level) and death_position != Vector3.ZERO:
+			_spawn_prop_death_particles_at_position(death_position)
+		return
+	
+	# Call death on the prop (this will spawn particles on all clients)
+	prop.death(death_position)
+
+# Helper function to spawn death particles at a specific position (fallback)
+func _spawn_prop_death_particles_at_position(_death_position: Vector3):
+	# Try to find a prop death particles scene
+	# This is a fallback - normally particles are spawned by the prop itself
+	# You might want to load a default particle scene here if needed
+	pass
+
+# Helper function to find all props recursively
+func _find_all_props_recursive(node: Node) -> Array[PhysicalPropRigidbody3D]:
+	var props: Array[PhysicalPropRigidbody3D] = []
+	if node is PhysicalPropRigidbody3D:
+		props.append(node as PhysicalPropRigidbody3D)
+	for child in node.get_children():
+		props.append_array(_find_all_props_recursive(child))
+	return props
 
 @rpc("authority", "call_local", "reliable")
 func _sync_dungeon_seed(seed_value: int) -> void:
