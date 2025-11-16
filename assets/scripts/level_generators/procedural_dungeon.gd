@@ -23,6 +23,7 @@ enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 @export var tunnel_tiles_coords : Dictionary[Vector3i, DungeonTile] # coord, tile
 @export var debug_tile_islands : bool = false
 @export var mobs_amount_to_spawn = 30
+var cached_elevator_spawn_location : Vector3i = Vector3i.ZERO  # Кешированная позиция лифта
 @export var pickup_items_to_spawn_dict : Dictionary[ResourceWeapon, int] # item, amount
 @export var enable_spawn_props : bool = false
 @export var enable_spawn_mobs : bool = false
@@ -84,6 +85,7 @@ func clear():
 	spawned_stairs_coords.clear()
 	spawned_doors_coords.clear()
 	tunnel_tiles_coords.clear()
+	cached_elevator_spawn_location = Vector3i.ZERO
 
 func generate_dungeon():
 	var parent_name: String = String(get_parent().name) if get_parent() else "null"
@@ -229,6 +231,9 @@ func generate_dungeon():
 	
 	# Expand rooms vertically upward
 	await _expand_rooms_vertically()
+	
+	# Найти и закешировать позицию лифта после спавна всех основных тайлов, но до их конфигурации
+	_find_and_cache_elevator_spawn_location()
 	
 	# Configure all tiles based on their neighbors
 	await connect_rooms_with_tunnels()
@@ -1594,33 +1599,45 @@ func spawn_doors():
 	print("spawn_doors: Successfully spawned ", doors_spawned_count, " doors out of ", actual_doors_to_spawn, " attempted")
 
 func find_elevator_spawn_location() -> Vector3i:
-	# Найти тайлы с полом и самой высокой Y позицией
-	var tiles_with_floors_by_y: Dictionary = {}  # Dictionary[int, Array]
+	# Возвращает заранее закешированную позицию лифта
+	return cached_elevator_spawn_location
+
+func _find_and_cache_elevator_spawn_location():
+	# Найти тайлы БЕЗ нижнего соседа - только такие тайлы будут иметь пол после конфигурации
+	# Сгруппировать их по Y координате
+	var tiles_without_bottom_neighbor_by_y: Dictionary = {}  # Dictionary[int, Array]
 	var max_y: int = -2147483648  # INT_MIN equivalent
 	
-	# Собрать все тайлы с полом, сгруппированные по Y координате
+	# Собрать все тайлы без нижнего соседа, сгруппированные по Y координате
 	for tile in all_spawned_tiles.keys():
 		if not is_instance_valid(tile):
 			continue
-		if not is_instance_valid(tile.floor):
+		
+		# Проверить, есть ли сосед снизу
+		var neighbor_below_coord: Vector3i = Vector3i(tile.coord.x, tile.coord.y - 1, tile.coord.z)
+		var neighbor_below: DungeonTile = _get_tile_at_coord(neighbor_below_coord)
+		
+		# Пропустить тайлы, у которых есть сосед снизу (у них не будет пола после конфигурации)
+		if neighbor_below != null:
 			continue
 		
 		var y_coord: int = tile.coord.y
-		if not tiles_with_floors_by_y.has(y_coord):
-			tiles_with_floors_by_y[y_coord] = []
-		tiles_with_floors_by_y[y_coord].append(tile)
+		if not tiles_without_bottom_neighbor_by_y.has(y_coord):
+			tiles_without_bottom_neighbor_by_y[y_coord] = []
+		tiles_without_bottom_neighbor_by_y[y_coord].append(tile)
 		
 		if y_coord > max_y:
 			max_y = y_coord
 	
-	if tiles_with_floors_by_y.is_empty() or not tiles_with_floors_by_y.has(max_y):
-		push_warning("find_elevator_spawn_location: No tiles with floors found")
-		return Vector3i.ZERO
+	if tiles_without_bottom_neighbor_by_y.is_empty() or not tiles_without_bottom_neighbor_by_y.has(max_y):
+		push_warning("_find_and_cache_elevator_spawn_location: No tiles without bottom neighbor found")
+		cached_elevator_spawn_location = Vector3i.ZERO
+		return
 	
-	# Получить тайлы с максимальной Y позицией
-	var tiles_at_max_y = tiles_with_floors_by_y[max_y]
+	# Получить тайлы с максимальной Y позицией (без нижнего соседа)
+	var tiles_at_max_y = tiles_without_bottom_neighbor_by_y[max_y]
 	
-	# Для каждого тайла посчитать количество соседних тайлов с полом по горизонтали
+	# Для каждого тайла посчитать количество соседних тайлов по горизонтали
 	var tiles_with_neighbor_counts: Dictionary[DungeonTile, int] = {}
 	
 	for tile in tiles_at_max_y:
@@ -1636,7 +1653,7 @@ func find_elevator_spawn_location() -> Vector3i:
 		for offset in horizontal_offsets:
 			var neighbor_coord: Vector3i = tile.coord + offset
 			var neighbor_tile: DungeonTile = _get_tile_at_coord(neighbor_coord)
-			if neighbor_tile != null and is_instance_valid(neighbor_tile.floor):
+			if neighbor_tile != null:
 				neighbor_count += 1
 		
 		tiles_with_neighbor_counts[tile] = neighbor_count
@@ -1654,16 +1671,50 @@ func find_elevator_spawn_location() -> Vector3i:
 			candidate_tiles.append(tile)
 	
 	if candidate_tiles.is_empty():
-		push_warning("find_elevator_spawn_location: No candidate tiles found")
-		return Vector3i.ZERO
+		push_warning("_find_and_cache_elevator_spawn_location: No candidate tiles found")
+		cached_elevator_spawn_location = Vector3i.ZERO
+		return
 	
 	# Выбрать случайный тайл из кандидатов
 	var selected_tile: DungeonTile = candidate_tiles[rng.randi() % candidate_tiles.size()]
+	var target_coord: Vector3i = selected_tile.coord
 	
-	print("find_elevator_spawn_location: Selected tile at coord %s (Y=%d, neighbors=%d)" % [
-		selected_tile.coord,
+	print("_find_and_cache_elevator_spawn_location: Selected tile at coord %s (Y=%d, neighbors=%d)" % [
+		target_coord,
 		max_y,
 		tiles_with_neighbor_counts[selected_tile]
 	])
 	
-	return selected_tile.coord
+	# Убедиться, что над таргет тайлом лифта есть еще 2 соседних тайла (если нет - создать)
+	# Проверяем тайлы на уровнях target_coord.y + 1 и target_coord.y + 2
+	var tile_above_1: DungeonTile = _get_tile_at_coord(Vector3i(target_coord.x, target_coord.y + 1, target_coord.z))
+	var tile_above_2: DungeonTile = _get_tile_at_coord(Vector3i(target_coord.x, target_coord.y + 2, target_coord.z))
+	
+	# Получить комнату для таргет тайла (для создания новых тайлов)
+	var room: ResourceDungeonRoom = null
+	if all_spawned_tiles.has(selected_tile):
+		room = all_spawned_tiles[selected_tile]
+	else:
+		# Fallback: использовать первую комнату
+		if rooms_resources.size() > 0:
+			room = rooms_resources[0]
+	
+	if room == null:
+		push_warning("_find_and_cache_elevator_spawn_location: Could not find room for target tile")
+		cached_elevator_spawn_location = target_coord
+		return
+	
+	# Создать тайлы над таргет тайлом, если их нет
+	if tile_above_1 == null:
+		var coord_above_1: Vector3i = Vector3i(target_coord.x, target_coord.y + 1, target_coord.z)
+		_spawn_tile_at_coord(room, coord_above_1)
+		print("_find_and_cache_elevator_spawn_location: Created tile above elevator at %s" % coord_above_1)
+	
+	if tile_above_2 == null:
+		var coord_above_2: Vector3i = Vector3i(target_coord.x, target_coord.y + 2, target_coord.z)
+		_spawn_tile_at_coord(room, coord_above_2)
+		print("_find_and_cache_elevator_spawn_location: Created tile above elevator at %s" % coord_above_2)
+	
+	# Сохранить закешированную позицию
+	cached_elevator_spawn_location = target_coord
+	print("_find_and_cache_elevator_spawn_location: Cached elevator spawn location at %s" % cached_elevator_spawn_location)
