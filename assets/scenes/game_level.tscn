@@ -15,7 +15,7 @@ agent_radius = 0.25
 [node name="GameLevel" type="NavigationRegion3D"]
 navigation_mesh = SubResource("NavigationMesh_ax1lr")
 script = ExtResource("1_nbe18")
-level_generator_path = NodePath("")
+level_generator_path = NodePath("MultistoryBuildingDungeon")
 
 [node name="ParticlesManager" type="Node3D" parent="."]
 script = ExtResource("2_slvmx")
@@ -35,6 +35,9 @@ transform = Transform3D(0.7283828, 0.011957396, 0.68506604, 0, 0.9998477, -0.017
 
 [node name="MultistoryBuildingDungeon" type="Node3D" parent="."]
 script = ExtResource("12_0ts1u")
+floors_heights = Array[int]([2])
+rooms_per_floor_min_max = Vector2i(20, 20)
+dungeon_seed = 1763406800
 
 [node name="DungeonTiles" type="Node3D" parent="MultistoryBuildingDungeon"]
 unique_name_in_owner = true
