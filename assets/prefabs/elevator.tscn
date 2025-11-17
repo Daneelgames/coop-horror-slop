@@ -1,12 +1,17 @@
-[gd_scene load_steps=38 format=4 uid="uid://d1fhekbr7wjf3"]
+[gd_scene load_steps=48 format=4 uid="uid://d1fhekbr7wjf3"]
 
 [ext_resource type="Texture2D" uid="uid://x5ctr86ri1dx" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_AlbedoTransparency.png" id="1_e4udu"]
+[ext_resource type="Script" uid="uid://cepasvg8pm00v" path="res://assets/scripts/main_elevator_controller.gd" id="1_hvhng"]
 [ext_resource type="Texture2D" uid="uid://drpvrdr1w27p6" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_AO.png" id="2_hvhng"]
 [ext_resource type="Texture2D" uid="uid://bsp7gy7ipagpr" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_Emission.png" id="3_btkhg"]
 [ext_resource type="Texture2D" uid="uid://6n3k8jk5p4m" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_MetallicSmoothness.png" id="4_2rv35"]
 [ext_resource type="Texture2D" uid="uid://ngrwblupu04x" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_Normal.png" id="5_5iafp"]
+[ext_resource type="AudioStream" uid="uid://k0tgy3dqh7mk" path="res://assets/audio/breakLight.wav" id="7_btkhg"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iktdn"]
+transparency = 2
+alpha_scissor_threshold = 0.028
+alpha_antialiasing_mode = 0
 albedo_texture = ExtResource("1_e4udu")
 metallic = 1.0
 metallic_texture = ExtResource("4_2rv35")
@@ -293,6 +298,38 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_jl27h")
 
+[sub_resource type="ArrayMesh" id="ArrayMesh_tkr16"]
+_surfaces = [{
+"aabb": AABB(-0.021575492, -0.012677631, -0.02859194, 0.043087393, 0.044126287, 0.057183884),
+"format": 34359742465,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQA"),
+"name": "elevator",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("uzmwPE7QAD2lOeo8uzmwPE7QAD2lOeq8uzmwPA/AS7ylOeq8uzmwPA/AS7ylOeo8JSSuvNe1T7ylOeo8Az9hvNe1T7yoOeo8Az9hvNe1T7yjOeq8JCSuvNe1T7yjOeq8Az9hvKSZTrylOeo8JSSuvKSZTrylOeo8JCSuvKSZTryjOeq8Az9hvKSZTryjOeq8Fu9hPNe1T7yoOeo8LnyuPNe1T7yoOeo8LnyuPNe1T7yjOeq8FO9hPNe1T7yjOeq8Fu9hPKGZTrylOeo8FO9hPKGZTryjOeq8LnyuPKGZTryjOeq8LnyuPKGZTrylOeo8Fr+wvE7QAD2lOeo8FL+wvA3AS7ylOeo8Fr+wvA3AS7yjOeq8Fr+wvE7QAD2jOeq8")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_u4un6"]
+resource_name = "Mesh_022"
+_surfaces = [{
+"aabb": AABB(-0.021575492, -0.012677631, -0.02859194, 0.043087393, 0.044126287, 0.057183884),
+"attribute_data": PackedByteArray("BlZhPhif1T4MMu0+GJ/VPgwy7T7+lxo/BlZhPv6XGj9aRxc/+6RVP1pHFz9oFE0/b39YP2gUTT9vf1g/+6RVP1pHFz/7pFU/WkcXP2gUTT9vf1g/aBRNP29/WD/7pFU/WkcXP/ukVT9aRxc/aBRNP29/WD9oFE0/b39YP/ukVT9aRxc/aBRNP29/WD9oFE0/b39YP/ukVT9aRxc/+6RVPyBWYT7klxo/IFZhPgYX0T5xGfM+BhfRPnEZ8z7klxo/"),
+"format": 34359742487,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQA"),
+"material": SubResource("StandardMaterial3D_f0jft"),
+"name": "elevator",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("uzmwPE7QAD2lOeo8uzmwPE7QAD2lOeq8uzmwPA/AS7ylOeq8uzmwPA/AS7ylOeo8JSSuvNe1T7ylOeo8Az9hvNe1T7yoOeo8Az9hvNe1T7yjOeq8JCSuvNe1T7yjOeq8Az9hvKSZTrylOeo8JSSuvKSZTrylOeo8JCSuvKSZTryjOeq8Az9hvKSZTryjOeq8Fu9hPNe1T7yoOeo8LnyuPNe1T7yoOeo8LnyuPNe1T7yjOeq8FO9hPNe1T7yjOeq8Fu9hPKGZTrylOeo8FO9hPKGZTryjOeq8LnyuPKGZTryjOeq8LnyuPKGZTrylOeo8Fr+wvE7QAD2lOeo8FL+wvA3AS7ylOeo8Fr+wvA3AS7yjOeq8Fr+wvE7QAD2jOeq8////f/////////9//////////3//////////f///////fwAA//////9/AAD//////38AAP//////fwAA//////9//////////3//////////f/////////9//////////38AAP//////fwAA//////9/AAD//////38AAP//////f/////////9//////////3//////////f////////wAA/3//////AAD/f/////8AAP9//////wAA/38AAACA")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_tkr16")
+
 [sub_resource type="ArrayMesh" id="ArrayMesh_26gxp"]
 _surfaces = [{
 "aabb": AABB(-0.00052813767, -0.0003448844, -0.04360705, 0.0010562753, 0.0006897759, 0.054189093),
@@ -493,127 +530,219 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_8c8nv")
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_tkr16"]
-_surfaces = [{
-"aabb": AABB(-0.021575492, -0.012677631, -0.02859194, 0.043087393, 0.044126287, 0.057183884),
-"format": 34359742465,
-"index_count": 36,
-"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQA"),
-"name": "elevator",
-"primitive": 3,
-"uv_scale": Vector4(0, 0, 0, 0),
-"vertex_count": 24,
-"vertex_data": PackedByteArray("uzmwPE7QAD2lOeo8uzmwPE7QAD2lOeq8uzmwPA/AS7ylOeq8uzmwPA/AS7ylOeo8JSSuvNe1T7ylOeo8Az9hvNe1T7yoOeo8Az9hvNe1T7yjOeq8JCSuvNe1T7yjOeq8Az9hvKSZTrylOeo8JSSuvKSZTrylOeo8JCSuvKSZTryjOeq8Az9hvKSZTryjOeq8Fu9hPNe1T7yoOeo8LnyuPNe1T7yoOeo8LnyuPNe1T7yjOeq8FO9hPNe1T7yjOeq8Fu9hPKGZTrylOeo8FO9hPKGZTryjOeq8LnyuPKGZTryjOeq8LnyuPKGZTrylOeo8Fr+wvE7QAD2lOeo8FL+wvA3AS7ylOeo8Fr+wvA3AS7yjOeq8Fr+wvE7QAD2jOeq8")
-}]
-blend_shape_mode = 0
+[sub_resource type="BoxShape3D" id="BoxShape3D_e4udu"]
+size = Vector3(4.868164, 0.15039063, 4.6933594)
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_u4un6"]
-resource_name = "Mesh_022"
-_surfaces = [{
-"aabb": AABB(-0.021575492, -0.012677631, -0.02859194, 0.043087393, 0.044126287, 0.057183884),
-"attribute_data": PackedByteArray("BlZhPhif1T4MMu0+GJ/VPgwy7T7+lxo/BlZhPv6XGj9aRxc/+6RVP1pHFz9oFE0/b39YP2gUTT9vf1g/+6RVP1pHFz/7pFU/WkcXP2gUTT9vf1g/aBRNP29/WD/7pFU/WkcXP/ukVT9aRxc/aBRNP29/WD9oFE0/b39YP/ukVT9aRxc/aBRNP29/WD9oFE0/b39YP/ukVT9aRxc/+6RVPyBWYT7klxo/IFZhPgYX0T5xGfM+BhfRPnEZ8z7klxo/"),
-"format": 34359742487,
-"index_count": 36,
-"index_data": PackedByteArray("AAABAAIAAgADAAAABAAFAAYABgAHAAQACAAJAAoACgALAAgADAANAA4ADgAPAAwAEAARABIAEgATABAAFAAVABYAFgAXABQA"),
-"material": SubResource("StandardMaterial3D_f0jft"),
-"name": "elevator",
-"primitive": 3,
-"uv_scale": Vector4(0, 0, 0, 0),
-"vertex_count": 24,
-"vertex_data": PackedByteArray("uzmwPE7QAD2lOeo8uzmwPE7QAD2lOeq8uzmwPA/AS7ylOeq8uzmwPA/AS7ylOeo8JSSuvNe1T7ylOeo8Az9hvNe1T7yoOeo8Az9hvNe1T7yjOeq8JCSuvNe1T7yjOeq8Az9hvKSZTrylOeo8JSSuvKSZTrylOeo8JCSuvKSZTryjOeq8Az9hvKSZTryjOeq8Fu9hPNe1T7yoOeo8LnyuPNe1T7yoOeo8LnyuPNe1T7yjOeq8FO9hPNe1T7yjOeq8Fu9hPKGZTrylOeo8FO9hPKGZTryjOeq8LnyuPKGZTryjOeq8LnyuPKGZTrylOeo8Fr+wvE7QAD2lOeo8FL+wvA3AS7ylOeo8Fr+wvA3AS7yjOeq8Fr+wvE7QAD2jOeq8////f/////////9//////////3//////////f///////fwAA//////9/AAD//////38AAP//////fwAA//////9//////////3//////////f/////////9//////////38AAP//////fwAA//////9/AAD//////38AAP//////f/////////9//////////3//////////f////////wAA/3//////AAD/f/////8AAP9//////wAA/38AAACA")
-}]
-blend_shape_mode = 0
-shadow_mesh = SubResource("ArrayMesh_tkr16")
+[sub_resource type="BoxShape3D" id="BoxShape3D_hvhng"]
+size = Vector3(0.44171143, 6.0321045, 4.6933594)
 
-[node name="elevator" type="Node3D"]
-transform = Transform3D(-2.1855694e-08, 0, -0.5, 0, 0.5, 0, 0.5, 0, -2.1855694e-08, 0, 0, 0)
+[sub_resource type="BoxShape3D" id="BoxShape3D_btkhg"]
+size = Vector3(1.7392578, 3.4239502, 0.44433594)
 
-[node name="box" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.023487685, 2.9381998, 0.021354366)
+[sub_resource type="Animation" id="Animation_hvhng"]
+resource_name = "open"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/Door:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.105, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_btkhg"]
+resource_name = "close"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/Door:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_2rv35"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/Door:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_5iafp"]
+_data = {
+&"RESET": SubResource("Animation_2rv35"),
+&"close": SubResource("Animation_btkhg"),
+&"open": SubResource("Animation_hvhng")
+}
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_2rv35"]
+random_pitch = 1.1
+streams_count = 1
+stream_0/stream = ExtResource("7_btkhg")
+
+[node name="Elevator" type="StaticBody3D"]
+script = ExtResource("1_hvhng")
+
+[node name="Visual" type="Node3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.14813232, 0)
+
+[node name="box" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, -0.023686051, 2.94396, -0.019018339)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_jf55h")
 skeleton = NodePath("")
 
-[node name="call" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 1.4641471, 5.7777166, -0.9000592)
+[node name="call" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, -1.464147, 5.7777166, 0.90005934)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_nvnvj")
 skeleton = NodePath("")
 
-[node name="lamps" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, -0.0012173011, 6.99388, -0.32105285)
+[node name="lamps" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 0.0012173292, 6.99388, 0.32105285)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_crwil")
 skeleton = NodePath("")
 
-[node name="cage_main" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 5.676633e-09, 3.8541071, -0.008398708)
+[node name="cage_main" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, -4.9423945e-09, 3.8541071, 0.008398708)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_6ryxe")
 skeleton = NodePath("")
 
-[node name="cage_door_frame" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.0004600212, 4.0015707, 2.1965313)
+[node name="cage_door_frame" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, -0.00046021322, 4.0015707, -2.1965313)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_3r7dg")
 skeleton = NodePath("")
 
-[node name="cage_decor" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.00045275688, 6.1357527, 0.8678728)
+[node name="cage_decor" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, -0.00045283276, 6.1357527, -0.8678728)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_4s6n7")
 skeleton = NodePath("")
 
-[node name="cage_rails_horz" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, -0.0008191879, 2.2349105, 0.15839423)
+[node name="cage_rails_horz" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 0.00081917405, 2.2349105, -0.15839423)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_2wnui")
 skeleton = NodePath("")
 
-[node name="cage_rails_vert" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.0020030164, 2.64509, -0.14573263)
+[node name="cage_rails_vert" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, -0.0020030036, 2.64509, 0.14573263)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_u6ryc")
 skeleton = NodePath("")
 
-[node name="door_edge" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, -1.2037382, 4.3551493, 2.2002788)
+[node name="wire" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, -0.0018392515, 2.698569, -0.9373146)
+material_override = SubResource("StandardMaterial3D_iktdn")
+mesh = SubResource("ArrayMesh_u4un6")
+skeleton = NodePath("")
+
+[node name="Door" type="Node3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.278621, 0, -2.2054067)
+
+[node name="door_edge" type="MeshInstance3D" parent="Visual/Door"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 2.482359, 4.3551493, 0.005127907)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_e6wh1")
 skeleton = NodePath("")
 
-[node name="door_rails_vert" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.23890477, 4.3551493, 2.2002785)
+[node name="door_rails_vert" type="MeshInstance3D" parent="Visual/Door"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 1.039716, 4.3551493, 0.005128145)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_j7sy7")
 skeleton = NodePath("")
 
-[node name="door_pikes" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.044186827, 2.6023774, 2.2001588)
+[node name="door_pikes" type="MeshInstance3D" parent="Visual/Door"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 1.2344339, 2.6023774, 0.0052478313)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_s1a11")
 skeleton = NodePath("")
 
-[node name="door_slashes_in" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.038663216, 2.1246424, 2.1803522)
+[node name="door_slashes_in" type="MeshInstance3D" parent="Visual/Door"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 1.2399576, 2.1246424, 0.025054455)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_na6lv")
 skeleton = NodePath("")
 
-[node name="door_slashes_out" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.038663175, 2.1246426, 2.2173595)
+[node name="door_slashes_out" type="MeshInstance3D" parent="Visual/Door"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 1.2399576, 2.1246426, -0.011952877)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_co7yr")
 skeleton = NodePath("")
 
-[node name="door_handle" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, -1.2021985, 2.2520404, 2.3073666)
+[node name="door_handle" type="MeshInstance3D" parent="Visual/Door"]
+transform = Transform3D(-100, 8.742277e-06, 2.0843214e-12, 0, -2.3841858e-05, 99.99999, 8.742278e-06, 99.99999, 2.3841858e-05, 2.4808192, 2.2520404, -0.101959944)
 material_override = SubResource("StandardMaterial3D_iktdn")
 mesh = SubResource("ArrayMesh_a1gf3")
 skeleton = NodePath("")
 
-[node name="wire" type="MeshInstance3D" parent="."]
-transform = Transform3D(100, 0, 0, 0, -2.3841858e-05, 99.99999, 0, -99.99999, -2.3841858e-05, 0.0018391695, 2.698569, 0.9373146)
-material_override = SubResource("StandardMaterial3D_iktdn")
-mesh = SubResource("ArrayMesh_u4un6")
-skeleton = NodePath("")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.022064209, 0)
+shape = SubResource("BoxShape3D_e4udu")
+
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 3.0182023, 0)
+shape = SubResource("BoxShape3D_e4udu")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -1.0769958, 1.4924927, 0)
+shape = SubResource("BoxShape3D_hvhng")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 1.0660992, 1.4924927, 0)
+shape = SubResource("BoxShape3D_hvhng")
+
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="."]
+transform = Transform3D(-2.1855694e-08, 0, 0.5, 0, 0.5, 0, -0.5, 0, -2.1855694e-08, -0.0054482957, 1.4924927, 1.087226)
+shape = SubResource("BoxShape3D_hvhng")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9150512, 0.4033377, 0, -0.4033377, 0.9150512, 0, 2.6385581, 0.6498693)
+light_color = Color(1, 0.80784315, 0.31764707, 1)
+light_energy = 5.0
+shadow_enabled = true
+spot_range = 10.0
+spot_attenuation = 0.2
+
+[node name="ElevatorArea3D" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.0981894)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ElevatorArea3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2119751, 0)
+shape = SubResource("BoxShape3D_btkhg")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_5iafp")
+}
+autoplay = "close"
+
+[node name="DoorAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = SubResource("AudioStreamRandomizer_2rv35")
+pitch_scale = 0.7
+bus = &"SFX"
+
+[connection signal="body_entered" from="ElevatorArea3D" to="." method="_on_elevator_area_3d_body_entered"]
+[connection signal="body_exited" from="ElevatorArea3D" to="." method="_on_elevator_area_3d_body_exited"]

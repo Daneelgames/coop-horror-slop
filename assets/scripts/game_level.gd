@@ -288,6 +288,51 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	dungeon_tiles_node.add_child(elevator)
 	elevator.owner = get_tree().edited_scene_root
 	
+	# Повернуть лифт к одному из горизонтальных соседей
+	# Преобразовать позицию в координату тайла
+	var TILE_SIZE: Vector3i = Vector3i(4, 2, 4)  # Должно совпадать с TILE_SIZE в procedural_dungeon.gd
+	var elevator_coord: Vector3i = Vector3i(
+		int(round(elevator_pos.x / TILE_SIZE.x)),
+		int(round(elevator_pos.y / TILE_SIZE.y)),
+		int(round(elevator_pos.z / TILE_SIZE.z))
+	)
+	
+	# Найти горизонтальных соседей (только X и Z направления)
+	var horizontal_offsets: Array[Vector3i] = [
+		Vector3i(1, 0, 0),   # Right
+		Vector3i(-1, 0, 0),  # Left
+		Vector3i(0, 0, 1),   # Forward
+		Vector3i(0, 0, -1)   # Backward
+	]
+	
+	var available_neighbors: Array[Vector3i] = []
+	for offset in horizontal_offsets:
+		var neighbor_coord: Vector3i = elevator_coord + offset
+		var neighbor_tile = level_generator._get_tile_at_coord(neighbor_coord)
+		if neighbor_tile != null:
+			available_neighbors.append(offset)
+	
+	# Если есть доступные соседи, выбрать первого и повернуть к нему
+	if available_neighbors.size() > 0:
+		var neighbor_offset: Vector3i = available_neighbors[0]
+		
+		# Вычислить угол поворота в радианах
+		# В Godot: 0° = +Z (вперед), 90° = -X (влево), 180° = -Z (назад), 270° = +X (вправо)
+		var rotation_y: float = 0.0
+		if neighbor_offset.x > 0:  # Right (+X)
+			rotation_y = deg_to_rad(270)  # или -90°
+		elif neighbor_offset.x < 0:  # Left (-X)
+			rotation_y = deg_to_rad(90)
+		elif neighbor_offset.z > 0:  # Forward (+Z)
+			rotation_y = deg_to_rad(0)
+		elif neighbor_offset.z < 0:  # Backward (-Z)
+			rotation_y = deg_to_rad(180)
+		
+		elevator.rotation.y = rotation_y
+		print("_spawn_elevator_at_position: Rotated elevator towards neighbor at offset %s (rotation_y=%.2f°)" % [neighbor_offset, rad_to_deg(rotation_y)])
+	else:
+		print("_spawn_elevator_at_position: No horizontal neighbors found for elevator, using default rotation")
+	
 	# Установить authority на сервер в мультиплеере
 	if multiplayer.has_multiplayer_peer():
 		elevator.set_multiplayer_authority(1)

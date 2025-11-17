@@ -11,6 +11,7 @@ const AI_CHARACTER = preload("res://addons/fpc/ai_character.tscn")
 const TILE_SIZE : Vector3i = Vector3i(4,2,4) # tile's origin is at its bottom center
 enum ROOM_SPAWN_TYPE {RANDOM, CIRCLE}
 @export var room_spawn_type : ROOM_SPAWN_TYPE
+@export var rooms_bounding_box_size_int_tiles : Vector3i = Vector3i(30, 30, 30)
 @export var rooms_circle_spawn_radius_in_tiles : int = 10
 @export var min_distance_between_rooms_in_tiles : int = 10
 @export var max_distance_between_rooms_in_tiles : int = 20
@@ -269,7 +270,14 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 	if not spawned_room_tiles.has(room) or spawned_room_tiles[room].is_empty():
 		return	
 	
-	var tiles_to_spawn: int = room.target_tiles_amount - spawned_room_tiles[room].size()
+	# Count only tiles at the base room height (horizontal tiles)
+	# Vertical tiles are added separately in _expand_rooms_vertically()
+	var base_height_tiles_count: int = 0
+	for tile in spawned_room_tiles[room]:
+		if tile.coord.y == room.base_room_height:
+			base_height_tiles_count += 1
+	
+	var tiles_to_spawn: int = room.target_tiles_amount - base_height_tiles_count
 	if tiles_to_spawn <= 0:
 		return
 	
@@ -280,8 +288,21 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 	var last_step_was_vertical: bool = false
 	var walker_steps: int = 0  # Track current walker steps
 	
-	while tiles_to_spawn > 0 and counter < max_iterations:
+	# Helper function to count tiles at base height
+	var count_base_height_tiles = func() -> int:
+		var count: int = 0
+		for tile in spawned_room_tiles[room]:
+			if tile.coord.y == room.base_room_height:
+				count += 1
+		return count
+	
+	while counter < max_iterations:
 		counter += 1
+		
+		# Check if we've reached target_tiles_amount on base height
+		var current_base_height_tiles: int = count_base_height_tiles.call()
+		if current_base_height_tiles >= room.target_tiles_amount:
+			break  # Stop generating - we've reached the target
 		
 		# Check if walker steps have reached the limit
 		if walker_steps >= room.max_walker_steps_before_changing_walker:
@@ -333,18 +354,45 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 			if _is_coord_free(new_coord):
 				walker_coord = new_coord
 				_spawn_tile_at_coord(room, walker_coord)
-				tiles_to_spawn -= 1
+				# Only count tiles at base height towards target_tiles_amount
+				# Vertical tiles don't count, so we don't decrement tiles_to_spawn here
 				walker_steps += 1  # Increment walker steps
 				last_step_was_vertical = true
 				if counter % 10 == 0:
 					await _await_frame()
+				# Check if we've reached target after spawning
+				if count_base_height_tiles.call() >= room.target_tiles_amount:
+					break
 			else:
-				# Teleport to random spawned tile from this room
-				if spawned_room_tiles[room].size() > 0:
-					var random_tile: DungeonTile = spawned_room_tiles[room][rng.randi() % spawned_room_tiles[room].size()]
-					walker_coord = random_tile.coord
-					walker_steps = 0  # Reset walker steps on teleport
-					last_step_was_vertical = false  # Reset on teleport
+				# Try different directions instead of teleporting
+				# This prevents resetting walker_steps unnecessarily
+				var tried_directions: Array[int] = [direction]
+				var found_new_position: bool = false
+				for attempt in range(3):  # Try up to 3 different vertical directions
+					var alt_direction: int = -direction if attempt == 0 else (1 if rng.randf() < 0.5 else -1)
+					if alt_direction in tried_directions:
+						continue
+					tried_directions.append(alt_direction)
+					var alt_coord: Vector3i = Vector3i(walker_coord.x, walker_coord.y + alt_direction, walker_coord.z)
+					if _is_coord_free(alt_coord):
+						walker_coord = alt_coord
+						_spawn_tile_at_coord(room, walker_coord)
+						# Only count tiles at base height towards target_tiles_amount
+						# Vertical tiles don't count, so we don't decrement tiles_to_spawn here
+						walker_steps += 1  # Increment walker steps
+						last_step_was_vertical = true
+						found_new_position = true
+						if counter % 10 == 0:
+							await _await_frame()
+						# Check if we've reached target after spawning
+						if count_base_height_tiles.call() >= room.target_tiles_amount:
+							break
+						break
+				
+				# Only teleport if we couldn't find any valid vertical position
+				# Increment walker_steps to trigger walker change if stuck
+				if not found_new_position:
+					walker_steps += 1  # Increment to eventually trigger walker change
 		else:
 			# Move horizontally (in X or Z direction)
 			var directions: Array[Vector3i] = [
@@ -353,24 +401,31 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				Vector3i(0, 0, 1),   # Forward
 				Vector3i(0, 0, -1)   # Backward
 			]
-			var direction: Vector3i = directions[rng.randi() % directions.size()]
-			var new_coord: Vector3i = walker_coord + direction
+			_shuffle_array(directions)  # Shuffle to try different directions
+			var found_new_position: bool = false
 			
-			if _is_coord_free(new_coord):
-				walker_coord = new_coord
-				_spawn_tile_at_coord(room, walker_coord)
-				tiles_to_spawn -= 1
-				walker_steps += 1  # Increment walker steps
-				last_step_was_vertical = false
-				if counter % 10 == 0:
-					await _await_frame()
-			else:
-				# Teleport to random spawned tile from this room
-				if spawned_room_tiles[room].size() > 0:
-					var random_tile: DungeonTile = spawned_room_tiles[room][rng.randi() % spawned_room_tiles[room].size()]
-					walker_coord = random_tile.coord
-					walker_steps = 0  # Reset walker steps on teleport
-					last_step_was_vertical = false  # Reset on teleport
+			for direction in directions:
+				var new_coord: Vector3i = walker_coord + direction
+				
+				if _is_coord_free(new_coord):
+					walker_coord = new_coord
+					_spawn_tile_at_coord(room, walker_coord)
+					# Only count tiles at base height towards target_tiles_amount
+					# Horizontal tiles above/below base height don't count
+					walker_steps += 1  # Increment walker steps
+					last_step_was_vertical = false
+					found_new_position = true
+					if counter % 10 == 0:
+						await _await_frame()
+					# Check if we've reached target after spawning (only base height tiles count)
+					if count_base_height_tiles.call() >= room.target_tiles_amount:
+						break
+					break
+			
+			# Only teleport if we couldn't find any valid horizontal position
+			# Increment walker_steps to trigger walker change if stuck
+			if not found_new_position:
+				walker_steps += 1  # Increment to eventually trigger walker change
 
 func _spawn_tile_at_coord(room: ResourceDungeonRoom, coord: Vector3i):
 	var world_position: Vector3 = Vector3(
@@ -1543,7 +1598,16 @@ func spawn_doors():
 			is_valid_door_location = true
 		
 		if is_valid_door_location:
-			candidate_tiles.append(tile)
+			# Check if any neighboring tiles already have doors - skip this candidate if so
+			var has_neighbor_with_door: bool = false
+			var horizontal_neighbors: Array[DungeonTile] = [neighbor_r, neighbor_l, neighbor_f, neighbor_b]
+			for neighbor in horizontal_neighbors:
+				if neighbor != null and spawned_doors_coords.has(neighbor.coord):
+					has_neighbor_with_door = true
+					break
+			
+			if not has_neighbor_with_door:
+				candidate_tiles.append(tile)
 	
 	print("spawn_doors: Checked ", tiles_checked, " tiles, ", tiles_with_floor, " with floors, ", candidate_tiles.size(), " candidates")
 	
@@ -1562,6 +1626,22 @@ func spawn_doors():
 	
 	for i in range(actual_doors_to_spawn):
 		var tile: DungeonTile = candidate_tiles[i]
+		
+		# Check if any neighboring tiles already have doors - skip this candidate if so
+		var neighbor_r: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(1, 0, 0))
+		var neighbor_l: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(-1, 0, 0))
+		var neighbor_f: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, -1))
+		var neighbor_b: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, 1))
+		
+		var has_neighbor_with_door: bool = false
+		var horizontal_neighbors: Array[DungeonTile] = [neighbor_r, neighbor_l, neighbor_f, neighbor_b]
+		for neighbor in horizontal_neighbors:
+			if neighbor != null and spawned_doors_coords.has(neighbor.coord):
+				has_neighbor_with_door = true
+				break
+		
+		if has_neighbor_with_door:
+			continue  # Skip this candidate - it has a neighbor with a door
 		
 		# Check if there's a tile above (doors are 2 tiles tall)
 		var upper_coord: Vector3i = Vector3i(tile.coord.x, tile.coord.y + 1, tile.coord.z)
@@ -1600,10 +1680,10 @@ func spawn_doors():
 		
 		# Determine door orientation based on which directions have neighbors
 		# Check neighbors again to determine orientation
-		var neighbor_r: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(1, 0, 0))
-		var neighbor_l: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(-1, 0, 0))
-		var neighbor_f: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, -1))
-		var neighbor_b: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, 0, 1))
+		neighbor_r = _get_tile_at_coord(tile.coord + Vector3i(1, 0, 0))
+		neighbor_l = _get_tile_at_coord(tile.coord + Vector3i(-1, 0, 0))
+		neighbor_f = _get_tile_at_coord(tile.coord + Vector3i(0, 0, -1))
+		neighbor_b = _get_tile_at_coord(tile.coord + Vector3i(0, 0, 1))
 		
 		var door_rotation_y: float = 0.0
 		if neighbor_r != null and neighbor_l != null:
