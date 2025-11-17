@@ -278,9 +278,46 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 	var counter: int = 0
 	var max_iterations: int = tiles_to_spawn * 1000  # Safety limit
 	var last_step_was_vertical: bool = false
+	var walker_steps: int = 0  # Track current walker steps
 	
 	while tiles_to_spawn > 0 and counter < max_iterations:
 		counter += 1
+		
+		# Check if walker steps have reached the limit
+		if walker_steps >= room.max_walker_steps_before_changing_walker:
+			# Find a new random tile from the room that has at least one free horizontal side
+			var candidate_tiles: Array[DungeonTile] = []
+			for tile in spawned_room_tiles[room]:
+				# Check horizontal neighbors (X and Z directions only)
+				var horizontal_offsets: Array[Vector3i] = [
+					Vector3i(1, 0, 0),   # Right
+					Vector3i(-1, 0, 0),  # Left
+					Vector3i(0, 0, 1),   # Forward
+					Vector3i(0, 0, -1)   # Backward
+				]
+				var horizontal_neighbor_count: int = 0
+				for offset in horizontal_offsets:
+					var neighbor_coord: Vector3i = tile.coord + offset
+					if not _is_coord_free(neighbor_coord):
+						horizontal_neighbor_count += 1
+				
+				# Add tile if it has at least one free horizontal side (horizontal_neighbor_count < 4)
+				if horizontal_neighbor_count < 4:
+					candidate_tiles.append(tile)
+			
+			# If we found candidate tiles, pick one randomly
+			if candidate_tiles.size() > 0:
+				var random_tile: DungeonTile = candidate_tiles[rng.randi() % candidate_tiles.size()]
+				walker_coord = random_tile.coord
+				walker_steps = 0  # Reset walker steps
+				last_step_was_vertical = false  # Reset on teleport
+			else:
+				# Fallback: teleport to random spawned tile from this room if no candidates found
+				if spawned_room_tiles[room].size() > 0:
+					var random_tile: DungeonTile = spawned_room_tiles[room][rng.randi() % spawned_room_tiles[room].size()]
+					walker_coord = random_tile.coord
+					walker_steps = 0  # Reset walker steps
+					last_step_was_vertical = false  # Reset on teleport
 		
 		# Decide if walker moves vertically or horizontally
 		# Never make two vertical steps in a row
@@ -297,6 +334,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				walker_coord = new_coord
 				_spawn_tile_at_coord(room, walker_coord)
 				tiles_to_spawn -= 1
+				walker_steps += 1  # Increment walker steps
 				last_step_was_vertical = true
 				if counter % 10 == 0:
 					await _await_frame()
@@ -305,6 +343,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				if spawned_room_tiles[room].size() > 0:
 					var random_tile: DungeonTile = spawned_room_tiles[room][rng.randi() % spawned_room_tiles[room].size()]
 					walker_coord = random_tile.coord
+					walker_steps = 0  # Reset walker steps on teleport
 					last_step_was_vertical = false  # Reset on teleport
 		else:
 			# Move horizontally (in X or Z direction)
@@ -321,6 +360,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				walker_coord = new_coord
 				_spawn_tile_at_coord(room, walker_coord)
 				tiles_to_spawn -= 1
+				walker_steps += 1  # Increment walker steps
 				last_step_was_vertical = false
 				if counter % 10 == 0:
 					await _await_frame()
@@ -329,6 +369,7 @@ func _run_random_walker_for_room(room: ResourceDungeonRoom):
 				if spawned_room_tiles[room].size() > 0:
 					var random_tile: DungeonTile = spawned_room_tiles[room][rng.randi() % spawned_room_tiles[room].size()]
 					walker_coord = random_tile.coord
+					walker_steps = 0  # Reset walker steps on teleport
 					last_step_was_vertical = false  # Reset on teleport
 
 func _spawn_tile_at_coord(room: ResourceDungeonRoom, coord: Vector3i):
