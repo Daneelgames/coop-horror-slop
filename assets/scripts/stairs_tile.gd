@@ -4,6 +4,9 @@ class_name StairsTile
 @onready var csg_linear_stairs: CSGCombiner3D = $CSGLinearStairs
 @onready var stair_raycast_origin: Node3D = $StairRaycastOrigin
 @onready var stair_raycast_direction: Node3D = $StairRaycastDirection
+@onready var stair_end_platform: Node3D = %Platform
+
+signal tunnel_requested(stairs_tile: StairsTile, origin_global: Vector3, target_global: Vector3)
 
 
 const STAIRS_AMOUNT_PER_TILE = 16
@@ -39,6 +42,10 @@ func configure_stairs_height(floor_height):
 		# Добавляем оффсет Vector3(0, 0.5, 0.5)
 		var offset = Vector3(0, 1, 1)
 		stair_raycast_direction.position = last_stair_stairs_tile_pos + offset
+		
+		# Располагаем платформу перекрытия щели между лестницей и полом верхнего этажа
+		var platform_offset = Vector3(0, 0, 1.12)
+		stair_end_platform.position = last_stair_stairs_tile_pos + platform_offset
 	
 	# На сервере выполнить рейкаст и удаление солидов
 	# Ждем еще один фрейм, чтобы убедиться, что все обновлено
@@ -71,6 +78,7 @@ func _raycast_and_remove_solids():
 	
 	# Выполняем множественный рейкаст для получения всех объектов на пути
 	# Удаляем объекты сразу в каждом цикле
+	var removed_anything := false
 	var current_origin = origin_global
 	var max_iterations = 100  # Защита от бесконечного цикла
 	var iteration = 0
@@ -98,6 +106,7 @@ func _raycast_and_remove_solids():
 		if is_instance_valid(collider):
 			print("  -> Removing solid object: ", collider.name, " at ", collider.global_position)
 			collider.queue_free()
+			removed_anything = true
 			# Ждем кадр после удаления для синхронизации
 			await get_tree().process_frame
 		
@@ -113,6 +122,9 @@ func _raycast_and_remove_solids():
 		
 		iteration += 1
 	
+	if removed_anything:
+		emit_signal("tunnel_requested", self, origin_global, target_global)
+
 
 func _is_solid_object(obj: Node) -> bool:
 	# Проверяем, является ли объект солидом (стена, пол, потолок)

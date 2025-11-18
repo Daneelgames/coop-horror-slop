@@ -1685,6 +1685,7 @@ func _spawn_stairs_at_coord(coord: Vector3i, floor_height: int):
 	var stairs_tile: StairsTile = STAIRS_1.instantiate()
 	stairs_tile.position = world_position
 	stairs_tile.name = "Stairs_%d_%d_%d" % [coord.x, coord.y, coord.z]
+	stairs_tile.tunnel_requested.connect(_on_stairs_tunnel_requested)
 
 	dungeon_tiles.add_child(stairs_tile)
 	stairs_tile.owner = _get_edited_scene_root()
@@ -1694,3 +1695,169 @@ func _spawn_stairs_at_coord(coord: Vector3i, floor_height: int):
 
 	# Записать в словарь спавненных лестниц
 	spawned_stairs_coords[coord] = stairs_tile
+
+
+func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector3, target_global: Vector3):
+	var start_coord: Vector3i = _world_to_tile_coord(origin_global)
+	var end_coord: Vector3i = _world_to_tile_coord(target_global)
+	
+	if start_coord == end_coord:
+		return
+	
+	var base_path_coords: Array[Vector3i] = _create_stairs_tunnel_path(start_coord, end_coord)
+	if base_path_coords.is_empty():
+		return
+	
+	var combined_path_coords: Array[Vector3i] = base_path_coords.duplicate()
+	var pending_doors: Array = []
+	
+	var end_tile: DungeonTile = _get_tile_at_coord(end_coord)
+	var end_tile_room = all_spawned_tiles.get(end_tile, null) if end_tile else null
+	if end_tile_room == null or end_tile_room == tunnel_room:
+		var nearest_room_tile: DungeonTile = _find_nearest_room_tile_on_floor(end_coord, end_coord.y)
+		if nearest_room_tile != null:
+			var top_adjacent_coord: Vector3i = _find_best_adjacent_position(nearest_room_tile.coord, end_coord, nearest_room_tile.coord.y, [])
+			if top_adjacent_coord != nearest_room_tile.coord:
+				var connection_path: Array[Vector3i] = _create_stairs_tunnel_path(end_coord, top_adjacent_coord)
+				if connection_path.is_empty():
+					combined_path_coords.append(top_adjacent_coord)
+				else:
+					for coord in connection_path:
+						combined_path_coords.append(coord)
+				pending_doors.append({
+					"room_tile": nearest_room_tile,
+					"tunnel_coord": top_adjacent_coord
+				})
+	
+	var tunnel_coords: Array[Vector3i] = []
+	var seen: Dictionary = {}
+	var base_with_support = _expand_path_with_vertical_support(base_path_coords)
+	for coord in base_with_support:
+		_append_unique_coord(tunnel_coords, seen, coord)
+	for coord in combined_path_coords:
+		_append_unique_coord(tunnel_coords, seen, coord)
+	if tunnel_coords.is_empty():
+		return
+	
+	var created_tiles: Array[DungeonTile] = []
+	for coord in tunnel_coords:
+		var tile_info = _ensure_tunnel_tile_at_coord(coord)
+		var tunnel_tile: DungeonTile = tile_info.get("tile", null)
+		if tunnel_tile == null:
+			continue
+		if tile_info.get("created", false):
+			created_tiles.append(tunnel_tile)
+	
+	for tile in created_tiles:
+		var neighbors = _get_neighbor_tiles(tile)
+		tile.configure_tile_based_on_neighbours(neighbors)
+	
+	for door_request in pending_doors:
+		var room_tile: DungeonTile = door_request.get("room_tile", null)
+		var tunnel_coord: Vector3i = door_request.get("tunnel_coord", Vector3i.ZERO)
+		if room_tile == null:
+			continue
+		var tunnel_tile = _get_tile_at_coord(tunnel_coord)
+		if tunnel_tile == null:
+			continue
+		var offset = tunnel_tile.coord - room_tile.coord
+		if (abs(offset.x) + abs(offset.y) + abs(offset.z)) != 1:
+			continue
+		await _spawn_door_between_tiles(room_tile, tunnel_tile, offset, room_tile.coord.y)
+
+
+func _find_nearest_room_tile_on_floor(target_coord: Vector3i, floor_y: int) -> DungeonTile:
+	var closest_tile: DungeonTile = null
+	var min_distance: float = INF
+	for tile in all_spawned_tiles.keys():
+		if tile.coord.y != floor_y:
+			continue
+		var room = all_spawned_tiles.get(tile, null)
+		if room == null or room == tunnel_room:
+			continue
+		var distance = (tile.coord - target_coord).length()
+		if distance < min_distance:
+			min_distance = distance
+			closest_tile = tile
+	return closest_tile
+
+
+func _create_stairs_tunnel_path(start_coord: Vector3i, end_coord: Vector3i) -> Array[Vector3i]:
+	var coords: Array[Vector3i] = []
+	var delta: Vector3i = end_coord - start_coord
+	var steps: int = max(abs(delta.x), abs(delta.y), abs(delta.z))
+	if steps == 0:
+		return coords
+	
+	var last_coord: Vector3i = start_coord
+	for i in range(1, steps + 1):
+		var t := float(i) / float(steps)
+		var sample := Vector3(
+			start_coord.x + delta.x * t,
+			start_coord.y + delta.y * t,
+			start_coord.z + delta.z * t
+		)
+		var grid_coord := Vector3i(
+			int(round(sample.x)),
+			int(round(sample.y)),
+			int(round(sample.z))
+		)
+		
+		if grid_coord == last_coord:
+			continue
+		
+		if coords.is_empty() or coords.back() != grid_coord:
+			coords.append(grid_coord)
+			last_coord = grid_coord
+	
+	return coords
+
+
+func _ensure_tunnel_tile_at_coord(coord: Vector3i) -> Dictionary:
+	var existing_tile = _get_tile_at_coord(coord)
+	if existing_tile != null:
+		return {"tile": existing_tile, "created": false}
+	
+	var world_position := Vector3(
+		coord.x * TILE_SIZE.x,
+		coord.y * TILE_SIZE.y,
+		coord.z * TILE_SIZE.z
+	)
+	
+	var tunnel_tile: DungeonTile = DUNGEON_TILE.instantiate()
+	tunnel_tile.position = world_position
+	tunnel_tile.coord = coord
+	dungeon_tiles.add_child(tunnel_tile)
+	tunnel_tile.owner = _get_edited_scene_root()
+	
+	all_spawned_tiles[tunnel_tile] = tunnel_room
+	room_assignment[tunnel_tile] = tunnel_room
+	
+	return {"tile": tunnel_tile, "created": true}
+
+
+func _world_to_tile_coord(world_pos: Vector3) -> Vector3i:
+	return Vector3i(
+		int(round(world_pos.x / float(TILE_SIZE.x))),
+		int(round(world_pos.y / float(TILE_SIZE.y))),
+		int(round(world_pos.z / float(TILE_SIZE.z)))
+	)
+
+
+func _expand_path_with_vertical_support(base_path: Array[Vector3i]) -> Array[Vector3i]:
+	var coords: Array[Vector3i] = []
+	var seen: Dictionary = {}
+	for coord in base_path:
+		_append_unique_coord(coords, seen, coord)
+		for depth in range(1, 3):
+			var support_coord = coord + Vector3i(0, -depth, 0)
+			_append_unique_coord(coords, seen, support_coord)
+	return coords
+
+
+func _append_unique_coord(coords: Array[Vector3i], seen: Dictionary, coord: Vector3i) -> void:
+	var key = "%d_%d_%d" % [coord.x, coord.y, coord.z]
+	if seen.has(key):
+		return
+	seen[key] = true
+	coords.append(coord)

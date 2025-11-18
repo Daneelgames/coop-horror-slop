@@ -38,7 +38,7 @@ script = ExtResource("12_0ts1u")
 floors_heights = Array[int]([2, 1, 3, 1])
 min_stairs_per_floor = 2
 max_stairs_per_floor = 2
-dungeon_seed = 1763447986
+dungeon_seed = 1763460270
 
 [node name="DungeonTiles" type="Node3D" parent="MultistoryBuildingDungeon"]
 unique_name_in_owner = true

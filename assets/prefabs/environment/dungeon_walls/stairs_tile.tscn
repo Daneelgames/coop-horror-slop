@@ -23,3 +23,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35776672, -2.1601546)
 
 [node name="StairRaycastDirection" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.482561, 2.5449781)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.048171997, -1.6123302)
+use_collision = true
+size = Vector3(1.9990234, 0.10220337, 0.7480469)
+material = ExtResource("3_5g42u")
+
+[node name="Platform" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0098689, 3.120898)
+
+[node name="StairEndPlatformCSGBox3D" type="CSGBox3D" parent="Platform"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.134, 0)
+use_collision = true
+size = Vector3(3.711914, 0.3997345, 2.0371094)
+material = ExtResource("3_5g42u")
