@@ -171,10 +171,10 @@ func generate_dungeon():
 
 	await spawn_stairs_between_floors()
 	await _await_frame()
-	await _connect_dead_end_tiles_with_doors()
+	await _connect_dead_end_tiles_with_doors(floor_y_positions)
 
 	# Финальный проход - спавн заблокированных дверей на краях открытых в пустоту направлений
-	await _spawn_blocked_doors_on_open_edges()
+	await _spawn_blocked_doors_on_open_edges(floor_y_positions)
 	await _await_frame()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
@@ -198,8 +198,10 @@ func _generate_floor(floor_y: int, floor_height: int):
 	var first_room_z_start: int = - first_room_depth / 2
 	var first_room_x_end: int = first_room_x_start + first_room_width
 	var first_room_z_end: int = first_room_z_start + first_room_depth
+	# Генерировать случайную высоту для первой комнаты от 1 до floor_height
+	var first_room_height: int = rng.randi_range(1, floor_height)
 	
-	var first_room = await _generate_apartment(first_room_x_start, first_room_x_end, first_room_z_start, first_room_z_end, floor_y, floor_height)
+	var first_room = await _generate_apartment(first_room_x_start, first_room_x_end, first_room_z_start, first_room_z_end, floor_y, first_room_height)
 	if first_room != null:
 		apartments_on_floor.append(first_room)
 		rooms_data.append({
@@ -222,6 +224,8 @@ func _generate_floor(floor_y: int, floor_height: int):
 		# Определить размер новой комнаты
 		var room_width: int = rng.randi_range(apartment_side_size_min_max.x, apartment_side_size_min_max.y)
 		var room_depth: int = rng.randi_range(apartment_side_size_min_max.x, apartment_side_size_min_max.y)
+		# Генерировать случайную высоту для комнаты от 1 до floor_height
+		var room_height: int = rng.randi_range(1, floor_height)
 		
 		# Найти позицию для новой комнаты по касательной к существующим
 		var room_pos: Dictionary = _find_tangent_position(rooms_data, room_width, room_depth)
@@ -231,7 +235,7 @@ func _generate_floor(floor_y: int, floor_height: int):
 			var apartment_room = await _generate_apartment(
 				room_pos.x_start, room_pos.x_end,
 				room_pos.z_start, room_pos.z_end,
-				floor_y, floor_height
+				floor_y, room_height
 			)
 			
 			if apartment_room != null:
@@ -1385,7 +1389,7 @@ func _get_dead_end_tiles_with_open_direction() -> Array[Dictionary]:
 
 	return dead_end_tiles
 
-func _spawn_blocked_doors_on_open_edges():
+func _spawn_blocked_doors_on_open_edges(valid_floor_ys: Array[int]):
 	# Финальный проход по всем тайлам - спавн заблокированных дверей на краях открытых в пустоту направлений
 	var blocked_door_prefab = load("res://assets/prefabs/environment/dungeon_doors/door_blocked_multistory_building.tscn")
 	if blocked_door_prefab == null:
@@ -1395,6 +1399,10 @@ func _spawn_blocked_doors_on_open_edges():
 	var doors_spawned = 0
 
 	for tile in all_spawned_tiles.keys():
+		# Проверить, что тайл находится на валидном уровне этажа
+		if not valid_floor_ys.has(tile.coord.y):
+			continue
+
 		# Определить открытые направления (где нет стен)
 		var open_directions: Array[String] = []
 		if tile.wall_f == null or tile.wall_f.is_queued_for_deletion():
@@ -1706,21 +1714,41 @@ func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector
 					})
 					existing_room_connection_created = true
 
-	if not existing_room_connection_created and (end_tile_room == null or end_tile_room == tunnel_room):
 		var nearest_room_tile: DungeonTile = _find_nearest_room_tile_on_floor(end_coord, end_coord.y)
 		if nearest_room_tile != null:
 			var top_adjacent_coord: Vector3i = _find_best_adjacent_position(nearest_room_tile.coord, end_coord, nearest_room_tile.coord.y, [])
 			if top_adjacent_coord != nearest_room_tile.coord:
-				var connection_path: Array[Vector3i] = _create_stairs_tunnel_path(end_coord, top_adjacent_coord, allow_diagonal)
+				# Use orthogonal path for horizontal connection to ensure walkability (90 degree turns)
+				var connection_path: Array[Vector3i] = _create_orthogonal_path(end_coord, top_adjacent_coord, end_coord.y)
+				
 				if connection_path.is_empty():
+					# Fallback if path generation fails (shouldn't happen often with orthogonal path unless blocked)
 					combined_path_coords.append(top_adjacent_coord)
 				else:
 					for coord in connection_path:
 						combined_path_coords.append(coord)
+				
 				pending_doors.append({
 					"room_tile": nearest_room_tile,
 					"tunnel_coord": top_adjacent_coord
 				})
+
+				# Spawn debug marker at the end of the tunnel
+				var debug_sphere = MeshInstance3D.new()
+				var sphere_mesh = SphereMesh.new()
+				sphere_mesh.radius = 0.5
+				sphere_mesh.height = 1.0
+				debug_sphere.mesh = sphere_mesh
+				debug_sphere.name = "STAIR TUNNEL DEAD END"
+				
+				var marker_pos = Vector3(
+					top_adjacent_coord.x * TILE_SIZE.x,
+					top_adjacent_coord.y * TILE_SIZE.y + 1.0, # Slightly above floor
+					top_adjacent_coord.z * TILE_SIZE.z
+				)
+				debug_sphere.position = marker_pos
+				dungeon_tiles.add_child(debug_sphere)
+				debug_sphere.owner = _get_edited_scene_root()
 	
 	var tunnel_coords: Array[Vector3i] = []
 	var seen: Dictionary = {}
@@ -1936,7 +1964,7 @@ func _check_door_exists(tile1: DungeonTile, tile2: DungeonTile) -> bool:
 	return spawned_doors_coords_new.has(door_key1) or spawned_doors_coords_new.has(door_key2)
 
 
-func _connect_dead_end_tiles_with_doors():
+func _connect_dead_end_tiles_with_doors(valid_floor_ys: Array[int]):
 	var dead_end_tiles = _get_dead_end_tiles_with_open_direction()
 	print("DEBUG: Found ", dead_end_tiles.size(), " dead-end tiles with floors")
 	
@@ -1946,6 +1974,11 @@ func _connect_dead_end_tiles_with_doors():
 	for dead_end in dead_end_tiles:
 		var tile: DungeonTile = dead_end["tile"]
 		var open_direction: String = dead_end["open_direction"]
+		
+		# Проверить, что тайл находится на валидном уровне этажа
+		if not valid_floor_ys.has(tile.coord.y):
+			doors_skipped += 1
+			continue
 		
 		# Проверить, что у тайла есть пол
 		if tile.floor == null or tile.floor.is_queued_for_deletion():
@@ -1978,26 +2011,45 @@ func _connect_dead_end_tiles_with_doors():
 				skip_reasons.append("  %s: different Y-level (tile=%d, neighbor=%d)" % [direction, tile.coord.y, neighbor_tile.coord.y])
 				continue
 			
-			# Пропустить, если дверь уже существует
-			if _check_door_exists(tile, neighbor_tile):
-				skip_reasons.append("  %s: door already exists" % direction)
-				continue
+			# Если это открытое направление (open_direction), мы ОБЯЗАНЫ убрать стену у соседа
+			if direction == open_direction:
+				# Удалить стену у текущего тайла (на всякий случай, хотя она и так должна быть открыта)
+				_remove_wall_in_direction(tile, direction)
+				
+				# Удалить противоположную стену у соседа
+				var opposite_direction = ""
+				match direction:
+					"forward": opposite_direction = "back"
+					"right": opposite_direction = "left"
+					"back": opposite_direction = "forward"
+					"left": opposite_direction = "right"
+				
+				if opposite_direction != "":
+					_remove_wall_in_direction(neighbor_tile, opposite_direction)
 			
-			# Найден подходящий сосед! Удалить стену в этом направлении и заспавнить дверь
-			_remove_wall_in_direction(tile, direction)
-			# Также удалить противоположную стену у соседа
-			var opposite_direction = ""
-			match direction:
-				"forward":
-					opposite_direction = "back"
-				"right":
-					opposite_direction = "left"
-				"back":
-					opposite_direction = "forward"
-				"left":
-					opposite_direction = "right"
-			if opposite_direction != "":
-				_remove_wall_in_direction(neighbor_tile, opposite_direction)
+			# Проверить, если дверь уже существует
+			if _check_door_exists(tile, neighbor_tile):
+				# Если это было открытое направление, мы уже убрали стены, так что все ок.
+				# Если это другое направление, то просто пропускаем.
+				if direction == open_direction:
+					door_spawned = true # Считаем что "успех", так как проход обеспечен
+					break
+				else:
+					skip_reasons.append("  %s: door already exists" % direction)
+					continue
+			
+			# Если дошли сюда - двери нет, надо спавнить
+			# Удалить стены (если это не open_direction, то мы их еще не удалили)
+			if direction != open_direction:
+				_remove_wall_in_direction(tile, direction)
+				var opposite_direction = ""
+				match direction:
+					"forward": opposite_direction = "back"
+					"right": opposite_direction = "left"
+					"back": opposite_direction = "forward"
+					"left": opposite_direction = "right"
+				if opposite_direction != "":
+					_remove_wall_in_direction(neighbor_tile, opposite_direction)
 			
 			await _spawn_door_between_tiles(tile, neighbor_tile, neighbor_offset, tile.coord.y)
 			doors_created += 1
