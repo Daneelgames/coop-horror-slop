@@ -1,6 +1,6 @@
 @tool
 extends CSGCombiner3D
-
+class_name CSGLinearStairs3D
 
 # Properties
 @export_category("Stairs Config")

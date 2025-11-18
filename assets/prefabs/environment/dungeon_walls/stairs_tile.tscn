@@ -10,6 +10,7 @@ script = ExtResource("1_dovlt")
 [node name="CSGLinearStairs" type="CSGCombiner3D" parent="."]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, -1.1444887)
 use_collision = true
+collision_layer = 4
 collision_mask = 0
 script = ExtResource("2_swxl6")
 stairs_amount = 16
@@ -19,14 +20,19 @@ material = ExtResource("3_5g42u")
 metadata/_custom_type_script = "uid://cyq3us8aur1s6"
 
 [node name="StairRaycastOrigin" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35776672, -2.1601546)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4731116, -2.1601546)
 
-[node name="StairRaycastDirection" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.482561, 2.5449781)
+[node name="DiagonalTunnelRaycastDirection" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6382322, 2.5449781)
+
+[node name="HorizontalTunnelRaycastDirection" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6382322, 2.5449781)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.048171997, -1.6123302)
 use_collision = true
+collision_layer = 4
+collision_mask = 0
 size = Vector3(1.9990234, 0.10220337, 0.7480469)
 material = ExtResource("3_5g42u")
 
@@ -37,5 +43,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0098689, 3.120898)
 [node name="StairEndPlatformCSGBox3D" type="CSGBox3D" parent="Platform"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.134, 0)
 use_collision = true
-size = Vector3(3.711914, 0.3997345, 2.0371094)
+collision_layer = 4
+collision_mask = 0
+size = Vector3(4.2, 0.4, 2.037)
 material = ExtResource("3_5g42u")

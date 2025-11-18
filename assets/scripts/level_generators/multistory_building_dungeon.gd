@@ -168,38 +168,8 @@ func generate_dungeon():
 	await _configure_all_tiles_with_room_check()
 	await _await_frame()
 
-	# Обработка тупиковых тайлов - создание дверей
-	var dead_end_tiles = _get_dead_end_tiles_with_open_direction()
-
-	for dead_end in dead_end_tiles:
-		var tile: DungeonTile = dead_end["tile"]
-		var open_direction: String = dead_end["open_direction"]
-
-		# Определить координаты соседа за открытой стеной
-		var neighbor_offset: Vector3i = Vector3i(0, 0, 0)
-		match open_direction:
-			"forward":
-				neighbor_offset = Vector3i(0, 0, -1)
-			"right":
-				neighbor_offset = Vector3i(1, 0, 0)
-			"back":
-				neighbor_offset = Vector3i(0, 0, 1)
-			"left":
-				neighbor_offset = Vector3i(-1, 0, 0)
-
-		var neighbor_coord = tile.coord + neighbor_offset
-		var neighbor_tile = _get_tile_at_coord(neighbor_coord)
-
-		# Если сосед существует, создать дверь между тайлами
-		if neighbor_tile != null:
-			# Проверить, что у обоих тайлов есть пол (не висячие тайлы)
-			if tile.floor == null or tile.floor.is_queued_for_deletion() or neighbor_tile.floor == null or neighbor_tile.floor.is_queued_for_deletion():
-				continue
-
-			await _spawn_door_between_tiles(tile, neighbor_tile, neighbor_offset, tile.coord.y)
-
-	await _await_frame()
 	await spawn_stairs_between_floors()
+	await _connect_dead_end_tiles_with_doors()
 
 	# Финальный проход - спавн заблокированных дверей на краях открытых в пустоту направлений
 	await _spawn_blocked_doors_on_open_edges()
@@ -750,19 +720,19 @@ func _spawn_door_between_tiles(tile1: DungeonTile, tile2: DungeonTile, offset: V
 		if neighbor_below.coord.y >= floor_y:
 			return
 	
-	# Проверить, что над тайлом есть тайл (двери 2 тайла высотой)
-	var upper_coord: Vector3i = Vector3i(door_tile.coord.x, door_tile.coord.y + 1, door_tile.coord.z)
-	var upper_tile: DungeonTile = _get_tile_at_coord(upper_coord)
+	# # Проверить, что над тайлом есть тайл (двери 2 тайла высотой)
+	# var upper_coord: Vector3i = Vector3i(door_tile.coord.x, door_tile.coord.y + 1, door_tile.coord.z)
+	# var upper_tile: DungeonTile = _get_tile_at_coord(upper_coord)
 	
-	if upper_tile == null:
-		# Создать тайл сверху
-		var room: ResourceDungeonRoom = all_spawned_tiles.get(door_tile, null)
-		if room != null:
-			_spawn_tile_at_coord_for_door(room, upper_coord)
-			upper_tile = _get_tile_at_coord(upper_coord)
+	# if upper_tile == null:
+	# 	# Создать тайл сверху
+	# 	var room: ResourceDungeonRoom = all_spawned_tiles.get(door_tile, null)
+	# 	if room != null:
+	# 		_spawn_tile_at_coord_for_door(room, upper_coord)
+	# 		upper_tile = _get_tile_at_coord(upper_coord)
 	
-	if upper_tile == null:
-		return
+	# if upper_tile == null:
+	# 	return
 	
 	# Проверить, что здесь еще нет двери между этими тайлами
 	var test_coord1 = tile1.coord
@@ -1388,6 +1358,10 @@ func _get_dead_end_tiles_with_open_direction() -> Array[Dictionary]:
 	var dead_end_tiles: Array[Dictionary] = []
 
 	for tile in all_spawned_tiles.keys():
+		# Пропустить тайлы без пола (висячие тайлы)
+		if tile.floor == null or tile.floor.is_queued_for_deletion():
+			continue
+		
 		# Проверить, сколько стен у тайла активно
 		var active_walls: Array[String] = []
 		if tile.wall_f != null and not tile.wall_f.is_queued_for_deletion():
@@ -1697,28 +1671,55 @@ func _spawn_stairs_at_coord(coord: Vector3i, floor_height: int):
 	spawned_stairs_coords[coord] = stairs_tile
 
 
-func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector3, target_global: Vector3):
+const STAIRS_TUNNEL_TYPE_HORIZONTAL := "horizontal"
+
+
+func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector3, target_global: Vector3, tunnel_type: String):
 	var start_coord: Vector3i = _world_to_tile_coord(origin_global)
 	var end_coord: Vector3i = _world_to_tile_coord(target_global)
+	var original_end_coord: Vector3i = end_coord
 	
 	if start_coord == end_coord:
 		return
 	
-	var base_path_coords: Array[Vector3i] = _create_stairs_tunnel_path(start_coord, end_coord)
+	var allow_diagonal := tunnel_type != STAIRS_TUNNEL_TYPE_HORIZONTAL
+	var base_path_coords: Array[Vector3i] = _create_stairs_tunnel_path(start_coord, end_coord, allow_diagonal)
 	if base_path_coords.is_empty():
 		return
 	
 	var combined_path_coords: Array[Vector3i] = base_path_coords.duplicate()
 	var pending_doors: Array = []
+	var existing_room_connection_created := false
 	
+	### ХУЙ ЗНАЕТ ПОМОЖЕТ НЕТ
+	end_coord.y -= 1
+	#########################################################
+	# ПОМОГЛО!!!
+	#########################################################
+
 	var end_tile: DungeonTile = _get_tile_at_coord(end_coord)
 	var end_tile_room = all_spawned_tiles.get(end_tile, null) if end_tile else null
-	if end_tile_room == null or end_tile_room == tunnel_room:
+
+	if tunnel_type == STAIRS_TUNNEL_TYPE_HORIZONTAL:
+		var room_tile_at_target: DungeonTile = _get_tile_at_coord(original_end_coord)
+		var room_at_target = all_spawned_tiles.get(room_tile_at_target, null) if room_tile_at_target else null
+		if room_tile_at_target != null and room_at_target != tunnel_room:
+			var connecting_coord = _get_last_coord_before_target(base_path_coords, original_end_coord)
+			if connecting_coord != null:
+				var offset = room_tile_at_target.coord - connecting_coord
+				if (abs(offset.x) + abs(offset.y) + abs(offset.z)) == 1:
+					pending_doors.append({
+						"room_tile": room_tile_at_target,
+						"tunnel_coord": connecting_coord
+					})
+					existing_room_connection_created = true
+
+	if not existing_room_connection_created and (end_tile_room == null or end_tile_room == tunnel_room):
 		var nearest_room_tile: DungeonTile = _find_nearest_room_tile_on_floor(end_coord, end_coord.y)
 		if nearest_room_tile != null:
 			var top_adjacent_coord: Vector3i = _find_best_adjacent_position(nearest_room_tile.coord, end_coord, nearest_room_tile.coord.y, [])
 			if top_adjacent_coord != nearest_room_tile.coord:
-				var connection_path: Array[Vector3i] = _create_stairs_tunnel_path(end_coord, top_adjacent_coord)
+				var connection_path: Array[Vector3i] = _create_stairs_tunnel_path(end_coord, top_adjacent_coord, allow_diagonal)
 				if connection_path.is_empty():
 					combined_path_coords.append(top_adjacent_coord)
 				else:
@@ -1782,8 +1783,11 @@ func _find_nearest_room_tile_on_floor(target_coord: Vector3i, floor_y: int) -> D
 	return closest_tile
 
 
-func _create_stairs_tunnel_path(start_coord: Vector3i, end_coord: Vector3i) -> Array[Vector3i]:
+func _create_stairs_tunnel_path(start_coord: Vector3i, end_coord: Vector3i, allow_diagonal: bool = true) -> Array[Vector3i]:
 	var coords: Array[Vector3i] = []
+	if not allow_diagonal:
+		return _create_manhattan_path(start_coord, end_coord)
+	
 	var delta: Vector3i = end_coord - start_coord
 	var steps: int = max(abs(delta.x), abs(delta.y), abs(delta.z))
 	if steps == 0:
@@ -1811,6 +1815,31 @@ func _create_stairs_tunnel_path(start_coord: Vector3i, end_coord: Vector3i) -> A
 			last_coord = grid_coord
 	
 	return coords
+
+
+func _create_manhattan_path(start_coord: Vector3i, end_coord: Vector3i) -> Array[Vector3i]:
+	var coords: Array[Vector3i] = []
+	var current: Vector3i = start_coord
+	while current != end_coord:
+		if current.x != end_coord.x:
+			current.x += _step_towards(current.x, end_coord.x)
+		elif current.z != end_coord.z:
+			current.z += _step_towards(current.z, end_coord.z)
+		elif current.y != end_coord.y:
+			current.y += _step_towards(current.y, end_coord.y)
+		
+		if coords.is_empty() or coords.back() != current:
+			coords.append(current)
+	
+	return coords
+
+
+func _step_towards(current: int, target: int) -> int:
+	if target > current:
+		return 1
+	elif target < current:
+		return -1
+	return 0
 
 
 func _ensure_tunnel_tile_at_coord(coord: Vector3i) -> Dictionary:
@@ -1861,3 +1890,62 @@ func _append_unique_coord(coords: Array[Vector3i], seen: Dictionary, coord: Vect
 		return
 	seen[key] = true
 	coords.append(coord)
+
+
+func _get_last_coord_before_target(path: Array[Vector3i], target_coord: Vector3i):
+	if path.is_empty():
+		return null
+	for i in range(path.size() - 1, -1, -1):
+		var coord: Vector3i = path[i]
+		if coord != target_coord:
+			return coord
+	return null
+
+
+func _connect_dead_end_tiles_with_doors():
+	var dead_end_tiles = _get_dead_end_tiles_with_open_direction()
+	print("DEBUG: Found ", dead_end_tiles.size(), " dead-end tiles with floors")
+	
+	var doors_created = 0
+	var doors_skipped = 0
+	
+	for dead_end in dead_end_tiles:
+		var tile: DungeonTile = dead_end["tile"]
+		var open_direction: String = dead_end["open_direction"]
+		
+		var neighbor_offset: Vector3i = Vector3i.ZERO
+		match open_direction:
+			"forward":
+				neighbor_offset = Vector3i(0, 0, -1)
+			"right":
+				neighbor_offset = Vector3i(1, 0, 0)
+			"back":
+				neighbor_offset = Vector3i(0, 0, 1)
+			"left":
+				neighbor_offset = Vector3i(-1, 0, 0)
+		
+		var neighbor_coord = tile.coord + neighbor_offset
+		var neighbor_tile = _get_tile_at_coord(neighbor_coord)
+		
+		if neighbor_tile == null:
+			doors_skipped += 1
+			continue
+		
+		if tile.floor == null or tile.floor.is_queued_for_deletion():
+			doors_skipped += 1
+			continue
+		if neighbor_tile.floor == null or neighbor_tile.floor.is_queued_for_deletion():
+			doors_skipped += 1
+			continue
+		
+		# Проверить, не существует ли уже дверь между этими тайлами
+		var door_key1 = "%d_%d_%d-%d_%d_%d" % [tile.coord.x, tile.coord.y, tile.coord.z, neighbor_tile.coord.x, neighbor_tile.coord.y, neighbor_tile.coord.z]
+		var door_key2 = "%d_%d_%d-%d_%d_%d" % [neighbor_tile.coord.x, neighbor_tile.coord.y, neighbor_tile.coord.z, tile.coord.x, tile.coord.y, tile.coord.z]
+		if spawned_doors_coords_new.has(door_key1) or spawned_doors_coords_new.has(door_key2):
+			doors_skipped += 1
+			continue
+		
+		await _spawn_door_between_tiles(tile, neighbor_tile, neighbor_offset, tile.coord.y)
+		doors_created += 1
+	
+	print("DEBUG: Created ", doors_created, " doors for dead-end tiles, skipped ", doors_skipped)

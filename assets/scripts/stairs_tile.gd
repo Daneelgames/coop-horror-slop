@@ -3,16 +3,21 @@ extends Node3D
 class_name StairsTile
 @onready var csg_linear_stairs: CSGCombiner3D = $CSGLinearStairs
 @onready var stair_raycast_origin: Node3D = $StairRaycastOrigin
-@onready var stair_raycast_direction: Node3D = $StairRaycastDirection
+@onready var stair_diagonal_raycast_direction: Node3D = $DiagonalTunnelRaycastDirection
+@onready var stair_horizontal_raycast_direction: Node3D = $HorizontalTunnelRaycastDirection
 @onready var stair_end_platform: Node3D = %Platform
 
-signal tunnel_requested(stairs_tile: StairsTile, origin_global: Vector3, target_global: Vector3)
+signal tunnel_requested(stairs_tile: StairsTile, origin_global: Vector3, target_global: Vector3, tunnel_type: String)
 
 
 const STAIRS_AMOUNT_PER_TILE = 16
 const STAIRS_WIDTH = 4
 const STAIR_HEIGHT = 0.13
 const STAIR_DEPTH = 0.21
+const TILE_SIZE: Vector3i = Vector3i(4, 2, 4)
+
+const TUNNEL_TYPE_DIAGONAL := "diagonal"
+const TUNNEL_TYPE_HORIZONTAL := "horizontal"
 
 func configure_stairs_height(floor_height):
 	csg_linear_stairs.stairs_amount_set(STAIRS_AMOUNT_PER_TILE * floor_height)
@@ -39,9 +44,14 @@ func configure_stairs_height(floor_height):
 		var last_stair_global_pos = csg_linear_stairs.to_global(last_stair_local_pos)
 		var last_stair_stairs_tile_pos = to_local(last_stair_global_pos)
 		
-		# Добавляем оффсет Vector3(0, 0.5, 0.5)
-		var offset = Vector3(0, 1, 1)
-		stair_raycast_direction.position = last_stair_stairs_tile_pos + offset
+		# Добавляем оффсет для туннеля вдоль лестницы
+		var diagonal_offset = Vector3(0, 1, 1)
+		stair_diagonal_raycast_direction.position = last_stair_stairs_tile_pos + diagonal_offset
+		
+		# Для горизонтального туннеля смещаемся вперед и опускаем на высоту тайла
+		var horizontal_target = last_stair_stairs_tile_pos + Vector3(0, 0, 1)
+		horizontal_target.y -= TILE_SIZE.y
+		stair_horizontal_raycast_direction.position = horizontal_target
 		
 		# Располагаем платформу перекрытия щели между лестницей и полом верхнего этажа
 		var platform_offset = Vector3(0, 0, 1.12)
@@ -51,25 +61,32 @@ func configure_stairs_height(floor_height):
 	# Ждем еще один фрейм, чтобы убедиться, что все обновлено
 	await get_tree().process_frame
 	
-	if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
-		_raycast_and_remove_solids()
-	elif not multiplayer.has_multiplayer_peer():
-		# В одиночной игре тоже выполняем
-		_raycast_and_remove_solids()
+	var should_raycast := (multiplayer.has_multiplayer_peer() and multiplayer.is_server()) or not multiplayer.has_multiplayer_peer()
+	if should_raycast:
+		var raycast_targets = [
+			{"node": stair_diagonal_raycast_direction, "type": TUNNEL_TYPE_DIAGONAL},
+			{"node": stair_horizontal_raycast_direction, "type": TUNNEL_TYPE_HORIZONTAL}
+		]
+		for target_data in raycast_targets:
+			var direction_node: Node3D = target_data["node"]
+			var tunnel_type: String = target_data["type"]
+			await _raycast_and_remove_solids(direction_node, tunnel_type)
 
-func _raycast_and_remove_solids():
+func _raycast_and_remove_solids(direction_node: Node3D, tunnel_type: String):
+	if direction_node == null:
+		return
 	await get_tree().process_frame
 	# Рейкаст от stair_raycast_origin до stair_raycast_direction и удаление всех солидов на пути
-	if not is_instance_valid(stair_raycast_origin) or not is_instance_valid(stair_raycast_direction):
-		print("ERROR: stair_raycast_origin or stair_raycast_direction is not valid!")
+	if not is_instance_valid(stair_raycast_origin) or not is_instance_valid(direction_node):
+		print("ERROR: stair_raycast_origin or tunnel direction is not valid!")
 		return
 	
 	var origin_global = stair_raycast_origin.global_position
-	var target_global = stair_raycast_direction.global_position
+	var target_global = direction_node.global_position
 	var direction = (target_global - origin_global).normalized()
 	var distance = origin_global.distance_to(target_global)
 	
-	print("Starting raycast from ", origin_global, " to ", target_global, " (distance: ", distance, ")")
+	print("Starting ", tunnel_type, " raycast from ", origin_global, " to ", target_global, " (distance: ", distance, ")")
 	
 	var space_state = get_world_3d().direct_space_state
 	# Проверяем все слои (можно настроить collision_mask если нужно)
@@ -103,6 +120,7 @@ func _raycast_and_remove_solids():
 		
 		# Проверяем, является ли объект солидом (стена, пол, потолок)
 			# Сразу удаляем найденный объект
+		# if is_instance_valid(collider) and collider is CSGLinearStairs3D == false:
 		if is_instance_valid(collider):
 			print("  -> Removing solid object: ", collider.name, " at ", collider.global_position)
 			collider.queue_free()
@@ -123,7 +141,7 @@ func _raycast_and_remove_solids():
 		iteration += 1
 	
 	if removed_anything:
-		emit_signal("tunnel_requested", self, origin_global, target_global)
+		emit_signal("tunnel_requested", self, origin_global, target_global, tunnel_type)
 
 
 func _is_solid_object(obj: Node) -> bool:
