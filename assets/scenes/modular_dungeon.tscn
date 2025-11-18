@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://bjkfpf6023qm6" path="res://assets/prefabs/environment/dungeon_walls/floor_5_corner.tscn" id="6_bgocc"]
 [ext_resource type="PackedScene" uid="uid://32qaikpv48gm" path="res://assets/prefabs/environment/dungeon_walls/floor_5_side.tscn" id="7_s45tm"]
 [ext_resource type="PackedScene" uid="uid://bdi320facp0je" path="res://assets/prefabs/environment/dungeon_walls/floor_5_middle.tscn" id="8_rt73t"]
-[ext_resource type="PackedScene" uid="uid://b3ko8bhy2wgnp" path="res://assets/prefabs/environment/dungeon_walls/stairs_1.tscn" id="9_fvpaw"]
+[ext_resource type="PackedScene" uid="uid://b3ko8bhy2wgnp" path="res://assets/prefabs/environment/dungeon_walls/stairs_tile.tscn" id="9_fvpaw"]
 [ext_resource type="PackedScene" uid="uid://bg7dfo32e5ul0" path="res://assets/prefabs/environment/dungeon_walls/vault_1m.tscn" id="10_6qyeg"]
 [ext_resource type="PackedScene" uid="uid://xeib2rqbqd3r" path="res://assets/prefabs/environment/dungeon_walls/vault_2m.tscn" id="11_6r5od"]
 [ext_resource type="PackedScene" uid="uid://bq45vpt7vv8ny" path="res://assets/prefabs/environment/dungeon_walls/straight_wall_arch.tscn" id="12_7em67"]

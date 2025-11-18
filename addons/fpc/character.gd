@@ -300,6 +300,7 @@ func _process(_delta):
 func _physics_process(delta): # Most things happen here.
 	if GameManager._game_level.is_game_level_ready == false:
 		return
+	super._physics_process(delta)
 	_ensure_authority_state()
 	#if mesh_animation_player and _has_input_authority:
 	if mesh_animation_player:
@@ -751,12 +752,15 @@ func handle_movement(delta, input_dir):
 		# Dampen velocity (this will reduce the push velocity naturally over time)
 		velocity.x = lerpf(velocity.x, velocity.x * 0.1, 10 * get_process_delta_time())
 		velocity.z = lerpf(velocity.z, velocity.z * 0.1, 10 * get_process_delta_time())
-		move_and_slide()
+		
+		# DONT CALL - ITS PROCESSED BY STAIRS CHARACTER 3D
+		#move_and_slide()
 		return
 		
 	direction = Vector3(direction.x, 0, direction.y)
-		
-	move_and_slide()
+	
+	# DONT CALL - ITS PROCESSED BY STAIRS CHARACTER 3D
+	#move_and_slide()
 
 	if in_air_momentum:
 		if is_on_floor():

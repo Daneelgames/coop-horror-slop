@@ -3,7 +3,7 @@ extends LevelGenerator
 class_name MultistoryBuildingDungeon
 
 const DUNGEON_TILE = preload("uid://cefhqgvoa83r2")
-const STAIRS_1 = preload("res://assets/prefabs/environment/dungeon_walls/stairs_1.tscn")
+const STAIRS_1 = preload("res://assets/prefabs/environment/dungeon_walls/stairs_tile.tscn")
 const DOORS_PREFABS = [preload("res://assets/prefabs/environment/dungeon_doors/door_multistory_building.tscn")]
 const TILE_SIZE : Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom center
 
@@ -150,14 +150,7 @@ func generate_dungeon():
 		var floor_height: int = floors_heights[floor_num]
 		await _generate_floor(floor_y, floor_height)
 		await _await_frame()  # Await после каждого этажа
-	
-	# Спавн лестниц между этажами
-	for floor_num in range(floors_count - 1):
-		var floor_y: int = floor_y_positions[floor_num]
-		var floor_above_y: int = floor_y_positions[floor_num + 1]
-		_spawn_stairs_between_floors(floor_y, floor_above_y)
-		await _await_frame()
-	
+
 	# Объединение комнат дверьми на каждом этаже (до конфигурации тайлов!)
 	for floor_num in range(floors_count):
 		var floor_y: int = floor_y_positions[floor_num]
@@ -205,12 +198,15 @@ func generate_dungeon():
 
 			await _spawn_door_between_tiles(tile, neighbor_tile, neighbor_offset, tile.coord.y)
 
-	level_generated.emit()
 	await _await_frame()
+	await spawn_stairs_between_floors()
 
 	# Финальный проход - спавн заблокированных дверей на краях открытых в пустоту направлений
 	await _spawn_blocked_doors_on_open_edges()
 	await _await_frame()
+	print("DEBUG: Final dungeon generation summary:")
+	print("  Total spawned stairs: ", spawned_stairs_coords.size())
+	level_generated.emit()
 
 func _generate_floor(floor_y: int, floor_height: int):
 	# Генерация квартир на этаже
@@ -956,128 +952,6 @@ func _spawn_tile_at_coord_for_door(room: ResourceDungeonRoom, coord: Vector3i):
 	all_spawned_tiles[tile] = room
 	room_assignment[tile] = room
 
-func _spawn_stairs_between_floors(floor_y: int, floor_above_y: int):
-	# Определить количество лестниц для этого этажа
-	var stairs_count: int = rng.randi_range(min_stairs_per_floor, max_stairs_per_floor)
-	
-	# Получить все квартиры на нижнем этаже
-	if not apartment_rooms_by_floor.has(floor_y):
-		return
-	
-	var apartments: Array[ResourceDungeonRoom] = apartment_rooms_by_floor[floor_y]
-	if apartments.is_empty():
-		return
-	
-	# Собрать все тайлы с полом на нижнем этаже (кандидаты для лестниц)
-	var candidate_tiles: Array[DungeonTile] = []
-	for tile in all_spawned_tiles.keys():
-		if tile.coord.y != floor_y:
-			continue
-		
-		# Проверить, что у тайла есть пол (нет соседа снизу)
-		var neighbor_below: DungeonTile = _get_tile_at_coord(tile.coord + Vector3i(0, -1, 0))
-		if neighbor_below != null:
-			continue  # У этого тайла нет пола
-		
-		# Проверить, что над этим тайлом есть тайл на верхнем этаже
-		var tile_above: DungeonTile = _get_tile_at_coord(Vector3i(tile.coord.x, floor_above_y, tile.coord.z))
-		if tile_above == null:
-			continue  # Нет тайла сверху
-		
-		# Проверить, что у верхнего тайла есть пол (нет соседа снизу на его уровне)
-		var neighbor_below_above: DungeonTile = _get_tile_at_coord(tile_above.coord + Vector3i(0, -1, 0))
-		if neighbor_below_above == null:
-			continue  # У верхнего тайла нет пола
-		
-		candidate_tiles.append(tile)
-	
-	if candidate_tiles.is_empty():
-		return
-	
-	# Перемешать кандидатов
-	_shuffle_array(candidate_tiles)
-	
-	# Спавнить лестницы
-	var stairs_spawned: int = 0
-	for tile in candidate_tiles:
-		if stairs_spawned >= stairs_count:
-			break
-		
-		# Проверить, что у нижнего тайла нет потолка (чтобы лестница могла пройти)
-		# Это проверим позже при спавне - потолок может быть удален при конфигурации
-		# Но для безопасности проверим сейчас
-		if is_instance_valid(tile.ceiling):
-			continue  # Пропустить - потолок заблокирует лестницу
-		
-		# Проверить, что здесь еще нет лестницы
-		if spawned_stairs_coords.has(tile.coord):
-			continue
-		
-		# Определить направление лестницы (случайное горизонтальное направление)
-		var horizontal_directions: Array[Vector3i] = [
-			Vector3i(1, 0, 0),   # Right
-			Vector3i(-1, 0, 0),  # Left
-			Vector3i(0, 0, 1),   # Forward
-			Vector3i(0, 0, -1)   # Backward
-		]
-		var tunnel_direction: Vector3i = horizontal_directions[rng.randi() % horizontal_directions.size()]
-		var vertical_direction: int = 1  # Вверх
-		
-		# Получить комнату для этого тайла
-		var room: ResourceDungeonRoom = all_spawned_tiles.get(tile, null)
-		if room == null:
-			continue
-		
-		# Спавнить лестницу
-		_spawn_stairs_at_coord(room, tile.coord, tunnel_direction, vertical_direction)
-		stairs_spawned += 1
-	
-
-func _spawn_stairs_at_coord(room: ResourceDungeonRoom, coord: Vector3i, tunnel_direction: Vector3i = Vector3i.ZERO, vertical_direction: int = 0):
-	# Spawn stairs at the specified coordinate
-	var world_position: Vector3 = Vector3(
-		coord.x * TILE_SIZE.x,
-		coord.y * TILE_SIZE.y,
-		coord.z * TILE_SIZE.z
-	)
-	
-	var stairs = STAIRS_1.instantiate()
-	
-	# Rotate stairs so the top part (blue arrow, negative Z) faces the tunnel direction
-	# tunnel_direction indicates the horizontal direction from bottom to top tile
-	# In Godot: 0° = +Z, 90° = -X, 180° = -Z, 270° = +X
-	# Since stairs top is at -Z (180°), we need to rotate based on tunnel_direction
-	var rotation_y: float = 0.0
-	
-	if tunnel_direction.x > 0:
-		# Going in +X direction, stairs should face +X (270° or -90°)
-		rotation_y = deg_to_rad(-90)
-	elif tunnel_direction.x < 0:
-		# Going in -X direction, stairs should face -X (90°)
-		rotation_y = deg_to_rad(90)
-	elif tunnel_direction.z > 0:
-		# Going in +Z direction, stairs should face +Z (0°)
-		# But stairs top is at -Z, so we need 180° rotation
-		rotation_y = deg_to_rad(180)
-	elif tunnel_direction.z < 0:
-		# Going in -Z direction, stairs should face -Z (180°)
-		# But stairs top is at -Z, so no rotation needed (0°)
-		rotation_y = 0.0
-	
-	stairs.rotation.y = rotation_y
-	stairs.rotation_degrees.y += 180
-	
-	stairs.position = world_position
-	dungeon_tiles.add_child(stairs)
-	
-	# Cache stairs coord
-	spawned_stairs_coords[coord] = stairs
-	
-	# Build stairs name
-	var stairs_name: String = str(tunnel_direction) + "_" + str(vertical_direction)
-	stairs.name += "_" + stairs_name
-	stairs.owner = _get_edited_scene_root()
-
 func _configure_all_tiles_with_room_check():
 	# Configure each tile based on its neighbors with room check
 	var total_tiles = all_spawned_tiles.size()
@@ -1595,19 +1469,19 @@ func _spawn_blocked_doors_on_open_edges():
 				var door_position: Vector3 = tile.position
 				var door_rotation_y: float = 0.0
 
-				# Сместить позицию в зависимости от направления
+				# Сместить позицию в зависимости от направления (на край тайла)
 				match direction:
 					"forward":  # Z-
-						door_position.z -= 0.5
+						door_position.z -= TILE_SIZE.z / 2.0  # -2.0
 						door_rotation_y = 0.0
 					"right":    # X+
-						door_position.x += 0.5
+						door_position.x += TILE_SIZE.x / 2.0  # +2.0
 						door_rotation_y = deg_to_rad(90)
 					"back":     # Z+
-						door_position.z += 0.5
+						door_position.z += TILE_SIZE.z / 2.0  # +2.0
 						door_rotation_y = deg_to_rad(180)
 					"left":     # X-
-						door_position.x -= 0.5
+						door_position.x -= TILE_SIZE.x / 2.0  # -2.0
 						door_rotation_y = deg_to_rad(-90)
 
 				blocked_door.rotation.y = door_rotation_y
@@ -1622,3 +1496,201 @@ func _spawn_blocked_doors_on_open_edges():
 				doors_spawned += 1
 
 	print("Spawned ", doors_spawned, " blocked doors on open edges")
+
+func _get_rooms_on_floor(floor_y: int) -> Array[ResourceDungeonRoom]:
+	# Получить все комнаты на данном этаже
+	if not apartment_rooms_by_floor.has(floor_y):
+		return []
+	return apartment_rooms_by_floor[floor_y].duplicate()
+
+func spawn_stairs_between_floors():
+	# Спавн лестниц между этажами
+	# Лестницы размещаются на каждом этаже (кроме последнего) и соединяют его со следующим этажом
+
+	if floors_heights.is_empty():
+		return
+
+	# DEBUG: Вывести все двери
+	print("DEBUG: spawn_stairs_between_floors: Total doors: ", spawned_doors_coords_new.size())
+	for door_key in spawned_doors_coords_new.keys():
+		var coords_str = door_key.split("-")
+		if coords_str.size() == 2:
+			var coord1_parts = coords_str[0].split("_")
+			var coord2_parts = coords_str[1].split("_")
+			if coord1_parts.size() == 3 and coord2_parts.size() == 3:
+				var door_coord1 = Vector3i(int(coord1_parts[0]), int(coord1_parts[1]), int(coord1_parts[2]))
+				var door_coord2 = Vector3i(int(coord2_parts[0]), int(coord2_parts[1]), int(coord2_parts[2]))
+				print("DEBUG: Door: ", door_key, " -> ", door_coord1, "-", door_coord2)
+
+	# Вычислить накопительные высоты этажей (как в generate_dungeon)
+	var floor_y_positions: Array[int] = []
+	var current_y: int = 0
+	for floor_height in floors_heights:
+		floor_y_positions.append(current_y)
+		current_y += floor_height
+
+	var floors_count: int = floors_heights.size()
+
+	# Пройтись по всем этажам кроме последнего
+	for floor_num in range(floors_count - 1):
+		var floor_y: int = floor_y_positions[floor_num]
+		var floor_height: int = floors_heights[floor_num]
+		var next_floor_height: int = floors_heights[floor_num + 1]
+
+		# Получить комнаты на этом этаже
+		var rooms_on_floor: Array[ResourceDungeonRoom] = _get_rooms_on_floor(floor_y)
+		if rooms_on_floor.is_empty():
+			continue
+
+		# Получить тайлы по комнатам на этом этаже
+		var tiles_by_room: Dictionary[ResourceDungeonRoom, Array] = {}
+		for tile in all_spawned_tiles.keys():
+			if tile.coord.y != floor_y:
+				continue
+			var room: ResourceDungeonRoom = all_spawned_tiles.get(tile, null)
+			if room == null or not rooms_on_floor.has(room):
+				continue
+			if not tiles_by_room.has(room):
+				tiles_by_room[room] = []
+			tiles_by_room[room].append(tile)
+
+		# Фильтровать комнаты с тайлами
+		var rooms_with_tiles: Array[ResourceDungeonRoom] = []
+		for room in rooms_on_floor:
+			if tiles_by_room.has(room) and tiles_by_room[room].size() > 0:
+				rooms_with_tiles.append(room)
+
+		if rooms_with_tiles.is_empty():
+			continue
+
+		# Определить количество лестниц для этого этажа
+		var target_stairs_count: int = rng.randi_range(min_stairs_per_floor, max_stairs_per_floor)
+		target_stairs_count = min(target_stairs_count, rooms_with_tiles.size())  # Не больше количества комнат
+
+		# Выбрать комнаты для размещения лестниц (на максимальном расстоянии друг от друга)
+		var selected_rooms: Array[ResourceDungeonRoom] = []
+		var available_rooms: Array[ResourceDungeonRoom] = rooms_with_tiles.duplicate()
+		_shuffle_array(available_rooms)
+
+		# Выбрать первые target_stairs_count комнат
+		for i in range(min(target_stairs_count, available_rooms.size())):
+			selected_rooms.append(available_rooms[i])
+
+		# Разместить лестницы в выбранных комнатах
+		print("DEBUG: Spawning stairs for floor_y=", floor_y, ", total doors on this floor: ", _count_doors_on_floor(floor_y))
+		for room in selected_rooms:
+			var room_tiles = tiles_by_room[room]
+			print("DEBUG: Room has ", room_tiles.size(), " tiles")
+
+			# Найти подходящий тайл в комнате (не занятый другими объектами и не рядом с дверями)
+			var suitable_tiles: Array[DungeonTile] = []
+			for tile in room_tiles:
+				if not spawned_stairs_coords.has(tile.coord):
+					var is_near_door = _is_coord_near_door(tile.coord, floor_y)
+					if not is_near_door:
+						suitable_tiles.append(tile)
+					else:
+						print("DEBUG: Tile at ", tile.coord, " is near door, skipping")
+				else:
+					print("DEBUG: Tile at ", tile.coord, " already has stairs, skipping")
+
+			if suitable_tiles.is_empty():
+				print("DEBUG: No suitable tiles found in room, skipping")
+				continue
+
+			# Выбрать случайный подходящий тайл
+			var selected_tile: DungeonTile = suitable_tiles[rng.randi() % suitable_tiles.size()]
+			print("DEBUG: Selected tile for stairs: ", selected_tile.coord, " (floor_y=", floor_y, ")")
+			
+			# Дополнительная проверка перед спавном
+			if _is_coord_near_door(selected_tile.coord, floor_y):
+				print("ERROR: Selected tile ", selected_tile.coord, " is near door! Skipping spawn.")
+				continue
+
+			# Спавнить лестницу
+			await _spawn_stairs_at_coord(selected_tile.coord, floor_height)
+			await _await_frame()
+
+func _count_doors_on_floor(floor_y: int) -> int:
+	# Подсчитать количество дверей на этаже
+	var count = 0
+	for door_key in spawned_doors_coords_new.keys():
+		var coords_str = door_key.split("-")
+		if coords_str.size() != 2:
+			continue
+		
+		var coord1_parts = coords_str[0].split("_")
+		if coord1_parts.size() != 3:
+			continue
+		
+		var door_coord1_y = int(coord1_parts[1])
+		if door_coord1_y == floor_y or door_coord1_y == floor_y + 1:
+			count += 1
+	return count
+
+func _is_coord_near_door(coord: Vector3i, floor_y: int) -> bool:
+	# Проверить, находится ли координата рядом с дверью на том же этаже
+	# Дверь находится между двумя тайлами, поэтому проверяем оба тайла и их соседей
+	
+	for door_key in spawned_doors_coords_new.keys():
+		# Распарсить координаты двери из ключа формата "x1_y1_z1-x2_y2_z2"
+		var coords_str = door_key.split("-")
+		if coords_str.size() != 2:
+			continue
+		
+		var coord1_parts = coords_str[0].split("_")
+		var coord2_parts = coords_str[1].split("_")
+		
+		if coord1_parts.size() != 3 or coord2_parts.size() != 3:
+			continue
+		
+		var door_coord1 = Vector3i(int(coord1_parts[0]), int(coord1_parts[1]), int(coord1_parts[2]))
+		var door_coord2 = Vector3i(int(coord2_parts[0]), int(coord2_parts[1]), int(coord2_parts[2]))
+		
+		# Проверить, что дверь на том же этаже (или на этаже выше/ниже, так как двери 2 тайла высотой)
+		if door_coord1.y != floor_y and door_coord1.y != floor_y + 1:
+			continue
+		
+		# Проверить, находится ли coord рядом с любым из тайлов двери
+		# Проверяем сам тайл и соседние тайлы в горизонтальной плоскости
+		var check_coords = [
+			door_coord1,
+			door_coord2,
+			door_coord1 + Vector3i(1, 0, 0),  # Сосед справа
+			door_coord1 + Vector3i(-1, 0, 0), # Сосед слева
+			door_coord1 + Vector3i(0, 0, 1),  # Сосед сзади
+			door_coord1 + Vector3i(0, 0, -1), # Сосед спереди
+			door_coord2 + Vector3i(1, 0, 0),
+			door_coord2 + Vector3i(-1, 0, 0),
+			door_coord2 + Vector3i(0, 0, 1),
+			door_coord2 + Vector3i(0, 0, -1)
+		]
+		
+		for check_coord in check_coords:
+			# Проверяем только координаты на том же этаже
+			if check_coord.y == floor_y and check_coord == coord:
+				print("DEBUG: _is_coord_near_door: coord ", coord, " matches door at ", door_coord1, "-", door_coord2, " (check_coord=", check_coord, ")")
+				return true
+	
+	return false
+
+func _spawn_stairs_at_coord(coord: Vector3i, floor_height: int):
+	# Спавнить лестницу на заданной координате
+	var world_position: Vector3 = Vector3(
+		coord.x * TILE_SIZE.x,
+		coord.y * TILE_SIZE.y,
+		coord.z * TILE_SIZE.z
+	)
+
+	var stairs_tile: StairsTile = STAIRS_1.instantiate()
+	stairs_tile.position = world_position
+	stairs_tile.name = "Stairs_%d_%d_%d" % [coord.x, coord.y, coord.z]
+
+	dungeon_tiles.add_child(stairs_tile)
+	stairs_tile.owner = _get_edited_scene_root()
+
+	# Конфигурировать высоту лестницы
+	stairs_tile.configure_stairs_height(floor_height)
+
+	# Записать в словарь спавненных лестниц
+	spawned_stairs_coords[coord] = stairs_tile

@@ -1,4 +1,4 @@
-extends CharacterBody3D
+extends StairsCharacterBody3D
 class_name Unit
 
 var item_in_hands : Weapon = null

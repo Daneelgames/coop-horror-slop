@@ -2,6 +2,9 @@
 
 [ext_resource type="Material" uid="uid://dah4n64qkc4lm" path="res://assets/meshes/modularDungeon/m_stone_3.tres" id="1_5x64d"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_5x64d"]
+size = Vector3(4, 0.25, 4)
+
 [sub_resource type="ArrayMesh" id="ArrayMesh_qe231"]
 _surfaces = [{
 "aabb": AABB(-4, -0.004464832, -3.0517577e-07, 4, 0.097467385, 4.000001),
@@ -34,22 +37,20 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_qe231")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_5x64d"]
-size = Vector3(4, 0.25, 4)
-
 [sub_resource type="BoxOccluder3D" id="BoxOccluder3D_5x64d"]
 size = Vector3(4, 0.27364838, 4)
 
-[node name="Floor2" type="MeshInstance3D"]
+[node name="StaticBody3D" type="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_5x64d")
+
+[node name="Floor2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -2)
 mesh = SubResource("ArrayMesh_7em67")
 skeleton = NodePath("")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
-shape = SubResource("BoxShape3D_5x64d")
-
-[node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
+[node name="OccluderInstance3D" type="OccluderInstance3D" parent="Floor2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 2)
 occluder = SubResource("BoxOccluder3D_5x64d")

@@ -684,7 +684,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("29_1ltnj")
 
-[node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("HEAD", "CAMERA", "HEADBOB_ANIMATION", "JUMP_ANIMATION", "CROUCH_ANIMATION", "COLLISION_MESH", "visual_node_3d", "skeleton_3d", "mesh_animation_player")]
+[node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("HEAD", "CAMERA", "HEADBOB_ANIMATION", "JUMP_ANIMATION", "CROUCH_ANIMATION", "COLLISION_MESH", "visual_node_3d", "skeleton_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 23
 floor_max_angle = 1.0471976
@@ -717,6 +717,7 @@ debug_authority = false
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])
 death_anims = Array[StringName]([&"death_0", &"death_1", &"death_2", &"death_3"])
+PLAYER_COLLIDER = NodePath("Collision")
 
 [node name="DustGPUParticles3D" type="GPUParticles3D" parent="."]
 unique_name_in_owner = true

@@ -5,7 +5,7 @@ class_name ProceduralDungeon
 const ELEVATOR = preload("uid://d1fhekbr7wjf3")
 
 const DUNGEON_TILE = preload("uid://cefhqgvoa83r2")
-const STAIRS_1 = preload("res://assets/prefabs/environment/dungeon_walls/stairs_1.tscn")
+const STAIRS_1 = preload("res://assets/prefabs/environment/dungeon_walls/stairs_tile.tscn")
 const AI_CHARACTER = preload("res://addons/fpc/ai_character.tscn")
 #const TILE_SIZE : Vector3i = Vector3i(4,4,4) # tile's origin is at its bottom center
 const TILE_SIZE : Vector3i = Vector3i(4,2,4) # tile's origin is at its bottom center

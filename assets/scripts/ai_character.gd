@@ -66,6 +66,7 @@ var _smoothed_input_dir: Vector2 = Vector2.ZERO
 func _physics_process(_delta): # Most things happen here. 
 	if GameManager._game_level.is_game_level_ready == false:
 		return
+	super._physics_process(_delta)
 	visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
 	# Convert Euler angles to Basis (quaternion) for proper rotation interpolation
 	var current_basis = Basis.from_euler(visual_node_3d.global_rotation)
@@ -378,7 +379,8 @@ func _handle_physics(delta: float):
 		velocity.y = 0
 	
 	# Move the character (this applies any velocity including push from attacks)
-	move_and_slide()
+	# DONT CALL AS IT GETS CALLED IN STAIRS CHARACTER 3D
+	#move_and_slide()
 #endregion
 
 func _get_closest_visible_enemy() -> Unit:

@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://dl6hok1wlwaeq" path="res://assets/prefabs/environment/dungeon_walls/wall_2m.tscn" id="3_l2blo"]
 [ext_resource type="PackedScene" uid="uid://c1yemvw006ad2" path="res://assets/prefabs/environment/dungeon_walls/floor_1.tscn" id="4_4ygpn"]
 [ext_resource type="PackedScene" uid="uid://ccjf5p2g81be8" path="res://assets/prefabs/environment/dungeon_walls/floor_2.tscn" id="5_bqpbu"]
-[ext_resource type="PackedScene" uid="uid://b3ko8bhy2wgnp" path="res://assets/prefabs/environment/dungeon_walls/stairs_1.tscn" id="6_mm2e1"]
+[ext_resource type="PackedScene" uid="uid://b3ko8bhy2wgnp" path="res://assets/prefabs/environment/dungeon_walls/stairs_tile.tscn" id="6_mm2e1"]
 
 [node name="Tile" type="Node3D"]
 script = ExtResource("1_y2rmy")
@@ -40,7 +40,7 @@ visible = false
 unique_name_in_owner = true
 
 [node name="Ceiling" parent="Ceiling" instance=ExtResource("5_bqpbu")]
-transform = Transform3D(1, 0, 0, 0, -1, -8.742278e-08, 0, 8.742278e-08, -1, 2, 2, 2)
+transform = Transform3D(1, 0, 0, 0, -1, -8.742278e-08, 0, 8.742278e-08, -1, 0, 1.9999999, 0)
 
 [node name="WallF" type="Node3D" parent="."]
 unique_name_in_owner = true

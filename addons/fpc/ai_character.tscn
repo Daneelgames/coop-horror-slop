@@ -410,7 +410,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("28_rivgy")
 
-[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player")]
+[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 platform_on_leave = 2
@@ -427,6 +427,7 @@ team = 1
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])
 death_anims = Array[StringName]([&"death_0", &"death_1", &"death_2", &"death_3"])
+PLAYER_COLLIDER = NodePath("Collision")
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13531351, 0, 0)

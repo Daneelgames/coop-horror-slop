@@ -12,4 +12,7 @@ albedo_texture = ExtResource("1_7smo5")
 emission_enabled = true
 normal_enabled = true
 normal_texture = ExtResource("2_3ba3b")
+uv1_scale = Vector3(0.33, 0.33, 0.33)
+uv1_triplanar = true
+uv1_world_triplanar = true
 texture_filter = 2
