@@ -1,8 +1,8 @@
 extends NavigationRegion3D
 
 @export var is_game_level_ready = false
-@export var level_generator_path : NodePath = "ProceduralDungeon"
-var level_generator : Node  # Changed from ProceduralDungeon to Node to avoid casting issues in exported builds
+@export var level_generator_path: NodePath = "ProceduralDungeon"
+var level_generator: Node # Changed from ProceduralDungeon to Node to avoid casting issues in exported builds
 var players_placed: bool = false
 @onready var world_environment: WorldEnvironment = %WorldEnvironment
 
@@ -11,86 +11,25 @@ func _ready() -> void:
 	players_placed = false
 	GameManager._game_level = self
 	
-	# Debug: Print all children to see what's available
-	print("GameLevel._ready: Children count: ", get_child_count())
-	for child in get_children():
-		print("GameLevel._ready: Child: ", child.name, " (", child.get_class(), "), path: ", child.get_path())
-	
 	# Wait for a frame to ensure all child nodes are added to the scene tree
 	# This is especially important in exported builds where nodes might not be ready immediately
 	await get_tree().process_frame
 	
-	# Debug again after frame wait
-	print("GameLevel._ready: After frame wait, children count: ", get_child_count())
-	var procedural_dungeon_node: Node = null
-	for child in get_children():
-		print("GameLevel._ready: After wait - Child: ", child.name, " (", child.get_class(), "), is_inside_tree: ", child.is_inside_tree())
-		if child.name == "ProceduralDungeon":
-			procedural_dungeon_node = child
-			print("GameLevel._ready: Found ProceduralDungeon node! Type check: is ProceduralDungeon = ", child is ProceduralDungeon)
-			print("GameLevel._ready: ProceduralDungeon script: ", child.get_script())
-			if child.get_script():
-				print("GameLevel._ready: Script path: ", child.get_script().resource_path)
-	
-	# Try to get the node directly from children array first
-	if procedural_dungeon_node != null:
-		print("GameLevel._ready: Using direct reference from children array")
-		# In exported builds, class_name casting may not work, so we use the node directly
-		# Check if the node has the correct script by checking script path
-		var script = procedural_dungeon_node.get_script()
-		if script:
-			var script_path = script.resource_path
-			print("GameLevel._ready: Node script path: ", script_path)
-			# Check if script is ProceduralDungeon by path or name
-			if script_path.ends_with("procedural_dungeon.gd") or "procedural_dungeon" in script_path.to_lower():
-				print("GameLevel._ready: Node has ProceduralDungeon script, using directly")
-				# Use the node directly - it has the script, so it will work
-				level_generator = procedural_dungeon_node
-			else:
-				print("GameLevel._ready: Script path doesn't match ProceduralDungeon: ", script_path)
-		else:
-			print("GameLevel._ready: WARNING - Node has no script!")
-		
-		# Fallback: try casting if direct assignment didn't work
-		if level_generator == null:
-			level_generator = procedural_dungeon_node as ProceduralDungeon
-			if level_generator != null:
-				print("GameLevel._ready: Cast to ProceduralDungeon succeeded")
-			else:
-				print("GameLevel._ready: WARNING - Cast to ProceduralDungeon failed! Node type: ", procedural_dungeon_node.get_class())
-	
-	# Resolve level_generator from NodePath (works in both editor and exported builds)
-	if level_generator == null and level_generator_path != NodePath():
+	# Try to find level generator from the exported NodePath first
+	if level_generator_path != NodePath():
 		var node_from_path = get_node_or_null(level_generator_path)
-		print("GameLevel._ready: Tried NodePath resolution: ", level_generator_path, " -> node: ", node_from_path)
 		if node_from_path != null:
-			level_generator = node_from_path as ProceduralDungeon
-			print("GameLevel._ready: NodePath cast result: ", level_generator != null)
+			level_generator = node_from_path
+			print("GameLevel._ready: Found level generator from NodePath: ", node_from_path.name)
 	
-	# Fallback: try to find ProceduralDungeon node directly if path resolution failed
+	# If not found, try to find any LevelGenerator-derived node recursively
 	if level_generator == null:
-		var node_by_name = get_node_or_null("ProceduralDungeon")
-		print("GameLevel._ready: Tried direct name lookup 'ProceduralDungeon' -> node: ", node_by_name)
-		if node_by_name != null:
-			level_generator = node_by_name as ProceduralDungeon
-			print("GameLevel._ready: Direct name cast result: ", level_generator != null)
-	
-	# Try to find any ProceduralDungeon node recursively
-	if level_generator == null:
-		level_generator = _find_procedural_dungeon_recursive(self)
-		print("GameLevel._ready: Tried recursive search -> ", level_generator != null)
+		level_generator = _find_level_generator_recursive(self)
+		if level_generator != null:
+			print("GameLevel._ready: Found level generator recursively: ", level_generator.name)
 	
 	if level_generator == null:
-		push_error("GameLevel: Failed to find ProceduralDungeon node! Children: " + str(get_children().map(func(c): return c.name)))
-		# Try one more time - maybe we need to wait longer?
-		await get_tree().create_timer(0.1).timeout
-		procedural_dungeon_node = get_node_or_null("ProceduralDungeon")
-		if procedural_dungeon_node != null:
-			level_generator = procedural_dungeon_node as ProceduralDungeon
-			print("GameLevel._ready: Found after additional wait!")
-	
-	if level_generator == null:
-		push_error("GameLevel: CRITICAL - ProceduralDungeon node exists but cannot be cast to ProceduralDungeon type!")
+		push_error("GameLevel: Failed to find any LevelGenerator node! Children: " + str(get_children().map(func(c): return c.name)))
 		return
 	
 	level_generator.generate_dungeon()
@@ -108,15 +47,21 @@ func _process(_delta: float) -> void:
 	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_M):
 		toggle_cheat_environment()
 
-func _find_procedural_dungeon_recursive(node: Node) -> Node:
-	# Check if current node has ProceduralDungeon script
+func _find_level_generator_recursive(node: Node) -> Node:
+	# Check if current node is a LevelGenerator (base class for all generators)
+	# This works with ProceduralDungeon, MultistoryBuildingDungeon, and any future generators
 	var script = node.get_script()
-	if script and script.resource_path.ends_with("procedural_dungeon.gd"):
-		return node
+	if script:
+		var script_path = script.resource_path
+		# Check if script is a level generator by checking for common patterns
+		if script_path.ends_with("procedural_dungeon.gd") or \
+		   script_path.ends_with("multistory_building_dungeon.gd") or \
+		   "level_generator" in script_path.to_lower():
+			return node
 	
 	# Recursively check all children
 	for child in node.get_children():
-		var result = _find_procedural_dungeon_recursive(child)
+		var result = _find_level_generator_recursive(child)
 		if result != null:
 			return result
 	
@@ -136,6 +81,77 @@ func toggle_cheat_environment():
 	await get_tree().create_timer(0.2).timeout
 	cheat_env_cooldown = false
 
+func _find_elevator_location_multistory_building() -> Vector3i:
+	# Найти позицию для лифта в multistory building dungeon
+	# Выбираем тайл с полом в одной из комнат на верхнем этаже
+	if level_generator == null:
+		push_warning("_find_elevator_location_multistory_building: level_generator is null")
+		return Vector3i.ZERO
+	
+	# Проверить, что у генератора есть apartment_rooms_by_floor
+	if not level_generator is MultistoryBuildingDungeon:
+		push_warning("_find_elevator_location_multistory_building: level_generator does not have apartment_rooms_by_floor property")
+		return Vector3i.ZERO
+	
+	var apartment_rooms_by_floor: Dictionary = level_generator.apartment_rooms_by_floor
+	
+	if apartment_rooms_by_floor.is_empty():
+		push_warning("_find_elevator_location_multistory_building: apartment_rooms_by_floor is empty")
+		return Vector3i.ZERO
+	
+	# Найти максимальный floor_y (верхний этаж)
+	var max_floor_y: int = -2147483648 # INT_MIN equivalent
+	for floor_y in apartment_rooms_by_floor.keys():
+		if floor_y > max_floor_y:
+			max_floor_y = floor_y
+	
+	if max_floor_y == -2147483648:
+		push_warning("_find_elevator_location_multistory_building: Could not find any floors")
+		return Vector3i.ZERO
+	
+	# Получить комнаты на верхнем этаже
+	var rooms_on_top_floor: Array = apartment_rooms_by_floor.get(max_floor_y, [])
+	if rooms_on_top_floor.is_empty():
+		push_warning("_find_elevator_location_multistory_building: No rooms on top floor (floor_y=%d)" % max_floor_y)
+		return Vector3i.ZERO
+	
+	# Выбрать случайную комнату на верхнем этаже
+	var selected_room = rooms_on_top_floor[randi() % rooms_on_top_floor.size()]
+	
+	# Найти тайлы этой комнаты НА УРОВНЕ ЭТАЖА (floor_y) - это будут тайлы с полом
+	# Проверить, что у генератора есть all_spawned_tiles
+	
+	var all_spawned_tiles: Dictionary = level_generator.all_spawned_tiles
+	
+	# Найти тайлы выбранной комнаты на уровне floor_y (это тайлы с полом)
+	var room_floor_tiles: Array[DungeonTile] = []
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile):
+			continue
+		var tile_room = all_spawned_tiles.get(tile, null)
+		# Мы ищем тайлы на уровне floor_y (где будет пол), а не выше
+		if tile_room == selected_room and tile.coord.y == max_floor_y:
+			# Дополнительная проверка: у тайла должен быть пол после конфигурации
+			# (то есть не должно быть тайла снизу на том же уровне этажа)
+			var neighbor_below = level_generator._get_tile_at_coord(tile.coord + Vector3i(0, -1, 0))
+			if neighbor_below == null or neighbor_below.coord.y < max_floor_y:
+				room_floor_tiles.append(tile)
+	
+	if room_floor_tiles.is_empty():
+		push_warning("_find_elevator_location_multistory_building: No floor tiles found for selected room on floor_y=%d" % max_floor_y)
+		return Vector3i.ZERO
+	
+	# Выбрать случайный тайл с полом из комнаты
+	var selected_tile: DungeonTile = room_floor_tiles[randi() % room_floor_tiles.size()]
+	
+	print("_find_elevator_location_multistory_building: Selected elevator location at %s (top floor=%d, room has %d floor tiles)" % [
+		selected_tile.coord,
+		max_floor_y,
+		room_floor_tiles.size()
+	])
+	
+	return selected_tile.coord
+
 func _handle_elevator_spawn_and_player_teleport():
 	# Проверить, что level_generator имеет правильный скрипт
 	if level_generator == null:
@@ -143,13 +159,28 @@ func _handle_elevator_spawn_and_player_teleport():
 		return
 	
 	var script = level_generator.get_script()
-	if not script or not script.resource_path.ends_with("procedural_dungeon.gd"):
-		push_warning("_handle_elevator_spawn_and_player_teleport: level_generator does not have ProceduralDungeon script")
+	if not script:
+		push_warning("_handle_elevator_spawn_and_player_teleport: level_generator does not have a script")
 		return
 	
-	# Используем level_generator напрямую - у него есть нужные методы
+	var script_path = script.resource_path
+	var is_multistory_building = script_path.ends_with("multistory_building_dungeon.gd")
+	var is_procedural_dungeon = script_path.ends_with("procedural_dungeon.gd")
+	
+	if not is_multistory_building and not is_procedural_dungeon:
+		push_warning("_handle_elevator_spawn_and_player_teleport: level_generator does not have ProceduralDungeon or MultistoryBuildingDungeon script")
+		return
+	
 	# Найти место для спавна лифта
-	var elevator_coord: Vector3i = level_generator.find_elevator_spawn_location()
+	var elevator_coord: Vector3i = Vector3i.ZERO
+	
+	if is_multistory_building:
+		# Для multistory building dungeon выбираем комнату на верхнем этаже
+		elevator_coord = _find_elevator_location_multistory_building()
+	else:
+		# Для обычного procedural dungeon используем стандартный метод
+		elevator_coord = level_generator.find_elevator_spawn_location()
+	
 	if elevator_coord == Vector3i.ZERO:
 		push_warning("_handle_elevator_spawn_and_player_teleport: Failed to find elevator spawn location")
 		return
@@ -263,11 +294,30 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 		return
 	
 	var script = level_generator.get_script()
-	if not script or not script.resource_path.ends_with("procedural_dungeon.gd"):
-		push_warning("_spawn_elevator_at_position: level_generator does not have ProceduralDungeon script")
+	if not script:
+		push_warning("_spawn_elevator_at_position: level_generator does not have a script")
 		return
 	
-	var dungeon_tiles_node = get_node_or_null("ProceduralDungeon/DungeonTiles")
+	var script_path = script.resource_path
+	var is_multistory_building = script_path.ends_with("multistory_building_dungeon.gd")
+	var is_procedural_dungeon = script_path.ends_with("procedural_dungeon.gd")
+	
+	if not is_multistory_building and not is_procedural_dungeon:
+		push_warning("_spawn_elevator_at_position: level_generator does not have ProceduralDungeon or MultistoryBuildingDungeon script")
+		return
+	
+	# Найти узел DungeonTiles в зависимости от типа генератора
+	var dungeon_tiles_node: Node3D = null
+	if is_multistory_building:
+		dungeon_tiles_node = get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+	else:
+		dungeon_tiles_node = get_node_or_null("ProceduralDungeon/DungeonTiles")
+	
+	if dungeon_tiles_node == null:
+		# Fallback: попробовать найти по имени level_generator
+		var generator_name = level_generator.name
+		dungeon_tiles_node = get_node_or_null("%s/DungeonTiles" % generator_name)
+	
 	if dungeon_tiles_node == null:
 		push_warning("_spawn_elevator_at_position: Could not find DungeonTiles node")
 		return
@@ -290,7 +340,7 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	
 	# Повернуть лифт к одному из горизонтальных соседей
 	# Преобразовать позицию в координату тайла
-	var TILE_SIZE: Vector3i = Vector3i(4, 2, 4)  # Должно совпадать с TILE_SIZE в procedural_dungeon.gd
+	var TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # Должно совпадать с TILE_SIZE в procedural_dungeon.gd
 	var elevator_coord: Vector3i = Vector3i(
 		int(round(elevator_pos.x / TILE_SIZE.x)),
 		int(round(elevator_pos.y / TILE_SIZE.y)),
@@ -299,10 +349,10 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	
 	# Найти горизонтальных соседей (только X и Z направления)
 	var horizontal_offsets: Array[Vector3i] = [
-		Vector3i(1, 0, 0),   # Right
-		Vector3i(-1, 0, 0),  # Left
-		Vector3i(0, 0, 1),   # Forward
-		Vector3i(0, 0, -1)   # Backward
+		Vector3i(1, 0, 0), # Right
+		Vector3i(-1, 0, 0), # Left
+		Vector3i(0, 0, 1), # Forward
+		Vector3i(0, 0, -1) # Backward
 	]
 	
 	var available_neighbors: Array[Vector3i] = []
@@ -319,13 +369,13 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 		# Вычислить угол поворота в радианах
 		# В Godot: 0° = +Z (вперед), 90° = -X (влево), 180° = -Z (назад), 270° = +X (вправо)
 		var rotation_y: float = 0.0
-		if neighbor_offset.x > 0:  # Right (+X)
-			rotation_y = deg_to_rad(270)  # или -90°
-		elif neighbor_offset.x < 0:  # Left (-X)
+		if neighbor_offset.x > 0: # Right (+X)
+			rotation_y = deg_to_rad(270) # или -90°
+		elif neighbor_offset.x < 0: # Left (-X)
 			rotation_y = deg_to_rad(90)
-		elif neighbor_offset.z > 0:  # Forward (+Z)
+		elif neighbor_offset.z > 0: # Forward (+Z)
 			rotation_y = deg_to_rad(0)
-		elif neighbor_offset.z < 0:  # Backward (-Z)
+		elif neighbor_offset.z < 0: # Backward (-Z)
 			rotation_y = deg_to_rad(180)
 		
 		elevator.rotation.y = rotation_y
