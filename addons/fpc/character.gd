@@ -705,7 +705,9 @@ func handle_attacking():
 		return
 	if Input.is_action_just_pressed("attack"):
 		var attack_string = ''
-		if input_dir.y != 0:
+		if is_crouching:
+			attack_string = 'crouch_attack'
+		elif input_dir.y != 0:
 			attack_string = 'attack_vertical'
 		elif input_dir.x != 0:
 			attack_string = 'attack_horizontal'
@@ -719,6 +721,8 @@ func rpc_melee_attack(attack_string: String):
 	# Store push velocity to apply it after movement handling (so it doesn't get dampened)
 	if is_multiplayer_authority() and item_in_hands != null and item_in_hands.weapon_resource != null:
 		var push_force = item_in_hands.weapon_resource.push_forward_on_attack_force
+		if is_crouching:
+			push_force = 0
 		if push_force > 0:
 			# Get forward direction from camera/head (where player is looking)
 			# Use camera forward direction if available, otherwise use head
