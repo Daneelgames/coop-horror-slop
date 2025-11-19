@@ -1,13 +1,13 @@
 [gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://st1qaks76e1l"]
 
-[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="1_53nc0"]
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="1_ivjjx"]
 
 [resource]
-script = ExtResource("1_53nc0")
+script = ExtResource("1_ivjjx")
 weapon_name = &"Gold"
 weapon_type = 3
-pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_torch_p.tscn"
-weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_torch_w.tscn"
+pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_gold_p.tscn"
+weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_gold_w.tscn"
 damage_min_max = Vector2i(1, 10)
 weapon_blocking_angle = 10
 push_forward_on_attack_force = 1.0

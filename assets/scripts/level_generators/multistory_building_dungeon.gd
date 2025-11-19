@@ -9,7 +9,7 @@ const ELEVATOR = preload("uid://d1fhekbr7wjf3")
 const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom center
 
 @export var items_to_spawn_amount = 30
-@export var item_spawns : Array[ResourceItemSpawn]
+@export var item_spawns: Array[ResourceItemSpawn]
 @export var floors_heights: Array[int] = [2, 3, 4, 5, 6]
 @export var rooms_per_floor_min_max: Vector2i = Vector2i(3, 8) # Минимальное и максимальное количество комнат на этаж
 @export var apartment_side_size_min_max: Vector2i = Vector2i(2, 5)
@@ -181,6 +181,7 @@ func generate_dungeon():
 	# Финальный проход - спавн заблокированных дверей на краях открытых в пустоту направлений
 	await _spawn_blocked_doors_on_open_edges(floor_y_positions)
 	await _await_frame()
+	await spawn_pickups()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
 	level_generated.emit()
@@ -2134,3 +2135,226 @@ func clear_stairs_on_tiles_with_no_floor():
 	
 	if removed_count > 0:
 		print("Removed ", removed_count, " stairs on tiles with no floor")
+
+func spawn_pickups():
+	# Don't spawn pickups in editor
+	if Engine.is_editor_hint():
+		return
+	
+	# Ensure GameSpawner spawn_path is set to DungeonTiles
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		var dungeon_tiles_node = GameManager._game_level.get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+		if dungeon_tiles_node != null:
+			var dungeon_tiles_path = GameManager._game_spawner.get_path_to(dungeon_tiles_node)
+			GameManager._game_spawner.spawn_path = dungeon_tiles_path
+	
+	# Build weighted item dictionary from item_spawns array
+	if item_spawns.is_empty() or items_to_spawn_amount <= 0:
+		return
+	
+	# Calculate total weight for weighted random selection
+	var total_weight: float = 0.0
+	for item_spawn in item_spawns:
+		if item_spawn != null and item_spawn.item_resource != null:
+			total_weight += item_spawn.spawn_weight
+	
+	if total_weight <= 0.0:
+		push_warning("spawn_pickups: No valid items with positive weight in item_spawns")
+		return
+	
+	# Collect all tiles with floors (exclude stairs)
+	var available_tiles: Array[DungeonTile] = []
+	var dead_end_tiles: Array[DungeonTile] = []
+	
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile) or not is_instance_valid(tile.floor):
+			continue
+		# Skip tiles that have stairs
+		if spawned_stairs_coords.has(tile.coord):
+			continue
+		
+		available_tiles.append(tile)
+		
+		# Check if tile is a dead-end (3 walls, 1 opening)
+		var wall_count: int = 0
+		if tile.wall_f != null and not tile.wall_f.is_queued_for_deletion():
+			wall_count += 1
+		if tile.wall_r != null and not tile.wall_r.is_queued_for_deletion():
+			wall_count += 1
+		if tile.wall_b != null and not tile.wall_b.is_queued_for_deletion():
+			wall_count += 1
+		if tile.wall_l != null and not tile.wall_l.is_queued_for_deletion():
+			wall_count += 1
+		
+		if wall_count == 3:
+			dead_end_tiles.append(tile)
+	
+	if available_tiles.is_empty():
+		push_warning("spawn_pickups: No available tiles found for spawning pickups")
+		return
+	
+	print("spawn_pickups: Found ", available_tiles.size(), " available tiles, ", dead_end_tiles.size(), " dead-end tiles")
+	
+	# Shuffle dead-end tiles using seeded RNG
+	_shuffle_array(dead_end_tiles)
+	
+	# Track spawned pickup positions for Farthest Point Sampling
+	var spawned_positions: Array[Vector3] = []
+	var items_remaining: int = items_to_spawn_amount
+	var total_pickups_spawned: int = 0
+	
+	# Phase 1: Spawn items in dead-ends (with 20% skip chance)
+	for tile in dead_end_tiles:
+		if items_remaining <= 0:
+			break
+		
+		# 20% chance to skip this dead end
+		if rng.randf() < 0.2:
+			continue
+		
+		# Choose random weighted item
+		var selected_item_spawn: ResourceItemSpawn = _choose_weighted_item_spawn(item_spawns, total_weight)
+		if selected_item_spawn == null or selected_item_spawn.item_resource == null:
+			continue
+		
+		var weapon_resource = selected_item_spawn.item_resource
+		
+		# Check if weapon_resource has pickup_prefab_path
+		if weapon_resource.pickup_prefab_path == null or weapon_resource.pickup_prefab_path == "":
+			push_warning("spawn_pickups: Weapon resource '%s' has no pickup_prefab_path" % weapon_resource.weapon_name)
+			continue
+		
+		# Randomize pickup position within tile bounds
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+		var pickup_position = tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+		
+		# Spawn pickup through MultiplayerSpawner for synchronization
+		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+			var spawn_data = {"type": "pickup", "path": str(weapon_resource.pickup_prefab_path)}
+			var pickup = GameManager._game_spawner.spawn(spawn_data)
+			if pickup != null:
+				# Set weapon_resource on the pickup (InteractivePickup class)
+				if pickup is InteractivePickup:
+					pickup.weapon_resource = weapon_resource.duplicate()
+				
+				# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+				pickup.position = pickup_position
+				pickup.owner = _get_edited_scene_root()
+				# Set multiplayer authority to server
+				pickup.set_multiplayer_authority(1)
+				
+				spawned_positions.append(pickup_position)
+				items_remaining -= 1
+				total_pickups_spawned += 1
+		
+		# Yield every 10 pickups to avoid frame drops
+		if total_pickups_spawned % 10 == 0:
+			await _await_frame()
+	
+	print("spawn_pickups: Spawned ", total_pickups_spawned, " items in dead-ends, ", items_remaining, " items remaining")
+	
+	# Phase 2: Spawn remaining items using Farthest Point Sampling
+	# This ensures items are well-distributed across the level
+	while items_remaining > 0:
+		var farthest_tile: DungeonTile = null
+		var max_min_distance: float = 0.0
+		
+		# Find the tile with the maximum minimum distance to all spawned positions
+		for tile in available_tiles:
+			if not is_instance_valid(tile):
+				continue
+			
+			var tile_center = tile.position
+			var min_distance: float = INF
+			
+			# Calculate minimum distance to any spawned pickup
+			if spawned_positions.is_empty():
+				# First item - just pick a random tile
+				farthest_tile = available_tiles[rng.randi() % available_tiles.size()]
+				break
+			else:
+				for spawned_pos in spawned_positions:
+					var distance = tile_center.distance_to(spawned_pos)
+					if distance < min_distance:
+						min_distance = distance
+			
+			# Update farthest tile if this is farther from all spawned pickups
+			if min_distance > max_min_distance:
+				max_min_distance = min_distance
+				farthest_tile = tile
+		
+		if farthest_tile == null:
+			push_warning("spawn_pickups: Could not find farthest tile, breaking")
+			break
+		
+		# Choose random weighted item
+		var selected_item_spawn: ResourceItemSpawn = _choose_weighted_item_spawn(item_spawns, total_weight)
+		if selected_item_spawn == null or selected_item_spawn.item_resource == null:
+			items_remaining -= 1
+			continue
+		
+		var weapon_resource = selected_item_spawn.item_resource
+		
+		# Check if weapon_resource has pickup_prefab_path
+		if weapon_resource.pickup_prefab_path == null or weapon_resource.pickup_prefab_path == "":
+			push_warning("spawn_pickups: Weapon resource '%s' has no pickup_prefab_path" % weapon_resource.weapon_name)
+			items_remaining -= 1
+			continue
+		
+		# Randomize pickup position within tile bounds
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+		var pickup_position = farthest_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+		
+		# Spawn pickup through MultiplayerSpawner for synchronization
+		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+			var spawn_data = {"type": "pickup", "path": str(weapon_resource.pickup_prefab_path)}
+			var pickup = GameManager._game_spawner.spawn(spawn_data)
+			if pickup != null:
+				# Set weapon_resource on the pickup (InteractivePickup class)
+				if pickup is InteractivePickup:
+					pickup.weapon_resource = weapon_resource.duplicate()
+				
+				# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+				pickup.position = pickup_position
+				pickup.owner = _get_edited_scene_root()
+				# Set multiplayer authority to server
+				pickup.set_multiplayer_authority(1)
+				
+				spawned_positions.append(pickup_position)
+				items_remaining -= 1
+				total_pickups_spawned += 1
+		else:
+			# If spawn failed, still decrement to avoid infinite loop
+			items_remaining -= 1
+		
+		# Yield every 10 pickups to avoid frame drops
+		if total_pickups_spawned % 10 == 0:
+			await _await_frame()
+	
+	print("spawn_pickups: Total pickups spawned: ", total_pickups_spawned)
+
+func _choose_weighted_item_spawn(items: Array[ResourceItemSpawn], total_weight: float) -> ResourceItemSpawn:
+	# Weighted random selection for item spawns
+	if items.is_empty() or total_weight <= 0.0:
+		return null
+	
+	# Choose random value
+	var random_value: float = rng.randf() * total_weight
+	var current_weight: float = 0.0
+	
+	# Find which item corresponds to the random value
+	for item_spawn in items:
+		if item_spawn == null or item_spawn.item_resource == null:
+			continue
+		current_weight += item_spawn.spawn_weight
+		if random_value <= current_weight:
+			return item_spawn
+	
+	# Fallback: return first valid item
+	for item_spawn in items:
+		if item_spawn != null and item_spawn.item_resource != null:
+			return item_spawn
+	
+	return null
