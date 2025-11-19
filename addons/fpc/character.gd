@@ -13,7 +13,7 @@ class_name PlayerCharacter
 @export var inventory_slots_max: int = 5
 @export var current_selected_item_index: int = 0
 @onready var interaction_ray_cast_3d: RayCast3D = %InteractionRayCast3D
-
+@export var vaulting_raycasts: Array[RayCast3D]
 @onready var inventory_slots_panel_container: PlayerInventorySlotsPanelContainer = %InventorySlotsPanelContainer
 @export_category("Character")
 ## The speed that the character moves at without crouching or sprinting.
