@@ -20,13 +20,13 @@ material = ExtResource("3_5g42u")
 metadata/_custom_type_script = "uid://cyq3us8aur1s6"
 
 [node name="StairRaycastOrigin" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4731116, -2.1601546)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9899013, -2.1601546)
 
 [node name="DiagonalTunnelRaycastDirection" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6382322, 2.5449781)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.015349, 2.5449781)
 
 [node name="HorizontalTunnelRaycastDirection" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6382322, 2.5449781)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0013819, 2.5449781)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.048171997, -1.6123302)

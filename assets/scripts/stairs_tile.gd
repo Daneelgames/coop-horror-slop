@@ -45,7 +45,7 @@ func configure_stairs_height(floor_height):
 		var last_stair_stairs_tile_pos = to_local(last_stair_global_pos)
 		
 		# Добавляем оффсет для туннеля вдоль лестницы
-		var diagonal_offset = Vector3(0, 1, 1)
+		var diagonal_offset = Vector3(0, 2, 1)
 		stair_diagonal_raycast_direction.position = last_stair_stairs_tile_pos + diagonal_offset
 		
 		# Для горизонтального туннеля смещаемся вперед и опускаем на высоту тайла

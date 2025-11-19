@@ -172,7 +172,10 @@ func generate_dungeon():
 	await spawn_stairs_between_floors()
 	await _await_frame()
 	await _connect_dead_end_tiles_with_doors(floor_y_positions)
+	await clear_stairs_on_tiles_with_no_floor()
+	await reconfigure_all_tunnel_tiles()
 
+	# await _configure_all_tiles_with_room_check()
 	# Финальный проход - спавн заблокированных дверей на краях открытых в пустоту направлений
 	await _spawn_blocked_doors_on_open_edges(floor_y_positions)
 	await _await_frame()
@@ -392,6 +395,7 @@ func _generate_apartment(x_start: int, x_end: int, z_start: int, z_end: int, flo
 	# Создать комнату для квартиры
 	var apartment_room = ResourceDungeonRoom.new()
 	apartment_room.base_room_height = floor_y
+	apartment_room.default_vertical_wall_tiles_amount = floor_height
 	
 	# Создать тайлы на всех вертикальных уровнях этажа
 	var tiles_created: int = 0
@@ -411,6 +415,7 @@ func _generate_apartment(x_start: int, x_end: int, z_start: int, z_end: int, flo
 				var tile: DungeonTile = DUNGEON_TILE.instantiate()
 				tile.position = world_position
 				tile.coord = coord
+				tile.master_dungeon = self
 				dungeon_tiles.add_child(tile)
 				tile.owner = _get_edited_scene_root()
 				
@@ -668,43 +673,77 @@ func _spawn_doors_between_rooms(room1: ResourceDungeonRoom, room2: ResourceDunge
 func _remove_wall_between_tiles(tile1: DungeonTile, tile2: DungeonTile, offset: Vector3i):
 	# Удалить стены между двумя соседними тайлами
 	# offset - направление от tile1 к tile2
+	print("DEBUG _remove_wall_between_tiles: tile1=", tile1.coord, " tile2=", tile2.coord, " offset=", offset)
+	
 	# У tile1 удалить стену в направлении offset
 	if offset == Vector3i(1, 0, 0):
 		# tile2 справа от tile1 - удалить правую стену tile1
-		if is_instance_valid(tile1.wall_r):
+		var tile1_wall_exists = tile1.wall_r != null
+		var tile1_wall_valid = is_instance_valid(tile1.wall_r)
+		var tile1_wall_queued = tile1.wall_r != null and tile1.wall_r.is_queued_for_deletion() if tile1.wall_r != null else false
+		var tile2_wall_exists = tile2.wall_l != null
+		var tile2_wall_valid = is_instance_valid(tile2.wall_l)
+		var tile2_wall_queued = tile2.wall_l != null and tile2.wall_l.is_queued_for_deletion() if tile2.wall_l != null else false
+		print("  RIGHT: tile1.wall_r: exists=", tile1_wall_exists, " valid=", tile1_wall_valid, " queued=", tile1_wall_queued)
+		print("        tile2.wall_l: exists=", tile2_wall_exists, " valid=", tile2_wall_valid, " queued=", tile2_wall_queued)
+		if is_instance_valid(tile1.wall_r) and not tile1.wall_r.is_queued_for_deletion():
 			tile1.wall_r.queue_free()
 			tile1.wall_r = null
 		# У tile2 удалить левую стену
-		if is_instance_valid(tile2.wall_l):
+		if is_instance_valid(tile2.wall_l) and not tile2.wall_l.is_queued_for_deletion():
 			tile2.wall_l.queue_free()
 			tile2.wall_l = null
 	elif offset == Vector3i(-1, 0, 0):
 		# tile2 слева от tile1 - удалить левую стену tile1
-		if is_instance_valid(tile1.wall_l):
+		var tile1_wall_exists = tile1.wall_l != null
+		var tile1_wall_valid = is_instance_valid(tile1.wall_l)
+		var tile1_wall_queued = tile1.wall_l != null and tile1.wall_l.is_queued_for_deletion() if tile1.wall_l != null else false
+		var tile2_wall_exists = tile2.wall_r != null
+		var tile2_wall_valid = is_instance_valid(tile2.wall_r)
+		var tile2_wall_queued = tile2.wall_r != null and tile2.wall_r.is_queued_for_deletion() if tile2.wall_r != null else false
+		print("  LEFT: tile1.wall_l: exists=", tile1_wall_exists, " valid=", tile1_wall_valid, " queued=", tile1_wall_queued)
+		print("       tile2.wall_r: exists=", tile2_wall_exists, " valid=", tile2_wall_valid, " queued=", tile2_wall_queued)
+		if is_instance_valid(tile1.wall_l) and not tile1.wall_l.is_queued_for_deletion():
 			tile1.wall_l.queue_free()
 			tile1.wall_l = null
 		# У tile2 удалить правую стену
-		if is_instance_valid(tile2.wall_r):
+		if is_instance_valid(tile2.wall_r) and not tile2.wall_r.is_queued_for_deletion():
 			tile2.wall_r.queue_free()
 			tile2.wall_r = null
 	elif offset == Vector3i(0, 0, 1):
-		# tile2 вперед от tile1 (Z+) - удалить переднюю стену tile1 (wall_f)
-		if is_instance_valid(tile1.wall_f):
-			tile1.wall_f.queue_free()
-			tile1.wall_f = null
-		# У tile2 удалить заднюю стену (wall_b)
-		if is_instance_valid(tile2.wall_b):
-			tile2.wall_b.queue_free()
-			tile2.wall_b = null
-	elif offset == Vector3i(0, 0, -1):
-		# tile2 назад от tile1 (Z-) - удалить заднюю стену tile1 (wall_b)
-		if is_instance_valid(tile1.wall_b):
+		# tile2 НАЗАД от tile1 (Z+) - удалить заднюю стену tile1 (wall_b)
+		var tile1_wall_exists = tile1.wall_b != null
+		var tile1_wall_valid = is_instance_valid(tile1.wall_b)
+		var tile1_wall_queued = tile1.wall_b != null and tile1.wall_b.is_queued_for_deletion() if tile1.wall_b != null else false
+		var tile2_wall_exists = tile2.wall_f != null
+		var tile2_wall_valid = is_instance_valid(tile2.wall_f)
+		var tile2_wall_queued = tile2.wall_f != null and tile2.wall_f.is_queued_for_deletion() if tile2.wall_f != null else false
+		print("  BACK (Z+): tile1.wall_b: exists=", tile1_wall_exists, " valid=", tile1_wall_valid, " queued=", tile1_wall_queued)
+		print("            tile2.wall_f: exists=", tile2_wall_exists, " valid=", tile2_wall_valid, " queued=", tile2_wall_queued)
+		if is_instance_valid(tile1.wall_b) and not tile1.wall_b.is_queued_for_deletion():
 			tile1.wall_b.queue_free()
 			tile1.wall_b = null
 		# У tile2 удалить переднюю стену (wall_f)
-		if is_instance_valid(tile2.wall_f):
+		if is_instance_valid(tile2.wall_f) and not tile2.wall_f.is_queued_for_deletion():
 			tile2.wall_f.queue_free()
 			tile2.wall_f = null
+	elif offset == Vector3i(0, 0, -1):
+		# tile2 ВПЕРЕД от tile1 (Z-) - удалить переднюю стену tile1 (wall_f)
+		var tile1_wall_exists = tile1.wall_f != null
+		var tile1_wall_valid = is_instance_valid(tile1.wall_f)
+		var tile1_wall_queued = tile1.wall_f != null and tile1.wall_f.is_queued_for_deletion() if tile1.wall_f != null else false
+		var tile2_wall_exists = tile2.wall_b != null
+		var tile2_wall_valid = is_instance_valid(tile2.wall_b)
+		var tile2_wall_queued = tile2.wall_b != null and tile2.wall_b.is_queued_for_deletion() if tile2.wall_b != null else false
+		print("  FORWARD (Z-): tile1.wall_f: exists=", tile1_wall_exists, " valid=", tile1_wall_valid, " queued=", tile1_wall_queued)
+		print("               tile2.wall_b: exists=", tile2_wall_exists, " valid=", tile2_wall_valid, " queued=", tile2_wall_queued)
+		if is_instance_valid(tile1.wall_f) and not tile1.wall_f.is_queued_for_deletion():
+			tile1.wall_f.queue_free()
+			tile1.wall_f = null
+		# У tile2 удалить заднюю стену (wall_b)
+		if is_instance_valid(tile2.wall_b) and not tile2.wall_b.is_queued_for_deletion():
+			tile2.wall_b.queue_free()
+			tile2.wall_b = null
 
 func _spawn_door_between_tiles(tile1: DungeonTile, tile2: DungeonTile, offset: Vector3i, floor_y: int):
 	# Заспавнить дверь между двумя тайлами
@@ -915,11 +954,29 @@ func _spawn_tile_at_coord_for_door(room: ResourceDungeonRoom, coord: Vector3i):
 	var tile: DungeonTile = DUNGEON_TILE.instantiate()
 	tile.position = world_position
 	tile.coord = coord
+	tile.master_dungeon = self
 	dungeon_tiles.add_child(tile)
 	tile.owner = _get_edited_scene_root()
 	
 	all_spawned_tiles[tile] = room
 	room_assignment[tile] = room
+
+func reconfigure_all_tunnel_tiles():
+	# loop over all tunnel room tiles and reconfigure them
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile):
+			continue
+		if room_assignment[tile] == tunnel_room:
+			tile.configure_tile_based_on_neighbours(_get_neighbor_tiles(tile), true)
+			
+	var deadendds_amount = 0
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile):
+			continue
+		if tile.is_dead_end:
+			deadendds_amount += 1
+	print("Deadends amount: %d" % deadendds_amount)
+	pass
 
 func _configure_all_tiles_with_room_check():
 	# Configure each tile based on its neighbors with room check
@@ -1114,6 +1171,7 @@ func _create_tunnel_between_rooms(room1: ResourceDungeonRoom, room2: ResourceDun
 			var tunnel_tile: DungeonTile = DUNGEON_TILE.instantiate()
 			tunnel_tile.position = world_position
 			tunnel_tile.coord = coord
+			tunnel_tile.master_dungeon = self
 			dungeon_tiles.add_child(tunnel_tile)
 			tunnel_tile.owner = _get_edited_scene_root()
 
@@ -1733,22 +1791,22 @@ func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector
 					"tunnel_coord": top_adjacent_coord
 				})
 
-				# Spawn debug marker at the end of the tunnel
-				var debug_sphere = MeshInstance3D.new()
-				var sphere_mesh = SphereMesh.new()
-				sphere_mesh.radius = 0.5
-				sphere_mesh.height = 1.0
-				debug_sphere.mesh = sphere_mesh
-				debug_sphere.name = "STAIR TUNNEL DEAD END"
+				# # Spawn debug marker at the end of the tunnel
+				# var debug_sphere = MeshInstance3D.new()
+				# var sphere_mesh = SphereMesh.new()
+				# sphere_mesh.radius = 0.5
+				# sphere_mesh.height = 1.0
+				# debug_sphere.mesh = sphere_mesh
+				# debug_sphere.name = "STAIR TUNNEL DEAD END"
 				
-				var marker_pos = Vector3(
-					top_adjacent_coord.x * TILE_SIZE.x,
-					top_adjacent_coord.y * TILE_SIZE.y + 1.0, # Slightly above floor
-					top_adjacent_coord.z * TILE_SIZE.z
-				)
-				debug_sphere.position = marker_pos
-				dungeon_tiles.add_child(debug_sphere)
-				debug_sphere.owner = _get_edited_scene_root()
+				# var marker_pos = Vector3(
+				# 	top_adjacent_coord.x * TILE_SIZE.x,
+				# 	top_adjacent_coord.y * TILE_SIZE.y + 1.0, # Slightly above floor
+				# 	top_adjacent_coord.z * TILE_SIZE.z
+				# )
+				# debug_sphere.position = marker_pos
+				# dungeon_tiles.add_child(debug_sphere)
+				# debug_sphere.owner = _get_edited_scene_root()
 	
 	var tunnel_coords: Array[Vector3i] = []
 	var seen: Dictionary = {}
@@ -1876,6 +1934,7 @@ func _ensure_tunnel_tile_at_coord(coord: Vector3i) -> Dictionary:
 	var tunnel_tile: DungeonTile = DUNGEON_TILE.instantiate()
 	tunnel_tile.position = world_position
 	tunnel_tile.coord = coord
+	tunnel_tile.master_dungeon = self
 	dungeon_tiles.add_child(tunnel_tile)
 	tunnel_tile.owner = _get_edited_scene_root()
 	
@@ -1975,14 +2034,18 @@ func _connect_dead_end_tiles_with_doors(valid_floor_ys: Array[int]):
 		var tile: DungeonTile = dead_end["tile"]
 		var open_direction: String = dead_end["open_direction"]
 		
+		print("DEBUG: Processing dead-end tile at ", tile.coord, " with open_direction=", open_direction)
+		
 		# Проверить, что тайл находится на валидном уровне этажа
 		if not valid_floor_ys.has(tile.coord.y):
 			doors_skipped += 1
+			print("  SKIPPED: not on valid floor_y")
 			continue
 		
 		# Проверить, что у тайла есть пол
 		if tile.floor == null or tile.floor.is_queued_for_deletion():
 			doors_skipped += 1
+			print("  SKIPPED: no floor")
 			continue
 		
 		# Построить список направлений для попытки, начиная с открытого направления
@@ -2001,56 +2064,32 @@ func _connect_dead_end_tiles_with_doors(valid_floor_ys: Array[int]):
 			var neighbor_coord = tile.coord + neighbor_offset
 			var neighbor_tile = _get_tile_at_coord(neighbor_coord)
 			
+			print("  Trying direction: ", direction, " neighbor_coord=", neighbor_coord)
+			
 			# Пропустить, если соседа нет
 			if neighbor_tile == null:
 				skip_reasons.append("  %s: no neighbor tile" % direction)
+				print("    -> No neighbor")
 				continue
 			
 			# КРИТИЧНО: Проверить, что оба тайла на одном Y-уровне (горизонтальные соседи)
 			if tile.coord.y != neighbor_tile.coord.y:
 				skip_reasons.append("  %s: different Y-level (tile=%d, neighbor=%d)" % [direction, tile.coord.y, neighbor_tile.coord.y])
+				print("    -> Different Y-level")
 				continue
 			
-			# Если это открытое направление (open_direction), мы ОБЯЗАНЫ убрать стену у соседа
-			if direction == open_direction:
-				# Удалить стену у текущего тайла (на всякий случай, хотя она и так должна быть открыта)
-				_remove_wall_in_direction(tile, direction)
-				
-				# Удалить противоположную стену у соседа
-				var opposite_direction = ""
-				match direction:
-					"forward": opposite_direction = "back"
-					"right": opposite_direction = "left"
-					"back": opposite_direction = "forward"
-					"left": opposite_direction = "right"
-				
-				if opposite_direction != "":
-					_remove_wall_in_direction(neighbor_tile, opposite_direction)
+			# Удалить стены между тайлами (используем проверенную функцию)
+			print("    -> Removing walls...")
+			_remove_wall_between_tiles(tile, neighbor_tile, neighbor_offset)
 			
 			# Проверить, если дверь уже существует
 			if _check_door_exists(tile, neighbor_tile):
-				# Если это было открытое направление, мы уже убрали стены, так что все ок.
-				# Если это другое направление, то просто пропускаем.
-				if direction == open_direction:
-					door_spawned = true # Считаем что "успех", так как проход обеспечен
-					break
-				else:
-					skip_reasons.append("  %s: door already exists" % direction)
-					continue
+				# Стены уже убрали, проход обеспечен
+				print("    -> Door already exists, passage ensured")
+				door_spawned = true
+				break
 			
-			# Если дошли сюда - двери нет, надо спавнить
-			# Удалить стены (если это не open_direction, то мы их еще не удалили)
-			if direction != open_direction:
-				_remove_wall_in_direction(tile, direction)
-				var opposite_direction = ""
-				match direction:
-					"forward": opposite_direction = "back"
-					"right": opposite_direction = "left"
-					"back": opposite_direction = "forward"
-					"left": opposite_direction = "right"
-				if opposite_direction != "":
-					_remove_wall_in_direction(neighbor_tile, opposite_direction)
-			
+			print("    -> Spawning door...")
 			await _spawn_door_between_tiles(tile, neighbor_tile, neighbor_offset, tile.coord.y)
 			doors_created += 1
 			door_spawned = true
@@ -2063,3 +2102,33 @@ func _connect_dead_end_tiles_with_doors(valid_floor_ys: Array[int]):
 				print(reason)
 	
 	print("DEBUG: Created ", doors_created, " doors for dead-end tiles, skipped ", doors_skipped)
+
+func clear_stairs_on_tiles_with_no_floor():
+	# луп по всем лестницам
+	# если тайл на котором лестница не имеет пола - удали лестницу
+	var stairs_to_remove: Array[Vector3i] = []
+	
+	for coord in spawned_stairs_coords.keys():
+		# Получить тайл на этой координате
+		var tile: DungeonTile = _get_tile_at_coord(coord)
+		
+		# Если тайл существует, проверить наличие пола
+		if tile != null:
+			# Если пола нет или он помечен на удаление - добавить в список для удаления
+			if tile.floor == null or tile.floor.is_queued_for_deletion():
+				stairs_to_remove.append(coord)
+		else:
+			# Если тайл не существует - тоже удалить лестницу
+			stairs_to_remove.append(coord)
+	
+	# Удалить лестницы
+	var removed_count = 0
+	for coord in stairs_to_remove:
+		var stairs_node = spawned_stairs_coords.get(coord, null)
+		if stairs_node != null and is_instance_valid(stairs_node):
+			stairs_node.queue_free()
+			removed_count += 1
+		spawned_stairs_coords.erase(coord)
+	
+	if removed_count > 0:
+		print("Removed ", removed_count, " stairs on tiles with no floor")

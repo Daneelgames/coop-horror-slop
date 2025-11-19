@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://buxkri7ewck05"]
+
+[ext_resource type="Texture2D" uid="uid://cpfnnbthju6vi" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/WIRE.png" id="1_cf6lh"]
+
+[resource]
+transparency = 2
+alpha_scissor_threshold = 0.105
+alpha_antialiasing_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("1_cf6lh")
+uv1_scale = Vector3(0.33, 0.33, 0.33)
+uv1_triplanar = true
+texture_filter = 2

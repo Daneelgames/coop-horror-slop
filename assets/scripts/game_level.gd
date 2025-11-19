@@ -116,8 +116,18 @@ func _find_elevator_location_multistory_building() -> Vector3i:
 		return Vector3i.ZERO
 	
 	# Выбрать случайную комнату на верхнем этаже
-	var selected_room = rooms_on_top_floor[randi() % rooms_on_top_floor.size()]
-	
+	# var selected_room = rooms_on_top_floor[randi() % rooms_on_top_floor.size()]
+	var selected_room = null
+	var max_room_height: int = -1
+	for room in rooms_on_top_floor:
+		if room.default_vertical_wall_tiles_amount > max_room_height:
+			max_room_height = room.default_vertical_wall_tiles_amount
+			selected_room = room
+
+	if selected_room == null:
+		push_warning("_find_elevator_location_multistory_building: Could not find any valid room")
+		return rooms_on_top_floor[randi() % rooms_on_top_floor.size()]
+
 	# Найти тайлы этой комнаты НА УРОВНЕ ЭТАЖА (floor_y) - это будут тайлы с полом
 	# Проверить, что у генератора есть all_spawned_tiles
 	
@@ -130,6 +140,7 @@ func _find_elevator_location_multistory_building() -> Vector3i:
 			continue
 		var tile_room = all_spawned_tiles.get(tile, null)
 		# Мы ищем тайлы на уровне floor_y (где будет пол), а не выше
+		# if tile_room == selected_room and is_instance_valid(tile.floor):
 		if tile_room == selected_room and tile.coord.y == max_floor_y:
 			# Дополнительная проверка: у тайла должен быть пол после конфигурации
 			# (то есть не должно быть тайла снизу на том же уровне этажа)
@@ -190,6 +201,11 @@ func _handle_elevator_spawn_and_player_teleport():
 	if elevator_tile == null:
 		push_warning("_handle_elevator_spawn_and_player_teleport: Failed to find tile at coord %s" % elevator_coord)
 		return
+	
+	# Очистить потолок на тайле где спавнится лифт
+	if is_instance_valid(elevator_tile.ceiling):
+		elevator_tile.ceiling.queue_free()
+		print("_handle_elevator_spawn_and_player_teleport: Cleared ceiling at elevator tile coord %s" % elevator_coord)
 	
 	# Заспавнить лифт на тайле через RPC для синхронизации с клиентами
 	var elevator_position = elevator_tile.position

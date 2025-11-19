@@ -20,8 +20,6 @@ class_name PlayerCharacter
 @export var base_speed : float = 3.0
 ## The speed that the character moves at when sprinting.
 @export var sprint_speed : float = 6.0
-## The speed that the character moves at when crouching.
-@export var crouch_speed : float = 1.0
 
 ## How fast the character speeds up and slows down when Motion Smoothing is on.
 @export var acceleration : float = 10.0
@@ -57,8 +55,6 @@ class_name PlayerCharacter
 @export var HEADBOB_ANIMATION : AnimationPlayer
 ## A reference to the jump animation for use in the character script.
 @export var JUMP_ANIMATION : AnimationPlayer
-## A reference to the crouch animation for use in the character script.
-@export var CROUCH_ANIMATION : AnimationPlayer
 ## A reference to the the player's collision shape for use in the character script.
 @export var COLLISION_MESH : CollisionShape3D
 @export var visual_node_3d : Node3D
@@ -140,7 +136,7 @@ class_name PlayerCharacter
 # These are variables used in this script that don't need to be exposed in the editor.
 var speed : float = base_speed
 var current_speed : float = 0.0
-# States: normal, crouching, sprinting
+# States: normal, sprinting
 @export var state : String = "normal"
 var low_ceiling : bool = false # This is for when the ceiling is too low and the player needs to crouch.
 var was_on_floor : bool = true # Was the player on the floor last frame (for landing animation)
@@ -727,12 +723,13 @@ func handle_jumping():
 		return
 	if jumping_enabled:
 		if continuous_jumping: # Hold down the jump button
-			if Input.is_action_pressed(controls.JUMP) and is_on_floor() and !low_ceiling:
+			#if Input.is_action_pressed(controls.JUMP) and is_on_floor() and !low_ceiling:
+			if Input.is_action_pressed(controls.JUMP) and is_on_floor():
 				if jump_animation:
 					JUMP_ANIMATION.play("jump", 0.25)
 				velocity.y += jump_velocity # Adding instead of setting so jumping on slopes works properly
 		else:
-			if Input.is_action_just_pressed(controls.JUMP) and is_on_floor() and !low_ceiling:
+			if Input.is_action_just_pressed(controls.JUMP) and is_on_floor():
 				if jump_animation:
 					JUMP_ANIMATION.play("jump", 0.25)
 				velocity.y += jump_velocity
@@ -889,43 +886,18 @@ func handle_state(moving):
 			elif state == "sprinting":
 				enter_normal_state()
 
-	if crouch_enabled:
-		if crouch_mode == 0:
-			if Input.is_action_pressed(controls.CROUCH) and state != "sprinting":
-				if state != "crouching":
-					enter_crouch_state()
-			elif state == "crouching" and !$CrouchCeilingDetection.is_colliding():
-				enter_normal_state()
-		elif crouch_mode == 1:
-			if Input.is_action_just_pressed(controls.CROUCH):
-				match state:
-					"normal":
-						enter_crouch_state()
-					"crouching":
-						if !$CrouchCeilingDetection.is_colliding():
-							enter_normal_state()
-
 
 # Any enter state function should only be called once when you want to enter that state, not every frame.
 func enter_normal_state():
 	#print("entering normal state")
 	var prev_state = state
-	if prev_state == "crouching":
-		CROUCH_ANIMATION.play_backwards("crouch")
 	state = "normal"
 	speed = base_speed
 
-func enter_crouch_state():
-	#print("entering crouch state")
-	state = "crouching"
-	speed = crouch_speed
-	CROUCH_ANIMATION.play("crouch")
 
 func enter_sprint_state():
 	#print("entering sprint state")
 	var prev_state = state
-	if prev_state == "crouching":
-		CROUCH_ANIMATION.play_backwards("crouch")
 	state = "sprinting"
 	speed = sprint_speed
 
@@ -938,7 +910,6 @@ func initialize_animations():
 	# If you want to change the default head height, change these animations.
 	HEADBOB_ANIMATION.play("RESET")
 	JUMP_ANIMATION.play("RESET")
-	CROUCH_ANIMATION.play("RESET")
 
 func play_headbob_animation(moving):
 	if !_has_input_authority:
@@ -1469,7 +1440,6 @@ func _debug_clear_block_reason(source : String) -> void:
 func death():
 	super.death()
 	if _has_input_authority:
-		enter_crouch_state()
 		await get_tree().create_timer(5).timeout
 		rpc_full_heal_and_resurrect.rpc()
 		enter_normal_state()

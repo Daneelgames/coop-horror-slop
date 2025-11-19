@@ -184,7 +184,7 @@ _data = {
 size = Vector3(1.4521484, 2, 0.4025879)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ix73n"]
-size = Vector3(1.0849609, 0.2020874, 0.40820313)
+size = Vector3(1.0849609, 0.067352295, 0.40820313)
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_h6sel"]
 _surfaces = [{
@@ -279,7 +279,7 @@ transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -1.6
 shape = SubResource("BoxShape3D_yxyem")
 
 [node name="CollisionShape3D3" type="CollisionShape3D" parent="StaticBody3D"]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 1.8989563, 0)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 1.9663239, 0)
 shape = SubResource("BoxShape3D_ix73n")
 
 [node name="Wall2m" type="MeshInstance3D" parent="StaticBody3D"]
@@ -293,6 +293,6 @@ mesh = SubResource("ArrayMesh_6r5od")
 skeleton = NodePath("")
 
 [node name="Wall2m3" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(-1, 1.9106845e-16, 5.5819648e-08, 1.14641115e-14, -0.04999998, 2.7909826e-08, 1.7484555e-07, 4.371137e-09, 0.31925118, 5.977824e-08, 2, -0.6324333)
+transform = Transform3D(-1, 6.569935e-17, 5.5819648e-08, 1.14641115e-14, -0.017192613, 2.7909826e-08, 1.7484555e-07, 1.5030259e-09, 0.31925118, 5.977824e-08, 2, -0.6324333)
 mesh = SubResource("ArrayMesh_6r5od")
 skeleton = NodePath("")

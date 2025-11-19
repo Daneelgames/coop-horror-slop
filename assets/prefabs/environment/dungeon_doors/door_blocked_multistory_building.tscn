@@ -155,6 +155,6 @@ mesh = SubResource("ArrayMesh_6r5od")
 skeleton = NodePath("")
 
 [node name="Wall2m3" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(-1, 1.9106845e-16, 5.5819648e-08, 1.14641115e-14, -0.04999998, 2.7909826e-08, 1.7484555e-07, 4.371137e-09, 0.31925118, 5.977824e-08, 2, -0.6324333)
+transform = Transform3D(-1, 7.655682e-17, 5.5819648e-08, 1.14641115e-14, -0.020033864, 2.7909826e-08, 1.7484555e-07, 1.7514159e-09, 0.31925118, 5.977824e-08, 2, -0.6324333)
 mesh = SubResource("ArrayMesh_6r5od")
 skeleton = NodePath("")
