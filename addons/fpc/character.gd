@@ -390,16 +390,16 @@ func _physics_process(delta): # Most things happen here.
 func handle_blocking():
 	if is_blocking:
 		return
-	if is_crouching:
-		if !low_ceiling:
-			enter_normal_state()
-		else:
-			return
 	if Input.is_action_just_pressed(controls.BLOCK):
 		rpc_block.rpc()
 
 @rpc("call_local")
 func rpc_block():
+	if is_crouching:
+		if !low_ceiling:
+			enter_normal_state()
+		else:
+			return
 	if is_blocking:
 		return
 	is_blocking = true
@@ -767,7 +767,7 @@ func rpc_melee_attack(attack_string: String):
 func handle_jumping():
 	if !_has_input_authority:
 		return
-	if is_vaulting :
+	if is_vaulting:
 		return
 	if jumping_enabled:
 		if continuous_jumping: # Hold down the jump button
