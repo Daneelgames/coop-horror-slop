@@ -21,6 +21,7 @@ class_name PlayerCharacter
 @export var crouch_speed: float = 1.0
 ## The speed that the character moves at when sprinting.
 @export var sprint_speed: float = 6.0
+@export var vaulting_threshold: float = 1.5
 
 ## How fast the character speeds up and slows down when Motion Smoothing is on.
 @export var acceleration: float = 10.0
@@ -145,6 +146,13 @@ var current_speed: float = 0.0
 var low_ceiling: bool = false # This is for when the ceiling is too low and the player needs to crouch.
 var was_on_floor: bool = true # Was the player on the floor last frame (for landing animation)
 var attack_push_velocity: Vector3 = Vector3.ZERO # Store push velocity from attacks
+
+# Vaulting 
+var is_vaulting: bool = false
+var vault_target_height: float = 0.0
+var vault_target_pos: Vector3 = Vector3.ZERO
+var vault_start_pos: Vector3 = Vector3.ZERO
+var vault_progress: float = 0.0
 
 # The reticle should always have a Control node as the root
 var RETICLE: Control
@@ -314,6 +322,7 @@ func _physics_process(delta): # Most things happen here.
 	if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
 		handle_attacking()
 		handle_blocking()
+		handle_vaulting()
 		handle_jumping()
 		handle_interaction()
 		handle_dropping_item()
@@ -324,7 +333,10 @@ func _physics_process(delta): # Most things happen here.
 	if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false:
 		input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
 
-	handle_movement(delta, input_dir)
+	if is_vaulting:
+		process_vault_climb(delta)
+	else:
+		handle_movement(delta, input_dir)
 
 	handle_head_rotation()
 	apply_rotation_smoothing(delta)
@@ -378,6 +390,11 @@ func _physics_process(delta): # Most things happen here.
 func handle_blocking():
 	if is_blocking:
 		return
+	if is_crouching:
+		if !low_ceiling:
+			enter_normal_state()
+		else:
+			return
 	if Input.is_action_just_pressed(controls.BLOCK):
 		rpc_block.rpc()
 
@@ -750,6 +767,8 @@ func rpc_melee_attack(attack_string: String):
 func handle_jumping():
 	if !_has_input_authority:
 		return
+	if is_vaulting :
+		return
 	if jumping_enabled:
 		if continuous_jumping: # Hold down the jump button
 			#if Input.is_action_pressed(controls.JUMP) and is_on_floor() and !low_ceiling:
@@ -1012,6 +1031,135 @@ func play_jump_animation():
 		else:
 			JUMP_ANIMATION.play("land_center", 0.25)
 
+#endregion
+
+#region Vaulting and Climbing
+
+func handle_vaulting():
+	if !_has_input_authority:
+		return
+		
+	# Check input direction directly (Forward)
+	if not Input.is_action_pressed(controls.FORWARD):
+		return
+		
+	if not Input.is_action_pressed(controls.JUMP):
+		return
+		
+	# Check for wall
+	var result = check_wall_height()
+	if result.type != "none":
+		start_vault_or_climb(result.type, result.height, result.normal, result.point)
+
+func check_wall_height() -> Dictionary:
+	# Returns { "type": "none"|"vault"|"climb", "height": float, "normal": Vector3, "point": Vector3 }
+	var result = {"type": "none", "height": 0.0, "normal": Vector3.ZERO, "point": Vector3.ZERO}
+	
+	if vaulting_raycasts.is_empty():
+		return result
+		
+	# Enable raycasts temporarily
+	for ray in vaulting_raycasts:
+		if ray.enabled == false:
+			ray.force_raycast_update()
+		
+	# Find the highest raycast that hits
+	var highest_hit_index = -1
+	var hit_point = Vector3.ZERO
+	var hit_normal = Vector3.ZERO
+	
+	for i in range(vaulting_raycasts.size()):
+		var ray = vaulting_raycasts[i]
+		if ray.is_colliding():
+			highest_hit_index = i
+			hit_point = ray.get_collision_point()
+			hit_normal = ray.get_collision_normal()
+		else:
+			# If we found a hit previously and this one misses, we found the top edge
+			if highest_hit_index != -1:
+				break
+	
+	# Disable raycasts
+	#for ray in vaulting_raycasts:
+		#ray.enabled = false
+	
+	if highest_hit_index == -1 or 0:
+		return result
+		
+	# Determine height based on the raycast ABOVE the highest hit
+	# If highest_hit_index is the last one, we can't climb over it (too high)
+	if highest_hit_index == vaulting_raycasts.size() - 1:
+		return result
+		
+	# The clear height is the position of the first ray that missed
+	var clear_ray = vaulting_raycasts[highest_hit_index + 1]
+	var wall_height_y = clear_ray.global_position.y
+	
+	# Calculate relative height from player feet
+	var height_diff = wall_height_y - global_position.y
+	print("trying enter parkour at dist %s"%height_diff)
+	if height_diff <= vaulting_threshold:
+		result.type = "vault"
+	else:
+		return result
+		
+	result.height = wall_height_y
+	result.normal = hit_normal
+	result.point = hit_point
+	
+	return result
+
+func start_vault_or_climb(type: String, target_height: float, wall_normal: Vector3, wall_point: Vector3):
+	if is_vaulting:
+		return
+	if type == "vault":
+		print('enter vault ')
+		is_vaulting = true
+		enter_crouch_state()
+		if mesh_animation_player:
+			mesh_animation_player.play("vault", 0.2)
+	
+	vault_target_height = target_height
+	# Target position is forward past the wall
+	# Invert normal to get wall direction (towards wall)
+	var wall_dir = - wall_normal
+	wall_dir.y = 0
+	wall_dir = wall_dir.normalized()
+	
+	# Move 1 meter past the hit point
+	vault_target_pos = wall_point + (wall_dir * 1)
+	vault_target_pos.y = target_height
+	
+	vault_start_pos = global_position
+	vault_progress = 0.0
+
+func process_vault_climb(delta):
+	# Simple procedural animation for movement: Up then Forward
+	# Adjust speed as needed
+	var move_speed = 2
+		
+	# Phase 1: Move Up
+	if global_position.y < vault_target_height - 0.1:
+		velocity = Vector3(0, move_speed, 0)
+		#move_and_slide()
+	else:
+		# Phase 2: Move Forward
+		var target_xz = Vector3(vault_target_pos.x, global_position.y, vault_target_pos.z)
+		var dir = global_position.direction_to(target_xz)
+		var dist = global_position.distance_to(target_xz)
+		
+		if dist > 0.2:
+			velocity = dir * move_speed
+			#move_and_slide()
+		else:
+			# Finished
+			finish_vault_climb()
+
+func finish_vault_climb():
+	is_vaulting = false
+	velocity = Vector3.ZERO
+	if !low_ceiling:
+		enter_normal_state()
 #endregion
 
 #region Debug Menu
