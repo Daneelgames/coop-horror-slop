@@ -1797,28 +1797,78 @@ func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector
 					for coord in connection_path:
 						combined_path_coords.append(coord)
 				
+	
 				pending_doors.append({
 					"room_tile": nearest_room_tile,
 					"tunnel_coord": top_adjacent_coord
 				})
 
-				# # Spawn debug marker at the end of the tunnel
-				# var debug_sphere = MeshInstance3D.new()
-				# var sphere_mesh = SphereMesh.new()
-				# sphere_mesh.radius = 0.5
-				# sphere_mesh.height = 1.0
-				# debug_sphere.mesh = sphere_mesh
-				# debug_sphere.name = "STAIR TUNNEL DEAD END"
-				
-				# var marker_pos = Vector3(
-				# 	top_adjacent_coord.x * TILE_SIZE.x,
-				# 	top_adjacent_coord.y * TILE_SIZE.y + 1.0, # Slightly above floor
-				# 	top_adjacent_coord.z * TILE_SIZE.z
-				# )
-				# debug_sphere.position = marker_pos
-				# dungeon_tiles.add_child(debug_sphere)
-				# debug_sphere.owner = _get_edited_scene_root()
-	
+
+	# DEBUG: Spawn debug marker at the ACTUAL stair endpoint using stair_end_platform
+	# Only spawn for DIAGONAL tunnels (not horizontal) to avoid duplicates
+	# Each stair calls this function twice: once for diagonal, once for horizontal
+	if tunnel_type != STAIRS_TUNNEL_TYPE_HORIZONTAL and _stairs_tile != null and is_instance_valid(_stairs_tile.stair_end_platform):
+		var debug_sphere = MeshInstance3D.new()
+		var sphere_mesh = SphereMesh.new()
+		sphere_mesh.radius = 0.5
+		sphere_mesh.height = 1.0
+		debug_sphere.mesh = sphere_mesh
+		debug_sphere.name = "STAIR_ENDPOINT_DEBUG"
+		
+		# Create yellow emissive material
+		var debug_material = StandardMaterial3D.new()
+		debug_material.albedo_color = Color(1.0, 1.0, 0.0, 1.0) # Yellow
+		debug_material.emission_enabled = true
+		debug_material.emission = Color(1.0, 1.0, 0.0, 1.0) # Yellow emission
+		debug_material.emission_energy_multiplier = 2.0
+		debug_sphere.material_override = debug_material
+		
+		# Get stair end position then find the horizontal tile coordinate
+		var stair_end_pos = _stairs_tile.stair_end_platform.global_position
+		
+		# Convert to tile coordinate, but use the target floor Y level (end_coord.y)
+		var stair_end_coord_raw: Vector3i = _world_to_tile_coord(stair_end_pos)
+		var stair_end_coord = Vector3i(stair_end_coord_raw.x, end_coord.y, stair_end_coord_raw.z)
+		
+		# Find the tile at this horizontal position
+		var endpoint_tile: DungeonTile = _get_tile_at_coord(stair_end_coord)
+		
+		# Position the sphere at the center of the tile on the floor level
+		var sphere_pos = Vector3(
+			stair_end_coord.x * TILE_SIZE.x,
+			stair_end_coord.y * TILE_SIZE.y + 1.0, # Slightly above floor
+			stair_end_coord.z * TILE_SIZE.z
+		)
+		debug_sphere.position = sphere_pos
+		dungeon_tiles.add_child(debug_sphere)
+		debug_sphere.owner = _get_edited_scene_root()
+		
+		# DEBUG: Log wall information for the tile where stairs actually end
+		if endpoint_tile != null:
+			var wall_count = 0
+			if endpoint_tile.wall_f != null and not endpoint_tile.wall_f.is_queued_for_deletion():
+				wall_count += 1
+			if endpoint_tile.wall_r != null and not endpoint_tile.wall_r.is_queued_for_deletion():
+				wall_count += 1
+			if endpoint_tile.wall_b != null and not endpoint_tile.wall_b.is_queued_for_deletion():
+				wall_count += 1
+			if endpoint_tile.wall_l != null and not endpoint_tile.wall_l.is_queued_for_deletion():
+				wall_count += 1
+			
+			print("=== STAIR ENDPOINT DEBUG ===")
+			print("  Stair end coord: ", stair_end_coord)
+			print("  Stair end platform pos: ", stair_end_pos)
+			print("  Wall count: ", wall_count)
+			print("  Has floor: ", endpoint_tile.floor != null and not endpoint_tile.floor.is_queued_for_deletion())
+			print("============================")
+		else:
+			print("=== STAIR ENDPOINT DEBUG ===")
+			print("  Stair end coord: ", stair_end_coord)
+			print("  Stair end platform pos: ", stair_end_pos)
+			print("  ERROR: No tile found at stair endpoint!")
+			print("============================")
+
+
 	var tunnel_coords: Array[Vector3i] = []
 	var seen: Dictionary = {}
 	var base_with_support = _expand_path_with_vertical_support(base_path_coords)

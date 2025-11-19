@@ -23,7 +23,7 @@ func configure_stairs_height(floor_height):
 	csg_linear_stairs.stairs_amount_set(STAIRS_AMOUNT_PER_TILE * floor_height)
 	global_rotation_degrees.y = randi_range(0, 4) * 90
 	# После обновления лестниц, переместить stair_raycast_direction на позицию последней лестницы плюс локальный оффсет
-	await get_tree().process_frame  # Ждем обновления лестниц
+	await get_tree().process_frame # Ждем обновления лестниц
 	
 	var stairs_amount = csg_linear_stairs.stairs_amount
 	if stairs_amount > 0:
@@ -34,7 +34,7 @@ func configure_stairs_height(floor_height):
 		# X: 0
 		var last_stair_index = stairs_amount - 1
 		var last_stair_y = (STAIR_HEIGHT / 2) + (last_stair_index * STAIR_HEIGHT)
-		var last_stair_z = -last_stair_index * STAIR_DEPTH
+		var last_stair_z = - last_stair_index * STAIR_DEPTH
 		var last_stair_x = 0.0
 		
 		# Позиция последней лестницы в локальных координатах CSGLinearStairs
@@ -97,7 +97,7 @@ func _raycast_and_remove_solids(direction_node: Node3D, tunnel_type: String):
 	# Удаляем объекты сразу в каждом цикле
 	var removed_anything := false
 	var current_origin = origin_global
-	var max_iterations = 100  # Защита от бесконечного цикла
+	var max_iterations = 100 # Защита от бесконечного цикла
 	var iteration = 0
 	
 	while iteration < max_iterations:
@@ -147,7 +147,6 @@ func _raycast_and_remove_solids(direction_node: Node3D, tunnel_type: String):
 func _is_solid_object(obj: Node) -> bool:
 	# Проверяем, является ли объект солидом (стена, пол, потолок)
 	# Это могут быть CSG объекты или части DungeonTile (floor, ceiling, walls)
-	
 	# Проверяем, является ли это часть DungeonTile (floor, ceiling, walls)
 	var parent = obj.get_parent()
 	if parent != null and parent is DungeonTile:
@@ -164,7 +163,7 @@ func _is_solid_object(obj: Node) -> bool:
 	
 	# Проверяем, является ли объект дочерним элементом floor/ceiling/wall из DungeonTile
 	var current = obj
-	for i in range(5):  # Проверяем до 5 уровней вверх
+	for i in range(5): # Проверяем до 5 уровней вверх
 		if current == null:
 			break
 		var current_parent = current.get_parent()
