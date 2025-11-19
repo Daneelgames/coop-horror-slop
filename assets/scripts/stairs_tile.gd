@@ -19,9 +19,9 @@ const TILE_SIZE: Vector3i = Vector3i(4, 2, 4)
 const TUNNEL_TYPE_DIAGONAL := "diagonal"
 const TUNNEL_TYPE_HORIZONTAL := "horizontal"
 
-func configure_stairs_height(floor_height):
+func configure_stairs_height(floor_height, rng: RandomNumberGenerator):
 	csg_linear_stairs.stairs_amount_set(STAIRS_AMOUNT_PER_TILE * floor_height)
-	global_rotation_degrees.y = randi_range(0, 4) * 90
+	global_rotation_degrees.y = rng.randi_range(0, 4) * 90
 	# После обновления лестниц, переместить stair_raycast_direction на позицию последней лестницы плюс локальный оффсет
 	await get_tree().process_frame # Ждем обновления лестниц
 	
@@ -61,16 +61,16 @@ func configure_stairs_height(floor_height):
 	# Ждем еще один фрейм, чтобы убедиться, что все обновлено
 	await get_tree().process_frame
 	
-	var should_raycast := (multiplayer.has_multiplayer_peer() and multiplayer.is_server()) or not multiplayer.has_multiplayer_peer()
-	if should_raycast:
-		var raycast_targets = [
-			{"node": stair_diagonal_raycast_direction, "type": TUNNEL_TYPE_DIAGONAL},
-			{"node": stair_horizontal_raycast_direction, "type": TUNNEL_TYPE_HORIZONTAL}
-		]
-		for target_data in raycast_targets:
-			var direction_node: Node3D = target_data["node"]
-			var tunnel_type: String = target_data["type"]
-			await _raycast_and_remove_solids(direction_node, tunnel_type)
+	# Run raycast on all clients for local obstacle removal and tunnel creation
+	# Each client needs to remove obstacles in their own scene tree
+	var raycast_targets = [
+		{"node": stair_diagonal_raycast_direction, "type": TUNNEL_TYPE_DIAGONAL},
+		{"node": stair_horizontal_raycast_direction, "type": TUNNEL_TYPE_HORIZONTAL}
+	]
+	for target_data in raycast_targets:
+		var direction_node: Node3D = target_data["node"]
+		var tunnel_type: String = target_data["type"]
+		await _raycast_and_remove_solids(direction_node, tunnel_type)
 
 func _raycast_and_remove_solids(direction_node: Node3D, tunnel_type: String):
 	if direction_node == null:

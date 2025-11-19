@@ -955,7 +955,7 @@ func handle_state(moving):
 
 # Any enter state function should only be called once when you want to enter that state, not every frame.
 func enter_normal_state():
-	#print("entering normal state")
+	#print("entering normal state ")
 	var prev_state = state
 	state = "normal"
 	speed = base_speed

@@ -685,7 +685,6 @@ mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPla
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])
 death_anims = Array[StringName]([&"death_0", &"death_1", &"death_2", &"death_3"])
 PLAYER_COLLIDER = NodePath("Collision")
-STEP_DOWN_DEBUG = true
 
 [node name="DustGPUParticles3D" type="GPUParticles3D" parent="."]
 unique_name_in_owner = true

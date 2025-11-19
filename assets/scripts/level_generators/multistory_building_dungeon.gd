@@ -68,6 +68,13 @@ func _await_frame():
 		if get_tree():
 			await get_tree().process_frame
 
+func _sort_tiles_by_coord(a: DungeonTile, b: DungeonTile) -> bool:
+	if a.coord.x != b.coord.x:
+		return a.coord.x < b.coord.x
+	if a.coord.y != b.coord.y:
+		return a.coord.y < b.coord.y
+	return a.coord.z < b.coord.z
+
 func _shuffle_array(arr: Array) -> void:
 	# Shuffle array using seeded RNG (Fisher-Yates algorithm)
 	for i in range(arr.size() - 1, 0, -1):
@@ -465,6 +472,10 @@ func _connect_rooms_with_doors_on_floor(floor_y: int):
 			tiles_by_room[room] = []
 		tiles_by_room[room].append(tile)
 		tiles_found += 1
+	
+	# Sort tiles in each room to ensure deterministic order
+	for room in tiles_by_room:
+		tiles_by_room[room].sort_custom(_sort_tiles_by_coord)
 	
 	
 	# Фильтровать комнаты - оставить только те, у которых есть тайлы на этом этаже
@@ -1087,6 +1098,10 @@ func _connect_dead_end_rooms(floor_y: int, initial_dead_end_rooms: Array[Resourc
 							tiles_by_room[room] = []
 						tiles_by_room[room].append(tile)
 
+					# Sort tiles in each room to ensure deterministic order
+					for room in tiles_by_room:
+						tiles_by_room[room].sort_custom(_sort_tiles_by_coord)
+
 					# Connect the remaining dead-end to the target room
 					var room1: ResourceDungeonRoom = remaining_dead_end
 					var room2: ResourceDungeonRoom = target_room
@@ -1112,6 +1127,10 @@ func _connect_dead_end_rooms(floor_y: int, initial_dead_end_rooms: Array[Resourc
 			if not tiles_by_room.has(room):
 				tiles_by_room[room] = []
 			tiles_by_room[room].append(tile)
+
+		# Sort tiles in each room to ensure deterministic order
+		for room in tiles_by_room:
+			tiles_by_room[room].sort_custom(_sort_tiles_by_coord)
 
 		# Shuffle and pick first two rooms to connect
 		var shuffled_dead_ends = valid_dead_ends.duplicate()
@@ -1600,6 +1619,10 @@ func spawn_stairs_between_floors():
 				tiles_by_room[room] = []
 			tiles_by_room[room].append(tile)
 
+		# Sort tiles in each room to ensure deterministic order
+		for room in tiles_by_room:
+			tiles_by_room[room].sort_custom(_sort_tiles_by_coord)
+
 		# Фильтровать комнаты с тайлами
 		var rooms_with_tiles: Array[ResourceDungeonRoom] = []
 		for room in rooms_on_floor:
@@ -1612,6 +1635,8 @@ func spawn_stairs_between_floors():
 		# Определить количество лестниц для этого этажа
 		var target_stairs_count: int = rng.randi_range(min_stairs_per_floor, max_stairs_per_floor)
 		target_stairs_count = min(target_stairs_count, rooms_with_tiles.size()) # Не больше количества комнат
+		
+		print("DEBUG: Floor ", floor_y, " target_stairs_count: ", target_stairs_count, " rooms_with_tiles: ", rooms_with_tiles.size())
 
 		# Выбрать комнаты для размещения лестниц (на максимальном расстоянии друг от друга)
 		var selected_rooms: Array[ResourceDungeonRoom] = []
@@ -1726,6 +1751,8 @@ func _spawn_stairs_at_coord(coord: Vector3i, floor_height: int):
 		coord.y * TILE_SIZE.y,
 		coord.z * TILE_SIZE.z
 	)
+	
+	print("DEBUG: Spawning stairs at ", coord, " (client? ", not multiplayer.is_server(), ")")
 
 	var stairs_tile: StairsTile = STAIRS_1.instantiate()
 	stairs_tile.position = world_position
@@ -1736,7 +1763,7 @@ func _spawn_stairs_at_coord(coord: Vector3i, floor_height: int):
 	stairs_tile.owner = _get_edited_scene_root()
 
 	# Конфигурировать высоту лестницы
-	await stairs_tile.configure_stairs_height(floor_height)
+	await stairs_tile.configure_stairs_height(floor_height, rng)
 
 	# Записать в словарь спавненных лестниц
 	spawned_stairs_coords[coord] = stairs_tile
@@ -2502,6 +2529,9 @@ func spawn_props():
 			continue
 		tiles_with_floors.append(tile)
 	
+	# Sort tiles to ensure deterministic order before random selection
+	tiles_with_floors.sort_custom(_sort_tiles_by_coord)
+	
 	if tiles_with_floors.is_empty():
 		print("spawn_props: No tiles with floors found")
 		return
@@ -2596,6 +2626,9 @@ func spawn_wall_torches():
 		if spawned_stairs_coords.has(tile.coord):
 			continue
 		tiles_with_floors.append(tile)
+	
+	# Sort tiles to ensure deterministic order before shuffling
+	tiles_with_floors.sort_custom(_sort_tiles_by_coord)
 	
 	if tiles_with_floors.is_empty():
 		print("spawn_wall_torches: No tiles with floors found")
