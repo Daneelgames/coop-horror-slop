@@ -136,7 +136,7 @@ func play_death():
 	death_audio_stream_player_3d.play()
 
 func play_mesh_animation(moving_vector, auth, state):
-	if is_attacking or is_taking_damage or is_dead() or is_blocking or is_blocking_react or is_stun_lock:
+	if is_attacking or is_taking_damage or is_dead() or is_blocking or is_blocking_react or is_stun_lock or is_on_floor() == false:
 		return
 	# For remote instances, use synced input_dir directly
 	# For local instance, check if on floor to avoid playing walk animation while in air

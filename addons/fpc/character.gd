@@ -756,11 +756,13 @@ func handle_jumping():
 			if Input.is_action_pressed(controls.JUMP) and is_on_floor():
 				if jump_animation:
 					JUMP_ANIMATION.play("jump", 0.25)
+				mesh_animation_player.play("jump", 0.1)
 				velocity.y += jump_velocity # Adding instead of setting so jumping on slopes works properly
 		else:
 			if Input.is_action_just_pressed(controls.JUMP) and is_on_floor():
 				if jump_animation:
 					JUMP_ANIMATION.play("jump", 0.25)
+				mesh_animation_player.play("jump", 0.1)
 				velocity.y += jump_velocity
 
 
@@ -915,7 +917,7 @@ func handle_state(moving):
 			elif state == "sprinting":
 				enter_normal_state()
 	
-	if crouch_enabled:
+	if crouch_enabled and is_multiplayer_authority():
 		if crouch_mode == 0: # Hold to crouch
 			if Input.is_action_pressed(controls.CROUCH) and state != "sprinting":
 				if state != "crouching":
