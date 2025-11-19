@@ -600,6 +600,13 @@ func handle_interaction():
 			else:
 				# Client sends RPC directly to the door (will route to server)
 				col.rpc_request_toggle.rpc_id(1, player_position)
+	elif col is InteractiveButton:
+		interaction_feedback_label_3d.text = 'INTERACT'
+		interaction_feedback_label_3d.visible = true
+		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
+		
+		if Input.is_action_just_pressed(controls.INTERACTION):
+			col.rpc_request_interaction.rpc()
 	else:
 		interaction_feedback_label_3d.visible = false
 			

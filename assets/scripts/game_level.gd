@@ -2,7 +2,7 @@ extends NavigationRegion3D
 
 @export var is_game_level_ready = false
 @export var level_generator_path: NodePath = "ProceduralDungeon"
-var level_generator: Node # Changed from ProceduralDungeon to Node to avoid casting issues in exported builds
+@export var level_generator: Node # Changed from ProceduralDungeon to Node to avoid casting issues in exported builds
 var players_placed: bool = false
 @onready var world_environment: WorldEnvironment = %WorldEnvironment
 
@@ -22,12 +22,6 @@ func _ready() -> void:
 			level_generator = node_from_path
 			print("GameLevel._ready: Found level generator from NodePath: ", node_from_path.name)
 	
-	# If not found, try to find any LevelGenerator-derived node recursively
-	if level_generator == null:
-		level_generator = _find_level_generator_recursive(self)
-		if level_generator != null:
-			print("GameLevel._ready: Found level generator recursively: ", level_generator.name)
-	
 	if level_generator == null:
 		push_error("GameLevel: Failed to find any LevelGenerator node! Children: " + str(get_children().map(func(c): return c.name)))
 		return
@@ -46,26 +40,6 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_M):
 		toggle_cheat_environment()
-
-func _find_level_generator_recursive(node: Node) -> Node:
-	# Check if current node is a LevelGenerator (base class for all generators)
-	# This works with ProceduralDungeon, MultistoryBuildingDungeon, and any future generators
-	var script = node.get_script()
-	if script:
-		var script_path = script.resource_path
-		# Check if script is a level generator by checking for common patterns
-		if script_path.ends_with("procedural_dungeon.gd") or \
-		   script_path.ends_with("multistory_building_dungeon.gd") or \
-		   "level_generator" in script_path.to_lower():
-			return node
-	
-	# Recursively check all children
-	for child in node.get_children():
-		var result = _find_level_generator_recursive(child)
-		if result != null:
-			return result
-	
-	return null
 
 var is_dark_env = true
 var cheat_env_cooldown = false
@@ -404,3 +378,89 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 		elevator.set_multiplayer_authority(1)
 	
 	print("_spawn_elevator_at_position: Spawned elevator at position %s [is_server=%s]" % [elevator_pos, multiplayer.is_server()])
+	
+	# Заспавнить шахту лифта - 100 тайлов вверх без потолка и пола
+	_spawn_elevator_shaft(elevator_coord, 100)
+
+func _spawn_elevator_shaft(elevator_coord: Vector3i, shaft_height: int):
+	# Спавнить шахту лифта над тайлом с лифтом
+	# shaft_height - количество тайлов вверх
+	if level_generator == null:
+		push_warning("_spawn_elevator_shaft: level_generator is null")
+		return
+	
+	var TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # Должно совпадать с TILE_SIZE в level_generator
+	var DUNGEON_TILE = level_generator.DUNGEON_TILE
+	
+	if DUNGEON_TILE == null:
+		push_warning("_spawn_elevator_shaft: DUNGEON_TILE is null")
+		return
+	
+	# Найти узел DungeonTiles
+	var script = level_generator.get_script()
+	if not script:
+		return
+	
+	var script_path = script.resource_path
+	var is_multistory_building = script_path.ends_with("multistory_building_dungeon.gd")
+	
+	var dungeon_tiles_node: Node3D = null
+	if is_multistory_building:
+		dungeon_tiles_node = get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+	else:
+		dungeon_tiles_node = get_node_or_null("ProceduralDungeon/DungeonTiles")
+	
+	if dungeon_tiles_node == null:
+		var generator_name = level_generator.name
+		dungeon_tiles_node = get_node_or_null("%s/DungeonTiles" % generator_name)
+	
+	if dungeon_tiles_node == null:
+		push_warning("_spawn_elevator_shaft: Could not find DungeonTiles node")
+		return
+	
+	# Создать шахту - тайлы без пола и потолка
+	var tiles_created: int = 0
+	for i in range(1, shaft_height + 1):
+		var shaft_coord: Vector3i = elevator_coord + Vector3i(0, i, 0)
+		
+		# Проверить, не существует ли уже тайл на этой позиции
+		var existing_tile = level_generator._get_tile_at_coord(shaft_coord)
+		if existing_tile != null:
+			# Удалить пол и потолок у существующего тайла
+			if is_instance_valid(existing_tile.floor):
+				existing_tile.floor.queue_free()
+				existing_tile.floor = null
+			if is_instance_valid(existing_tile.ceiling):
+				existing_tile.ceiling.queue_free()
+				existing_tile.ceiling = null
+			tiles_created += 1
+			continue
+		
+		# Создать новый тайл для шахты
+		var world_position: Vector3 = Vector3(
+			shaft_coord.x * TILE_SIZE.x,
+			shaft_coord.y * TILE_SIZE.y,
+			shaft_coord.z * TILE_SIZE.z
+		)
+		
+		var shaft_tile = DUNGEON_TILE.instantiate()
+		shaft_tile.position = world_position
+		shaft_tile.coord = shaft_coord
+		shaft_tile.master_dungeon = level_generator
+		dungeon_tiles_node.add_child(shaft_tile)
+		shaft_tile.owner = get_tree().edited_scene_root
+		
+		# Удалить пол и потолок у тайла шахты
+		# Подождем один кадр, чтобы тайл успел сконфигурироваться
+		await get_tree().process_frame
+		
+		if is_instance_valid(shaft_tile.floor):
+			shaft_tile.floor.queue_free()
+			shaft_tile.floor = null
+		if is_instance_valid(shaft_tile.ceiling):
+			shaft_tile.ceiling.queue_free()
+			shaft_tile.ceiling = null
+		
+		tiles_created += 1
+	
+	print("_spawn_elevator_shaft: Created %d shaft tiles above elevator at %s" % [tiles_created, elevator_coord])

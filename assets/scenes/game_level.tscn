@@ -37,10 +37,11 @@ script = ExtResource("7_dc4xw")
 item_resource = ExtResource("11_q5pb2")
 metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
 
-[node name="GameLevel" type="NavigationRegion3D"]
+[node name="GameLevel" type="NavigationRegion3D" node_paths=PackedStringArray("level_generator")]
 navigation_mesh = SubResource("NavigationMesh_ax1lr")
 script = ExtResource("1_nbe18")
 level_generator_path = NodePath("MultistoryBuildingDungeon")
+level_generator = NodePath("MultistoryBuildingDungeon")
 
 [node name="ParticlesManager" type="Node3D" parent="."]
 script = ExtResource("2_slvmx")
@@ -61,6 +62,7 @@ transform = Transform3D(0.7283828, 0.011957396, 0.68506604, 0, 0.9998477, -0.017
 [node name="MultistoryBuildingDungeon" type="Node3D" parent="."]
 script = ExtResource("12_0ts1u")
 item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_s1m6h"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
+mobs_amount_to_spawn = 10
 floors_heights = Array[int]([3, 3, 3, 3])
 min_stairs_per_floor = 2
 max_stairs_per_floor = 2

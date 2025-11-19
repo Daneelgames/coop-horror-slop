@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=4 uid="uid://d1fhekbr7wjf3"]
+[gd_scene load_steps=51 format=4 uid="uid://d1fhekbr7wjf3"]
 
 [ext_resource type="Texture2D" uid="uid://x5ctr86ri1dx" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_AlbedoTransparency.png" id="1_e4udu"]
 [ext_resource type="Script" uid="uid://cepasvg8pm00v" path="res://assets/scripts/main_elevator_controller.gd" id="1_hvhng"]
@@ -8,6 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://ngrwblupu04x" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_Normal.png" id="5_5iafp"]
 [ext_resource type="Material" uid="uid://buxkri7ewck05" path="res://assets/meshes/wire_material.tres" id="7_2rv35"]
 [ext_resource type="AudioStream" uid="uid://k0tgy3dqh7mk" path="res://assets/audio/breakLight.wav" id="7_btkhg"]
+[ext_resource type="Script" uid="uid://becxrvqo1r2mv" path="res://assets/scripts/interactive_button.gd" id="9_iktdn"]
+[ext_resource type="Material" uid="uid://dl0ctdhmj41te" path="res://assets/meshes/emissive_gold.tres" id="10_3lv7n"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iktdn"]
 transparency = 2
@@ -505,10 +507,10 @@ size = Vector3(4.868164, 0.15039063, 4.6933594)
 size = Vector3(0.26333618, 6.0321045, 4.2644043)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5iafp"]
-size = Vector3(0.25845337, 6.0321045, 3.884674)
+size = Vector3(0.13996887, 6.0321045, 3.884674)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_btkhg"]
-size = Vector3(2.126709, 2.9448853, 0.28027344)
+size = Vector3(1.8955383, 1.7119293, 2.6992188)
 
 [sub_resource type="Animation" id="Animation_2rv35"]
 length = 0.001
@@ -535,6 +537,30 @@ tracks/1/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector3(1, 1, 1)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("DoorBlockCollisionShape3D:disabled")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("DoorBlockCollisionShape3D2:disabled")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
 }
 
 [sub_resource type="Animation" id="Animation_btkhg"]
@@ -563,6 +589,30 @@ tracks/1/keys = {
 "update": 0,
 "values": [Vector3(1, 1, 1)]
 }
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("DoorBlockCollisionShape3D:disabled")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.03333333, 0.26333332, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [false, false, false]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("DoorBlockCollisionShape3D2:disabled")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0.03333333, 0.26333332, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [false, false, false]
+}
 
 [sub_resource type="Animation" id="Animation_hvhng"]
 resource_name = "open"
@@ -590,6 +640,30 @@ tracks/1/keys = {
 "update": 0,
 "values": [Vector3(0.05572033, 1, 1)]
 }
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("DoorBlockCollisionShape3D2:disabled")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.16666667, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [true, true, true]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("DoorBlockCollisionShape3D:disabled")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.16666667, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [true, true, true]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_5iafp"]
 _data = {
@@ -603,8 +677,13 @@ random_pitch = 1.1
 streams_count = 1
 stream_0/stream = ExtResource("7_btkhg")
 
-[node name="Elevator" type="StaticBody3D"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_v07g7"]
+radius = 0.34716797
+height = 0.84851074
+
+[node name="Elevator" type="StaticBody3D" node_paths=PackedStringArray("elevator_button")]
 script = ExtResource("1_hvhng")
+elevator_button = NodePath("ButonStaticBody3D")
 
 [node name="Visual" type="Node3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.14813232, 0)
@@ -764,26 +843,31 @@ shape = SubResource("BoxShape3D_2rv35")
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.93462205, 1.4924927, 0.007331848)
 shape = SubResource("BoxShape3D_5iafp")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.9150512, 0.4033377, 0, -0.4033377, 0.9150512, 0, 2.6385581, 0.6498693)
+[node name="DoorBlockCollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(-2.1855694e-08, 0, -0.5, 0, 0.5, 0, 0.5, 0, -2.1855694e-08, -0.06537795, 1.4924927, 1.0678867)
+shape = SubResource("BoxShape3D_5iafp")
+disabled = true
+
+[node name="DoorBlockCollisionShape3D2" type="CollisionShape3D" parent="."]
+transform = Transform3D(-2.1855694e-08, 0, -0.5, 0, 0.5, 0, 0.5, 0, -2.1855694e-08, -0.06537795, 1.4924927, -1.0751996)
+shape = SubResource("BoxShape3D_5iafp")
+
+[node name="SpotLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6371827, -4.1246414e-05)
 light_color = Color(1, 0.80784315, 0.31764707, 1)
 light_energy = 5.0
 shadow_enabled = true
-spot_range = 10.0
-spot_attenuation = 0.2
+omni_range = 10.0
+omni_attenuation = 0.1
 
 [node name="ElevatorArea3D" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.0981894)
 collision_layer = 0
-collision_mask = 2
+collision_mask = 6
 monitorable = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ElevatorArea3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4204612, 0)
-shape = SubResource("BoxShape3D_btkhg")
-
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="ElevatorArea3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4515076, 2.230449)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017532349, 0.9575782, 1.1135559)
 shape = SubResource("BoxShape3D_btkhg")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
@@ -797,6 +881,35 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3957763, 0)
 stream = SubResource("AudioStreamRandomizer_2rv35")
 pitch_scale = 0.7
 bus = &"SFX"
+
+[node name="ButonStaticBody3D" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5636587, 3.403225, 0)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("9_iktdn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ButonStaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.36572218, 0)
+shape = SubResource("CapsuleShape3D_v07g7")
+
+[node name="Visual" type="CSGCombiner3D" parent="ButonStaticBody3D/CollisionShape3D"]
+material_override = ExtResource("10_3lv7n")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="ButonStaticBody3D/CollisionShape3D/Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5024414, 0)
+size = Vector3(0.17797852, 0.87402344, 0.061523438)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="ButonStaticBody3D/CollisionShape3D/Visual"]
+transform = Transform3D(-4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0, 1, 0, -0.28516054, 0)
+size = Vector3(0.095703125, 0.5996094, 0.061523438)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="ButonStaticBody3D/CollisionShape3D/Visual"]
+transform = Transform3D(0.8660254, -0.5, 0, 0.5, 0.8660254, 0, 0, 0, 1, 0.14578855, -0.06480026, 0)
+size = Vector3(0.07727051, 0.4345703, 0.061523438)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="ButonStaticBody3D/CollisionShape3D/Visual"]
+transform = Transform3D(0.86930525, 0.49427557, 0, -0.49427557, 0.86930525, 0, 0, 0, 1, -0.16228396, -0.058692932, 0)
+size = Vector3(0.0513916, 0.4345703, 0.061523438)
 
 [connection signal="body_entered" from="ElevatorArea3D" to="." method="_on_elevator_area_3d_body_entered"]
 [connection signal="body_exited" from="ElevatorArea3D" to="." method="_on_elevator_area_3d_body_exited"]
