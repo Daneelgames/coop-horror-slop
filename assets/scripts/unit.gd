@@ -2,16 +2,16 @@ extends StairsCharacterBody3D
 #extends CharacterBody3D
 class_name Unit
 
-var item_in_hands : Weapon = null
-@export var team : int = 0
+var item_in_hands: Weapon = null
+@export var team: int = 0
 @export var mesh_animation_player: AnimationPlayer
-@export var health_current : float = 100
-@export var health_max : float = 100
+@export var health_current: float = 100
+@export var health_max: float = 100
 
-@export var take_damage_anims : Array[StringName]= []
-@export var death_anims : Array[StringName]= []
+@export var take_damage_anims: Array[StringName] = []
+@export var death_anims: Array[StringName] = []
 
-@export var is_attacking = false 
+@export var is_attacking = false
 @export var is_blocking = false
 @export var is_blocking_react = false
 @export var is_stun_lock = false
@@ -69,7 +69,7 @@ func take_damage(dmg):
 		velocity.x = 0
 		velocity.z = 0
 	health_current -= dmg
-	if  health_current <= 0:
+	if health_current <= 0:
 		death()
 	else:
 		play_damage_anim()
@@ -148,12 +148,19 @@ func play_mesh_animation(moving_vector, auth, state):
 		if state == "sprinting":
 			if mesh_animation_player.current_animation != "run_forward":
 				mesh_animation_player.play("run_forward", 0.2)
+		elif state == "crouching":
+			if mesh_animation_player.current_animation != "crouch_walk":
+				mesh_animation_player.play("crouch_walk", 0.2)
 		else:
 			if mesh_animation_player.current_animation != "walk_forward":
 				mesh_animation_player.play("walk_forward", 0.2)
 	else:
-		if mesh_animation_player.current_animation != "idle":
-			mesh_animation_player.play("idle", 0.2)
+		if state == "crouching":
+			if mesh_animation_player.current_animation != "crouch":
+				mesh_animation_player.play("crouch", 0.2)
+		else:
+			if mesh_animation_player.current_animation != "idle":
+				mesh_animation_player.play("idle", 0.2)
 			
 @rpc("authority", "call_local")
 func rpc_full_heal_and_resurrect():

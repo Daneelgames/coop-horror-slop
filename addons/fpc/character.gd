@@ -9,35 +9,36 @@ class_name PlayerCharacter
 #region Character Export Group
 
 ## The settings for the character's movement and feel.
-@export var carrying_items : Dictionary[StringName, ResourceWeapon] = {}  
-@export var inventory_slots_max : int = 5
-@export var current_selected_item_index : int = 0
+@export var carrying_items: Dictionary[StringName, ResourceWeapon] = {}
+@export var inventory_slots_max: int = 5
+@export var current_selected_item_index: int = 0
 @onready var interaction_ray_cast_3d: RayCast3D = %InteractionRayCast3D
 
 @onready var inventory_slots_panel_container: PlayerInventorySlotsPanelContainer = %InventorySlotsPanelContainer
 @export_category("Character")
 ## The speed that the character moves at without crouching or sprinting.
-@export var base_speed : float = 3.0
+@export var base_speed: float = 3.0
+@export var crouch_speed: float = 1.0
 ## The speed that the character moves at when sprinting.
-@export var sprint_speed : float = 6.0
+@export var sprint_speed: float = 6.0
 
 ## How fast the character speeds up and slows down when Motion Smoothing is on.
-@export var acceleration : float = 10.0
+@export var acceleration: float = 10.0
 ## How high the player jumps.
-@export var jump_velocity : float = 4.5
+@export var jump_velocity: float = 4.5
 ## How far the player turns when the mouse is moved.
-@export var mouse_sensitivity : float = 0.1
-@export var camera_clamp : Vector2 = Vector2(-80,80)
+@export var mouse_sensitivity: float = 0.1
+@export var camera_clamp: Vector2 = Vector2(-80, 80)
 ## How fast the camera rotation smooths (higher = faster). Set to 0 to disable smoothing.
-@export var rotation_smoothing_speed : float = 20.0
+@export var rotation_smoothing_speed: float = 20.0
 ## Invert the X axis input for the camera.
-@export var invert_camera_x_axis : bool = false
+@export var invert_camera_x_axis: bool = false
 ## Invert the Y axis input for the camera.
-@export var invert_camera_y_axis : bool = false
-@export var fov_sprint : float = 80
-@export var fov_idle : float = 50
+@export var invert_camera_y_axis: bool = false
+@export var fov_sprint: float = 80
+@export var fov_idle: float = 50
 ## Whether the player can use movement inputs. Does not stop outside forces or jumping. See Jumping Enabled.
-@export var immobile : bool = false
+@export var immobile: bool = false
 ## The reticle file to import at runtime. By default are in res://addons/fpc/reticles/. Set to an empty string to remove.
 @export_file var default_reticle
 
@@ -47,26 +48,28 @@ class_name PlayerCharacter
 
 @export_group("Nodes")
 ## A reference to the camera for use in the character script. This is the parent node to the camera and is rotated instead of the camera for mouse input.
-@export var HEAD : Node3D
+@export var HEAD: Node3D
 ## A reference to the camera for use in the character script.
-@export var CAMERA : Camera3D
+@export var CAMERA: Camera3D
 ## A reference to the headbob animation for use in the character script.
 
-@export var HEADBOB_ANIMATION : AnimationPlayer
+@export var HEADBOB_ANIMATION: AnimationPlayer
 ## A reference to the jump animation for use in the character script.
-@export var JUMP_ANIMATION : AnimationPlayer
+@export var JUMP_ANIMATION: AnimationPlayer
 ## A reference to the the player's collision shape for use in the character script.
-@export var COLLISION_MESH : CollisionShape3D
-@export var visual_node_3d : Node3D
-@export var skeleton_3d : Skeleton3D
+@export var COLLISION_MESH: CollisionShape3D
+@export var visual_node_3d: Node3D
+@export var skeleton_3d: Skeleton3D
 #endregion
 
 #region Controls Export Group
-
+@export var head_height_idle = 1.5
+@export var head_height_crouch = 1.0
+@export var is_crouching = false
 # We are using UI controls because they are built into Godot Engine so they can be used right away
 @export_group("Controls")
 ## Use the Input Map to map a mouse/keyboard input to an action and add a reference to it to this dictionary to be used in the script.
-@export var controls : Dictionary = {
+@export var controls: Dictionary = {
 	LEFT = "move_left",
 	RIGHT = "move_right",
 	FORWARD = "move_up",
@@ -81,93 +84,93 @@ class_name PlayerCharacter
 	}
 @export_subgroup("Controller Specific")
 ## This only affects how the camera is handled, the rest should be covered by adding controller inputs to the existing actions in the Input Map.
-@export var controller_support : bool = false
+@export var controller_support: bool = false
 ## Use the Input Map to map a controller input to an action and add a reference to it to this dictionary to be used in the script.
-@export var controller_controls : Dictionary = {
+@export var controller_controls: Dictionary = {
 	LOOK_LEFT = "look_left",
 	LOOK_RIGHT = "look_right",
 	LOOK_UP = "look_up",
 	LOOK_DOWN = "look_down"
 	}
 ## The sensitivity of the analog stick that controls camera rotation. Lower is less sensitive and higher is more sensitive.
-@export_range(0.001, 1, 0.001) var look_sensitivity : float = 0.035
+@export_range(0.001, 1, 0.001) var look_sensitivity: float = 0.035
 
 #endregion
 
 #region Feature Settings Export Group
-
 @export_group("Feature Settings")
+@export var collision_idle_height: float = 1.6
+@export var collision_crouch_height: float = 1.0
 ## Enable or disable jumping. Useful for restrictive storytelling environments.
-@export var jumping_enabled : bool = true
+@export var jumping_enabled: bool = true
 ## Whether the player can move in the air or not.
-@export var in_air_momentum : bool = true
+@export var in_air_momentum: bool = true
 ## Smooths the feel of walking.
-@export var motion_smoothing : bool = true
+@export var motion_smoothing: bool = true
 ## Enables or disables sprinting.
-@export var sprint_enabled : bool = true
+@export var sprint_enabled: bool = true
 ## Toggles the sprinting state when button is pressed or requires the player to hold the button down to remain sprinting.
-@export_enum("Hold to Sprint", "Toggle Sprint") var sprint_mode : int = 0
+@export_enum("Hold to Sprint", "Toggle Sprint") var sprint_mode: int = 0
 ## Enables or disables crouching.
-@export var crouch_enabled : bool = true
+@export var crouch_enabled: bool = true
 ## Toggles the crouch state when button is pressed or requires the player to hold the button down to remain crouched.
-@export_enum("Hold to Crouch", "Toggle Crouch") var crouch_mode : int = 0
+@export_enum("Hold to Crouch", "Toggle Crouch") var crouch_mode: int = 0
 ## Wether sprinting should effect FOV.
-@export var dynamic_fov : bool = true
+@export var dynamic_fov: bool = true
 ## If the player holds down the jump button, should the player keep hopping.
-@export var continuous_jumping : bool = true
+@export var continuous_jumping: bool = true
 ## Enables the view bobbing animation.
-@export var view_bobbing : bool = true
+@export var view_bobbing: bool = true
 ## Enables an immersive animation when the player jumps and hits the ground.
-@export var jump_animation : bool = true
+@export var jump_animation: bool = true
 ## This determines wether the player can use the pause button, not wether the game will actually pause.
-@export var pausing_enabled : bool = true
+@export var pausing_enabled: bool = true
 ## Use with caution.
-@export var gravity_enabled : bool = true
+@export var gravity_enabled: bool = true
 ## If your game changes the gravity value during gameplay, check this property to allow the player to experience the change in gravity.
-@export var dynamic_gravity : bool = false
+@export var dynamic_gravity: bool = false
 
 #endregion
 
 
-@export var debug_authority : bool = true
+@export var debug_authority: bool = true
 
 #region Member Variable Initialization
 
 # These are variables used in this script that don't need to be exposed in the editor.
-var speed : float = base_speed
-var current_speed : float = 0.0
+var speed: float = base_speed
+var current_speed: float = 0.0
 # States: normal, sprinting
-@export var state : String = "normal"
-var low_ceiling : bool = false # This is for when the ceiling is too low and the player needs to crouch.
-var was_on_floor : bool = true # Was the player on the floor last frame (for landing animation)
-var attack_push_velocity : Vector3 = Vector3.ZERO  # Store push velocity from attacks
+@export var state: String = "normal"
+var low_ceiling: bool = false # This is for when the ceiling is too low and the player needs to crouch.
+var was_on_floor: bool = true # Was the player on the floor last frame (for landing animation)
+var attack_push_velocity: Vector3 = Vector3.ZERO # Store push velocity from attacks
 
 # The reticle should always have a Control node as the root
-var RETICLE : Control
+var RETICLE: Control
 
 # Get the gravity from the project settings to be synced with RigidBody nodes
-var gravity : float = ProjectSettings.get_setting("physics/3d/default_gravity") # Don't set this as a const, see the gravity section in _physics_process
+var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") # Don't set this as a const, see the gravity section in _physics_process
 
 # Stores mouse input for rotating the camera in the physics process
-var mouseInput : Vector2 = Vector2(0,0)
+var mouseInput: Vector2 = Vector2(0, 0)
 
 # Target rotations for smoothing
-var target_head_rotation_x : float = 0.0
-var target_character_rotation_y : float = 0.0
+var target_head_rotation_x: float = 0.0
+var target_character_rotation_y: float = 0.0
 
 # Tracks whether this instance is allowed to process local player input.
-var _has_input_authority : bool = false
-var _debug_last_should_control : bool = false
-var _debug_last_has_input : bool = false
-var _debug_last_blocked_reason : String = ""
+var _has_input_authority: bool = false
+var _debug_last_should_control: bool = false
+var _debug_last_has_input: bool = false
+var _debug_last_blocked_reason: String = ""
 # Cached peer ID to avoid parsing name every frame
-var _cached_peer_id : int = -1
+var _cached_peer_id: int = -1
 # Cached local peer ID to avoid calling get_unique_id() every frame
-var _cached_local_peer_id : int = -1
+var _cached_local_peer_id: int = -1
 
 #endregion
 @onready var dust_gpu_particles_3d: GPUParticles3D = %DustGPUParticles3D
-
 
 
 #region Main Control Flow
@@ -318,13 +321,29 @@ func _physics_process(delta): # Most things happen here.
 	input_dir = Vector2.ZERO
 
 	#if not immobile and is_dead() == false and is_taking_damage == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false: # Immobility works by interrupting user input, so other forces can still be applied to the player
-	if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false: 
+	if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false:
 		input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
 
 	handle_movement(delta, input_dir)
 
 	handle_head_rotation()
 	apply_rotation_smoothing(delta)
+	
+	# Handle head height interpolation
+	var target_head_height = head_height_idle
+	var target_collision_height = collision_idle_height
+	if state == "crouching":
+		target_head_height = head_height_crouch
+		target_collision_height = collision_crouch_height
+	
+	HEAD.position.y = lerp(HEAD.position.y, target_head_height, 10 * delta)
+	
+	# Handle collision height interpolation
+	if COLLISION_MESH and COLLISION_MESH.shape is CapsuleShape3D:
+		var current_height = COLLISION_MESH.shape.height
+		var new_height = lerp(current_height, target_collision_height, 10 * delta)
+		COLLISION_MESH.shape.height = new_height
+		COLLISION_MESH.position.y = new_height / 2.0
 
 	# The player is not able to stand up if the ceiling is too low
 	low_ceiling = $CrouchCeilingDetection.is_colliding()
@@ -416,16 +435,16 @@ func rpc_drop_item(selected_item_index):
 			return
 		
 		# Calculate drop position in front of player
-		var drop_distance = 1.5  # Distance in front of player
-		var forward_direction = -requesting_player.CAMERA.global_transform.basis.z  # Forward is negative Z
+		var drop_distance = 1.5 # Distance in front of player
+		var forward_direction = - requesting_player.CAMERA.global_transform.basis.z # Forward is negative Z
 		var drop_position = requesting_player.global_position + forward_direction * drop_distance
-		drop_position.y = requesting_player.global_position.y + 0.5  # Slightly above ground
+		drop_position.y = requesting_player.global_position.y + 0.5 # Slightly above ground
 		
 		# Check if drop position is inside a wall (layer 1 - solids)
 		var space_state = requesting_player.get_world_3d().direct_space_state
 		var query = PhysicsRayQueryParameters3D.create(requesting_player.global_position, drop_position)
 		# Check only layer 1 (solids) - bit 0
-		query.collision_mask = (1 << 0)  # layer 1 only
+		query.collision_mask = (1 << 0) # layer 1 only
 		var result = space_state.intersect_ray(query)
 		if result:
 			# Collision detected, can't drop here
@@ -456,7 +475,7 @@ func rpc_drop_item(selected_item_index):
 			var selected_weapon_data = GameManager.serialize_weapon_resource(selected_item_resource)
 			requesting_player.rpc_update_item_in_hands.rpc(requesting_player.current_selected_item_index, selected_weapon_data)
 		else:
-			requesting_player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
+			requesting_player.rpc_update_item_in_hands.rpc(-1, {}) # No item selected
 		
 		# Update inventory on requesting client if not server
 		if requesting_peer_id != 1:
@@ -639,7 +658,7 @@ func rpc_destroy_weapon_by_position(weapon_position: Vector3):
 	if game_root == null:
 		return
 	
-	var search_radius = 0.5  # Search within 0.5 units
+	var search_radius = 0.5 # Search within 0.5 units
 	for child in game_root.get_children():
 		if child is InteractivePickup:
 			var distance = child.global_position.distance_to(weapon_position)
@@ -677,7 +696,7 @@ func rpc_update_inventory(serialized_inventory: Dictionary):
 		var weapon_data = GameManager.serialize_weapon_resource(selected_item_res)
 		rpc_update_item_in_hands(current_selected_item_index, weapon_data)
 	else:
-		rpc_update_item_in_hands(-1, {})  # No item selected
+		rpc_update_item_in_hands(-1, {}) # No item selected
 
 func handle_attacking():
 	if !_has_input_authority:
@@ -696,7 +715,6 @@ func handle_attacking():
 		
 @rpc("call_local")
 func rpc_melee_attack(attack_string: String):
-	
 	# Apply forward push when attacking (on the client that has authority over this character)
 	# Store push velocity to apply it after movement handling (so it doesn't get dampened)
 	if is_multiplayer_authority() and item_in_hands != null and item_in_hands.weapon_resource != null:
@@ -706,9 +724,9 @@ func rpc_melee_attack(attack_string: String):
 			# Use camera forward direction if available, otherwise use head
 			var forward_direction: Vector3
 			if CAMERA != null:
-				forward_direction = -CAMERA.global_transform.basis.z.normalized()
+				forward_direction = - CAMERA.global_transform.basis.z.normalized()
 			else:
-				forward_direction = -HEAD.global_transform.basis.z.normalized()
+				forward_direction = - HEAD.global_transform.basis.z.normalized()
 			# Ignore Y component for horizontal push
 			forward_direction.y = 0
 			forward_direction = forward_direction.normalized()
@@ -813,7 +831,7 @@ func handle_head_rotation():
 		else:
 			target_character_rotation_y += controller_view_rotation.x
 
-	mouseInput = Vector2(0,0)
+	mouseInput = Vector2(0, 0)
 	target_head_rotation_x = clamp(target_head_rotation_x, deg_to_rad(camera_clamp.x), deg_to_rad(camera_clamp.y))
 
 
@@ -892,6 +910,22 @@ func handle_state(moving):
 							enter_normal_state()
 			elif state == "sprinting":
 				enter_normal_state()
+	
+	if crouch_enabled:
+		if crouch_mode == 0: # Hold to crouch
+			if Input.is_action_pressed(controls.CROUCH) and state != "sprinting":
+				if state != "crouching":
+					enter_crouch_state()
+			elif state == "crouching":
+				if !low_ceiling:
+					enter_normal_state()
+		elif crouch_mode == 1: # Toggle crouch
+			if Input.is_action_just_pressed(controls.CROUCH):
+				if state == "crouching":
+					if !low_ceiling:
+						enter_normal_state()
+				elif state != "sprinting":
+					enter_crouch_state()
 
 
 # Any enter state function should only be called once when you want to enter that state, not every frame.
@@ -900,6 +934,7 @@ func enter_normal_state():
 	var prev_state = state
 	state = "normal"
 	speed = base_speed
+	is_crouching = false
 
 
 func enter_sprint_state():
@@ -907,6 +942,14 @@ func enter_sprint_state():
 	var prev_state = state
 	state = "sprinting"
 	speed = sprint_speed
+	is_crouching = false
+
+func enter_crouch_state():
+	#print("entering crouch state")
+	var prev_state = state
+	state = "crouching"
+	speed = crouch_speed
+	is_crouching = true
 
 #endregion
 
@@ -922,14 +965,14 @@ func play_headbob_animation(moving):
 	if !_has_input_authority:
 		return
 	if moving and is_on_floor():
-		var use_headbob_animation : String
+		var use_headbob_animation: String
 		match state:
-			"normal","crouching":
+			"normal", "crouching":
 				use_headbob_animation = "walk"
 			"sprinting":
 				use_headbob_animation = "sprint"
 
-		var was_playing : bool = false
+		var was_playing: bool = false
 		if HEADBOB_ANIMATION.current_animation == use_headbob_animation:
 			was_playing = true
 
@@ -949,12 +992,12 @@ func play_headbob_animation(moving):
 
 func play_jump_animation():
 	if !was_on_floor and is_on_floor(): # The player just landed
-		var facing_direction : Vector3 = CAMERA.get_global_transform().basis.x
-		var facing_direction_2D : Vector2 = Vector2(facing_direction.x, facing_direction.z).normalized()
-		var velocity_2D : Vector2 = Vector2(velocity.x, velocity.z).normalized()
+		var facing_direction: Vector3 = CAMERA.get_global_transform().basis.x
+		var facing_direction_2D: Vector2 = Vector2(facing_direction.x, facing_direction.z).normalized()
+		var velocity_2D: Vector2 = Vector2(velocity.x, velocity.z).normalized()
 
 		# Compares velocity direction against the camera direction (via dot product) to determine which landing animation to play.
-		var side_landed : int = round(velocity_2D.dot(facing_direction_2D))
+		var side_landed: int = round(velocity_2D.dot(facing_direction_2D))
 
 		if side_landed > 0:
 			JUMP_ANIMATION.play("land_right", 0.25)
@@ -969,7 +1012,7 @@ func play_jump_animation():
 
 func update_debug_menu_per_frame():
 	$UserInterface/DebugPanel.add_property("FPS", Performance.get_monitor(Performance.TIME_FPS), 0)
-	var status : String = state
+	var status: String = state
 	if !is_on_floor():
 		status += " in the air"
 	$UserInterface/DebugPanel.add_property("State", status, 4)
@@ -980,17 +1023,17 @@ func update_debug_menu_per_tick():
 	current_speed = Vector3.ZERO.distance_to(get_real_velocity())
 	$UserInterface/DebugPanel.add_property("Speed", snappedf(current_speed, 0.001), 1)
 	$UserInterface/DebugPanel.add_property("Target speed", speed, 2)
-	var cv : Vector3 = get_real_velocity()
-	var vd : Array[float] = [
+	var cv: Vector3 = get_real_velocity()
+	var vd: Array[float] = [
 		snappedf(cv.x, 0.001),
 		snappedf(cv.y, 0.001),
 		snappedf(cv.z, 0.001)
 	]
-	var readable_velocity : String = "X: " + str(vd[0]) + " Y: " + str(vd[1]) + " Z: " + str(vd[2])
+	var readable_velocity: String = "X: " + str(vd[0]) + " Y: " + str(vd[1]) + " Z: " + str(vd[2])
 	$UserInterface/DebugPanel.add_property("Velocity", readable_velocity, 3)
 
 
-func _unhandled_input(event : InputEvent):
+func _unhandled_input(event: InputEvent):
 	if !_has_input_authority:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -1187,7 +1230,7 @@ func _rpc_update_item_in_hands_server(item_index: int):
 		var weapon_data = GameManager.serialize_weapon_resource(selected_item_res)
 		rpc_update_item_in_hands.rpc(item_index, weapon_data)
 	else:
-		rpc_update_item_in_hands.rpc(-1, {})  # No item selected
+		rpc_update_item_in_hands.rpc(-1, {}) # No item selected
 	
 
 @onready var weapon_bone_attachment_3d: BoneAttachment3D = %WeaponBoneAttachment3D
@@ -1341,7 +1384,7 @@ func _has_local_control() -> bool:
 	return is_multiplayer_authority()
 
 
-func _refresh_authority_state(force : bool = false):
+func _refresh_authority_state(force: bool = false):
 	var new_authority_state := _has_local_control()
 	if !force and new_authority_state == _has_input_authority:
 		return
@@ -1362,7 +1405,7 @@ func _refresh_authority_state(force : bool = false):
 		if debug_authority:
 			_debug_print("Synchronizer status - authority: %s, multiplayer_authority: %d, visibility_mode: %d" % [str(_has_input_authority), get_multiplayer_authority(), synchronizer.visibility_update_mode])
 		# Set visibility update mode to On Change to match replication mode
-		synchronizer.visibility_update_mode = 1  # On Change
+		synchronizer.visibility_update_mode = 1 # On Change
 
 	if has_node("UserInterface"):
 		$UserInterface.visible = _has_input_authority
@@ -1400,7 +1443,7 @@ func _ensure_authority_state():
 
 #region Debug Helpers
 
-func _debug_print(message : String) -> void:
+func _debug_print(message: String) -> void:
 	if !debug_authority:
 		return
 	var prefix := "[CharacterAuth]"
@@ -1411,7 +1454,7 @@ func _debug_print(message : String) -> void:
 
 
 func _debug_authority_context() -> String:
-	var parts : Array[String] = []
+	var parts: Array[String] = []
 	parts.append("node=%s" % name)
 	if multiplayer:
 		if multiplayer.has_multiplayer_peer():
@@ -1426,7 +1469,7 @@ func _debug_authority_context() -> String:
 	return "; ".join(parts)
 
 
-func _debug_report_input_block(source : String) -> void:
+func _debug_report_input_block(source: String) -> void:
 	if !debug_authority:
 		return
 	if _debug_last_blocked_reason == source:
@@ -1436,7 +1479,7 @@ func _debug_report_input_block(source : String) -> void:
 	_debug_print("Input blocked at %s (%s)" % [source, ctx])
 
 
-func _debug_clear_block_reason(source : String) -> void:
+func _debug_clear_block_reason(source: String) -> void:
 	if !debug_authority:
 		return
 	if _debug_last_blocked_reason == source:
@@ -1457,5 +1500,4 @@ func cheat_codes():
 		#rpc_full_heal_and_resurrect.rpc()
 		#if _has_input_authority:
 			#enter_normal_state()
-
 	pass
