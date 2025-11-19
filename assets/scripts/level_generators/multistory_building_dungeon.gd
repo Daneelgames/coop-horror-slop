@@ -2165,6 +2165,9 @@ func spawn_pickups():
 		push_warning("spawn_pickups: No valid items with positive weight in item_spawns")
 		return
 	
+	# Determine spawn point (starting point for players) - use origin (0,0,0) as reference
+	var spawn_point: Vector3 = Vector3(0, 0, 0)
+	
 	# Collect all tiles with floors (exclude stairs)
 	var available_tiles: Array[DungeonTile] = []
 	var dead_end_tiles: Array[DungeonTile] = []
@@ -2220,6 +2223,11 @@ func spawn_pickups():
 		if selected_item_spawn == null or selected_item_spawn.item_resource == null:
 			continue
 		
+		# Check distance from spawn point (elevator/start area)
+		var tile_distance = _get_tile_distance_from_spawn_point(tile, spawn_point)
+		if tile_distance < selected_item_spawn.spawn_distance_from_elevator_min or tile_distance > selected_item_spawn.spawn_distance_from_elevator_max:
+			continue # Skip this tile - doesn't meet distance requirements
+		
 		var weapon_resource = selected_item_spawn.item_resource
 		
 		# Check if weapon_resource has pickup_prefab_path
@@ -2263,18 +2271,30 @@ func spawn_pickups():
 		var farthest_tile: DungeonTile = null
 		var max_min_distance: float = 0.0
 		
+		# Choose random weighted item first to check distance requirements
+		var selected_item_spawn: ResourceItemSpawn = _choose_weighted_item_spawn(item_spawns, total_weight)
+		if selected_item_spawn == null or selected_item_spawn.item_resource == null:
+			items_remaining -= 1
+			continue
+		
 		# Find the tile with the maximum minimum distance to all spawned positions
+		# that also meets distance requirements from spawn point
 		for tile in available_tiles:
 			if not is_instance_valid(tile):
 				continue
+			
+			# Check distance from spawn point (elevator/start area)
+			var tile_distance = _get_tile_distance_from_spawn_point(tile, spawn_point)
+			if tile_distance < selected_item_spawn.spawn_distance_from_elevator_min or tile_distance > selected_item_spawn.spawn_distance_from_elevator_max:
+				continue # Skip this tile - doesn't meet distance requirements
 			
 			var tile_center = tile.position
 			var min_distance: float = INF
 			
 			# Calculate minimum distance to any spawned pickup
 			if spawned_positions.is_empty():
-				# First item - just pick a random tile
-				farthest_tile = available_tiles[rng.randi() % available_tiles.size()]
+				# First item - just pick this tile if it meets requirements
+				farthest_tile = tile
 				break
 			else:
 				for spawned_pos in spawned_positions:
@@ -2288,12 +2308,7 @@ func spawn_pickups():
 				farthest_tile = tile
 		
 		if farthest_tile == null:
-			push_warning("spawn_pickups: Could not find farthest tile, breaking")
-			break
-		
-		# Choose random weighted item
-		var selected_item_spawn: ResourceItemSpawn = _choose_weighted_item_spawn(item_spawns, total_weight)
-		if selected_item_spawn == null or selected_item_spawn.item_resource == null:
+			# No suitable tile found for this item - skip it
 			items_remaining -= 1
 			continue
 		
@@ -2442,3 +2457,13 @@ func spawn_mobs():
 			await _await_frame()
 	
 	print("spawn_mobs: Total mobs spawned: ", mobs_to_spawn)
+
+func _get_tile_distance_from_spawn_point(tile: DungeonTile, spawn_point: Vector3) -> float:
+	# Calculate horizontal distance (ignoring Y) from tile to spawn point in tile units
+	# This approximates the distance players would walk
+	var tile_pos_2d = Vector2(tile.position.x, tile.position.z)
+	var spawn_pos_2d = Vector2(spawn_point.x, spawn_point.z)
+	var distance_world = tile_pos_2d.distance_to(spawn_pos_2d)
+	# Convert to tile units (TILE_SIZE.x = 4)
+	var distance_tiles = distance_world / TILE_SIZE.x
+	return distance_tiles
