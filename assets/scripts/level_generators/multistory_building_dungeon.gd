@@ -9,9 +9,12 @@ const ELEVATOR = preload("uid://d1fhekbr7wjf3")
 const AI_CHARACTER = preload("res://addons/fpc/ai_character.tscn")
 const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom center
 
+@export var torches_on_walls_amount = 30
 @export var items_to_spawn_amount = 30
 @export var item_spawns: Array[ResourceItemSpawn]
 @export var mobs_amount_to_spawn = 30
+@export var props_amount_to_spawn: int = 400 # Общее количество пропов для спавна
+@export var props_by_weight: Dictionary[StringName, float] # prop path, drop weight - единый словарь для всего данжа
 @export var floors_heights: Array[int] = [2, 3, 4, 5, 6]
 @export var rooms_per_floor_min_max: Vector2i = Vector2i(3, 8) # Минимальное и максимальное количество комнат на этаж
 @export var apartment_side_size_min_max: Vector2i = Vector2i(2, 5)
@@ -183,8 +186,10 @@ func generate_dungeon():
 	# Финальный проход - спавн заблокированных дверей на краях открытых в пустоту направлений
 	await _spawn_blocked_doors_on_open_edges(floor_y_positions)
 	await _await_frame()
+	await spawn_props()
 	await spawn_pickups()
 	await spawn_mobs()
+	await spawn_wall_torches()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
 	level_generated.emit()
@@ -2467,3 +2472,152 @@ func _get_tile_distance_from_spawn_point(tile: DungeonTile, spawn_point: Vector3
 	# Convert to tile units (TILE_SIZE.x = 4)
 	var distance_tiles = distance_world / TILE_SIZE.x
 	return distance_tiles
+
+func spawn_props():
+	# Spawn props to random tiles with floor using global props_by_weight dictionary
+	# This is similar to procedural_dungeon implementation, but uses a single global dictionary
+	# Don't spawn props in editor
+	if Engine.is_editor_hint():
+		return
+	
+	# Ensure GameSpawner spawn_path is set to DungeonTiles
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		var dungeon_tiles_node = GameManager._game_level.get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+		if dungeon_tiles_node != null:
+			var dungeon_tiles_path = GameManager._game_spawner.get_path_to(dungeon_tiles_node)
+			GameManager._game_spawner.spawn_path = dungeon_tiles_path
+	
+	# Check if we have props to spawn
+	if props_by_weight.is_empty() or props_amount_to_spawn <= 0:
+		return
+	
+	# Get all tiles with floors (excluding tiles with stairs)
+	var tiles_with_floors: Array[DungeonTile] = []
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile) or not is_instance_valid(tile.floor):
+			continue
+		# Skip tiles that have stairs
+		if spawned_stairs_coords.has(tile.coord):
+			continue
+		tiles_with_floors.append(tile)
+	
+	if tiles_with_floors.is_empty():
+		print("spawn_props: No tiles with floors found")
+		return
+	
+	print("spawn_props: Found ", tiles_with_floors.size(), " tiles with floors, spawning ", props_amount_to_spawn, " props")
+	
+	# Spawn props using props_amount_to_spawn
+	var props_to_spawn: int = min(props_amount_to_spawn, tiles_with_floors.size() * 10) # Allow multiple props per tile
+	
+	for i in range(props_to_spawn):
+		# Choose a random tile with floor (multiple props can occupy same tile)
+		var random_tile: DungeonTile = tiles_with_floors[rng.randi() % tiles_with_floors.size()]
+		
+		# Choose prop using weighted random selection
+		var prop_path: StringName = _choose_weighted_prop(props_by_weight)
+		if prop_path.is_empty():
+			continue
+		
+		# Randomize prop position within tile bounds
+		# TILE_SIZE is Vector3i(4, 2, 4) and tile's origin is at its bottom center
+		# So we randomize X and Z in range [-TILE_SIZE.x/2, TILE_SIZE.x/2] = [-2, 2]
+		# And Y is slightly above floor (0.1 to account for floor height)
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+		var prop_position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+		
+		# Spawn prop through MultiplayerSpawner for synchronization
+		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+			var spawn_data = {"type": "prop", "path": str(prop_path)}
+			var prop = GameManager._game_spawner.spawn(spawn_data)
+			if prop != null:
+				# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+				prop.position = prop_position
+				prop.owner = _get_edited_scene_root()
+				# Set multiplayer authority to server
+				prop.set_multiplayer_authority(1)
+		
+		# Yield every 10 props to avoid frame drops
+		if i % 10 == 0:
+			await _await_frame()
+	
+	print("spawn_props: Total props spawned: ", props_to_spawn)
+
+func _choose_weighted_prop(props_dict: Dictionary[StringName, float]) -> StringName:
+	# Weighted random selection from props dictionary
+	if props_dict.is_empty():
+		return StringName()
+	
+	# Calculate total weight
+	var total_weight: float = 0.0
+	for weight in props_dict.values():
+		total_weight += weight
+	
+	if total_weight <= 0.0:
+		return StringName()
+	
+	# Choose random value
+	var random_value: float = rng.randf() * total_weight
+	var current_weight: float = 0.0
+	
+	# Find which prop corresponds to the random value
+	for prop_path in props_dict.keys():
+		current_weight += props_dict[prop_path]
+		if random_value <= current_weight:
+			return prop_path
+	
+	# Fallback: return first prop
+	return props_dict.keys()[0] if props_dict.size() > 0 else StringName()
+
+func spawn_wall_torches():
+	# Don't spawn torches in editor
+	if Engine.is_editor_hint():
+		return
+	
+	# Ensure GameSpawner spawn_path is set to DungeonTiles
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		var dungeon_tiles_node = GameManager._game_level.get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+		if dungeon_tiles_node != null:
+			var dungeon_tiles_path = GameManager._game_spawner.get_path_to(dungeon_tiles_node)
+			GameManager._game_spawner.spawn_path = dungeon_tiles_path
+	
+	# Check if we have torches to spawn
+	if torches_on_walls_amount <= 0:
+		return
+	
+	# Gather all tiles with floors (excluding tiles with stairs)
+	var tiles_with_floors: Array[DungeonTile] = []
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile) or not is_instance_valid(tile.floor):
+			continue
+		# Skip tiles that have stairs
+		if spawned_stairs_coords.has(tile.coord):
+			continue
+		tiles_with_floors.append(tile)
+	
+	if tiles_with_floors.is_empty():
+		print("spawn_wall_torches: No tiles with floors found")
+		return
+	
+	print("spawn_wall_torches: Found ", tiles_with_floors.size(), " tiles with floors, spawning up to ", torches_on_walls_amount, " torches")
+	
+	# Shuffle tiles using seeded RNG for deterministic generation
+	_shuffle_array(tiles_with_floors)
+	
+	# Spawn torches on random tiles (one torch per tile at max)
+	var torches_to_spawn: int = min(torches_on_walls_amount, tiles_with_floors.size())
+	var torches_spawned: int = 0
+	
+	for i in range(torches_to_spawn):
+		var tile: DungeonTile = tiles_with_floors[i]
+		
+		# Call spawn_wall_torch on the tile
+		tile.spawn_wall_torch()
+		torches_spawned += 1
+		
+		# Yield every 10 torches to avoid frame drops
+		if i % 10 == 0:
+			await _await_frame()
+	
+	print("spawn_wall_torches: Total torches spawned: ", torches_spawned)

@@ -1,0 +1,106 @@
+[gd_scene load_steps=13 format=3 uid="uid://cu6165w5ndxo4"]
+
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive_pickup.gd" id="1_42bkh"]
+[ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="2_b0smw"]
+[ext_resource type="PackedScene" uid="uid://b1yn1qhuou6kw" path="res://assets/prefabs/environment/dungeon_props/light_02.tscn" id="3_yu0nx"]
+[ext_resource type="Texture2D" uid="uid://dixv7of6phw28" path="res://addons/kenney_particle_pack/fire_02.png" id="4_yu0nx"]
+[ext_resource type="AudioStream" uid="uid://cdqlejb6d7sfg" path="res://assets/audio/fire.wav" id="5_1pilk"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dgubb"]
+size = Vector3(0.32006836, 0.6557617, 0.24316406)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dgubb"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_obhvk"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.67058825, 0, 1)
+albedo_texture = ExtResource("4_yu0nx")
+texture_filter = 2
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_g80tp"]
+_data = [Vector2(0, 0.04147482), 0.0, 0.0, 0, 0, Vector2(0.06071428, 0.97432524), 0.0, 0.0, 0, 0, Vector2(1, 0.05431211), -2.1861095, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_cv04b"]
+curve = SubResource("Curve_g80tp")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ekdu6"]
+angle_min = -720.0
+angle_max = 720.0
+gravity = Vector3(0, 2, 0)
+scale_min = 0.19999999
+scale_max = 0.5
+scale_curve = SubResource("CurveTexture_cv04b")
+
+[sub_resource type="QuadMesh" id="QuadMesh_cw57d"]
+
+[node name="WeaponTorch" type="RigidBody3D"]
+transform = Transform3D(0.9999999, 0, 0, 0, 1.0000002, 0, 0, 0, 0.99999994, 0, 0, 0)
+collision_layer = 4
+collision_mask = 0
+axis_lock_linear_x = true
+axis_lock_linear_y = true
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+sleeping = true
+lock_rotation = true
+freeze = true
+freeze_mode = 1
+continuous_cd = true
+linear_damp = 1.0
+angular_damp = 1.0
+script = ExtResource("1_42bkh")
+weapon_resource = ExtResource("2_b0smw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.742279e-08, 8.742278e-08, -1.1464116e-14, -1, 0.28330055, 0.020958139, 2.318427e-09)
+shape = SubResource("BoxShape3D_dgubb")
+
+[node name="VisualParent" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1.0000002, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
+top_level = true
+
+[node name="Light02" parent="VisualParent" instance=ExtResource("3_yu0nx")]
+transform = Transform3D(-0.024370365, 0.9825986, -0.18413815, -0.9997015, -0.02362913, 0.006218956, 0.0017596785, 0.18423466, 0.98288107, 0.0032012353, 0.009509222, -0.00480187)
+cast_shadow = 0
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+unique_name_in_owner = true
+replication_interval = 0.1
+delta_interval = 0.1
+replication_config = SubResource("SceneReplicationConfig_dgubb")
+
+[node name="FireGPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.59151405, 0, 0)
+material_override = SubResource("StandardMaterial3D_obhvk")
+lifetime = 0.5
+process_material = SubResource("ParticleProcessMaterial_ekdu6")
+draw_pass_1 = SubResource("QuadMesh_cw57d")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="FireGPUParticles3D"]
+light_color = Color(1, 0.8472153, 0.55758405, 1)
+light_energy = 2.0
+shadow_enabled = true
+omni_attenuation = 0.25
+
+[node name="FireAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="FireGPUParticles3D"]
+stream = ExtResource("5_1pilk")
+unit_size = 1.0
+max_db = 0.0
+autoplay = true
+max_distance = 20.0

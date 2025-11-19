@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=15 format=3 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
 [ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
@@ -7,7 +7,6 @@
 [ext_resource type="Environment" uid="uid://k1g2psxie2ou" path="res://game_darkness_environment.tres" id="5_dc4xw"]
 [ext_resource type="Script" uid="uid://cbv5dn1i0igk3" path="res://assets/scripts/resources/resource_item_spawn.gd" id="7_dc4xw"]
 [ext_resource type="Resource" uid="uid://st1qaks76e1l" path="res://assets/resources/rw_gold.tres" id="8_0ts1u"]
-[ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="9_jbp4y"]
 [ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="10_58q7l"]
 [ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="11_q5pb2"]
 [ext_resource type="Script" uid="uid://d0keev2dq3y6g" path="res://assets/scripts/level_generators/multistory_building_dungeon.gd" id="12_0ts1u"]
@@ -20,11 +19,6 @@ agent_radius = 0.25
 [sub_resource type="Resource" id="Resource_roc3w"]
 script = ExtResource("7_dc4xw")
 item_resource = ExtResource("8_0ts1u")
-metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
-
-[sub_resource type="Resource" id="Resource_s1m6h"]
-script = ExtResource("7_dc4xw")
-item_resource = ExtResource("9_jbp4y")
 metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
 
 [sub_resource type="Resource" id="Resource_adyel"]
@@ -61,8 +55,14 @@ transform = Transform3D(0.7283828, 0.011957396, 0.68506604, 0, 0.9998477, -0.017
 
 [node name="MultistoryBuildingDungeon" type="Node3D" parent="."]
 script = ExtResource("12_0ts1u")
-item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_s1m6h"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
+item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
 mobs_amount_to_spawn = 10
+props_amount_to_spawn = 100
+props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0
+})
 floors_heights = Array[int]([3, 3, 3, 3])
 min_stairs_per_floor = 2
 max_stairs_per_floor = 2

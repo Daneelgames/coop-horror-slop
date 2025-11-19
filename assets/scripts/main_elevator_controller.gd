@@ -33,7 +33,7 @@ func on_elevator_button_interacted():
 			#character.set_multiplayer_authority(1)
 	
 	# Найти все интерактивные пикапы внутри области лифта
-	# Используем ShapeCast3D или получаем объекты через Area3D
+	# Используем ShapeCast3D или получаем объекты ччерез Area3D
 	# var elevator_area = $ElevatorArea3D if has_node("ElevatorArea3D") else null
 	# if elevator_area:
 	# 	# Получаем все тела, которые перекрываются с областью лифта

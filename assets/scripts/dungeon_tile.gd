@@ -9,7 +9,10 @@ class_name DungeonTile
 @onready var wall_r: Node3D = %WallR
 @onready var wall_b: Node3D = %WallB
 @onready var wall_l: Node3D = %WallL
-@onready var tmp: Node3D = %TMP
+@onready var torch_point_right: Node3D = %TorchPointRight
+@onready var torch_point_back: Node3D = %TorchPointBack
+@onready var torch_point_left: Node3D = %TorchPointLeft
+@onready var torch_point_front: Node3D = %TorchPointFront
 
 var is_dead_end = false
 var master_dungeon: LevelGenerator
@@ -17,9 +20,6 @@ var master_dungeon: LevelGenerator
 func configure_tile_based_on_neighbours(neighbor_tiles: Array[DungeonTile], ask_neighbor_to_reconfigure = false):
 	# should check every direction - top for ceiling, bottom for floor, and walls
 	# no floor or ceiling or wall should be present between two neighboring tiles
-	if tmp:
-		tmp.queue_free()
-		tmp = null
 	is_dead_end = false
 	var walls_amount = 4
 	
@@ -75,10 +75,6 @@ func configure_tile_based_on_neighbours_with_room_check(neighbor_tiles: Array[Du
 	# should check every direction - top for ceiling, bottom for floor, and walls
 	# no floor or ceiling or wall should be present between two neighboring tiles
 	# BUT: if tiles belong to different rooms, walls should remain UNLESS there's a door between them
-	if tmp:
-		tmp.queue_free()
-		tmp = null
-
 	is_dead_end = false
 	var walls_amount = 4
 
@@ -151,3 +147,66 @@ func configure_tile_based_on_neighbours_with_room_check(neighbor_tiles: Array[Du
 
 	if walls_amount == 3:
 		is_dead_end = true
+
+
+func spawn_wall_torch():
+	# Don't spawn in editor
+	if Engine.is_editor_hint():
+		return
+	
+	# Only server spawns
+	if not multiplayer.is_server():
+		return
+	
+	# Ensure GameManager and spawner are available
+	if not is_instance_valid(GameManager) or not is_instance_valid(GameManager._game_spawner):
+		return
+	
+	# Collect valid walls with their torch points
+	# Structure: [{wall: Node3D, torch_point: Node3D, direction: String}]
+	var valid_walls: Array[Dictionary] = []
+	
+	if is_instance_valid(wall_f) and not wall_f.is_queued_for_deletion():
+		if is_instance_valid(torch_point_front):
+			valid_walls.append({"wall": wall_f, "torch_point": torch_point_front, "direction": "front"})
+	
+	if is_instance_valid(wall_r) and not wall_r.is_queued_for_deletion():
+		if is_instance_valid(torch_point_right):
+			valid_walls.append({"wall": wall_r, "torch_point": torch_point_right, "direction": "right"})
+	
+	if is_instance_valid(wall_b) and not wall_b.is_queued_for_deletion():
+		if is_instance_valid(torch_point_back):
+			valid_walls.append({"wall": wall_b, "torch_point": torch_point_back, "direction": "back"})
+	
+	if is_instance_valid(wall_l) and not wall_l.is_queued_for_deletion():
+		if is_instance_valid(torch_point_left):
+			valid_walls.append({"wall": wall_l, "torch_point": torch_point_left, "direction": "left"})
+	
+	# No valid walls with torch points
+	if valid_walls.is_empty():
+		return
+	
+	# Choose random wall using master_dungeon's seeded RNG if available
+	var selected_wall: Dictionary
+	if is_instance_valid(master_dungeon) and master_dungeon.has_method("_get_rng"):
+		var rng = master_dungeon._get_rng()
+		selected_wall = valid_walls[rng.randi() % valid_walls.size()]
+	elif is_instance_valid(master_dungeon) and master_dungeon.get("rng") != null:
+		var rng = master_dungeon.rng
+		selected_wall = valid_walls[rng.randi() % valid_walls.size()]
+	else:
+		# Fallback to random
+		selected_wall = valid_walls[randi() % valid_walls.size()]
+	
+	var torch_point: Node3D = selected_wall.torch_point
+	
+	# Spawn torch using GameManager's spawner for network synchronization
+	var torch_path = "res://assets/prefabs/weapons/weapon_torch_p_f.tscn"
+	var spawn_data = {"type": "pickup", "path": torch_path}
+	var torch = GameManager._game_spawner.spawn(spawn_data)
+	
+	if torch != null:
+		# Set torch's global position and rotation to match torch_point
+		torch.global_position = torch_point.global_position
+		torch.global_rotation = torch_point.global_rotation
+		torch.set_multiplayer_authority(1)
