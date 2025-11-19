@@ -6,10 +6,12 @@ const DUNGEON_TILE = preload("uid://cefhqgvoa83r2")
 const STAIRS_1 = preload("res://assets/prefabs/environment/dungeon_walls/stairs_tile.tscn")
 const DOORS_PREFABS = [preload("res://assets/prefabs/environment/dungeon_doors/door_multistory_building.tscn")]
 const ELEVATOR = preload("uid://d1fhekbr7wjf3")
+const AI_CHARACTER = preload("res://addons/fpc/ai_character.tscn")
 const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom center
 
 @export var items_to_spawn_amount = 30
 @export var item_spawns: Array[ResourceItemSpawn]
+@export var mobs_amount_to_spawn = 30
 @export var floors_heights: Array[int] = [2, 3, 4, 5, 6]
 @export var rooms_per_floor_min_max: Vector2i = Vector2i(3, 8) # Минимальное и максимальное количество комнат на этаж
 @export var apartment_side_size_min_max: Vector2i = Vector2i(2, 5)
@@ -182,6 +184,7 @@ func generate_dungeon():
 	await _spawn_blocked_doors_on_open_edges(floor_y_positions)
 	await _await_frame()
 	await spawn_pickups()
+	await spawn_mobs()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
 	level_generated.emit()
@@ -2358,3 +2361,84 @@ func _choose_weighted_item_spawn(items: Array[ResourceItemSpawn], total_weight: 
 			return item_spawn
 	
 	return null
+
+func spawn_mobs():
+	# Don't spawn mobs in editor
+	if Engine.is_editor_hint():
+		return
+	
+	# Use mobs_amount_to_spawn to spawn mobs in random tiles with floor (except first floor)
+	# Spawn on all peers using seeded RNG for consistency (same as dungeon generation and pickups)
+	if mobs_amount_to_spawn <= 0:
+		return
+	
+	# Get game_level (NavigationRegion3D) as parent for mobs so they can use navigation
+	var game_level = get_parent()
+	if not is_instance_valid(game_level):
+		push_warning("spawn_mobs: Could not find game_level parent")
+		return
+	
+	# Collect tiles with floors from all floors except the first (floor_y = 0)
+	var available_tiles: Array[DungeonTile] = []
+	
+	# Determine the first floor Y value (should be 0, but let's get it from floors_heights)
+	var first_floor_y: int = 0
+	
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile) or not is_instance_valid(tile.floor):
+			continue
+		# Skip tiles on first floor (Y = 0)
+		if tile.coord.y == first_floor_y:
+			continue
+		# Skip tiles that have stairs
+		if spawned_stairs_coords.has(tile.coord):
+			continue
+		available_tiles.append(tile)
+	
+	if available_tiles.is_empty():
+		push_warning("spawn_mobs: No available tiles found for spawning mobs")
+		return
+	
+	print("spawn_mobs: Found ", available_tiles.size(), " available tiles for mob spawning")
+	
+	# Spawn mobs
+	var mobs_to_spawn: int = min(mobs_amount_to_spawn, available_tiles.size())
+	for i in range(mobs_to_spawn):
+		# Choose a random tile using seeded RNG (ensures same selection on all clients)
+		var random_tile: DungeonTile = available_tiles[rng.randi() % available_tiles.size()]
+		
+		# Randomize mob position within tile bounds using seeded RNG
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+		var mob_position = random_tile.position + Vector3(random_offset_x, 1.0, random_offset_z) # 1 unit above floor
+		
+		# Give mob a unique, consistent name based on spawn order and tile coordinate
+		# This ensures RPCs can find the correct mob on all peers
+		var mob_name = "Mob_%d_%d_%d_%d" % [
+			random_tile.coord.x,
+			random_tile.coord.y,
+			random_tile.coord.z,
+			i
+		]
+		
+		# Spawn mob through MultiplayerSpawner for proper synchronization
+		# Only spawn on server - MultiplayerSpawner will replicate to all clients
+		if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+			if is_instance_valid(GameManager):
+				GameManager.spawn_mob(mob_name, mob_position, mob_position)
+		elif not multiplayer.has_multiplayer_peer():
+			# Single player - spawn directly
+			var mob = AI_CHARACTER.instantiate()
+			if mob != null:
+				mob.name = mob_name
+				mob.position = mob_position
+				if mob is AiCharacter:
+					mob.home_position = mob_position
+				game_level.add_child(mob)
+				mob.owner = _get_edited_scene_root()
+		
+		# Yield every 10 mobs to avoid frame drops
+		if i % 10 == 0:
+			await _await_frame()
+	
+	print("spawn_mobs: Total mobs spawned: ", mobs_to_spawn)
