@@ -17,7 +17,12 @@ func on_elevator_button_interacted():
 		return
 	
 	if is_elevator_moving:
+		is_elevator_moving = false
+		bodies_to_move_inside = []
+		bodies_inside = bodies_to_move_inside
+		update_door_anim()
 		return
+		
 	is_elevator_moving = true
 	print("[ELEVATOR] Button pressed! bodies inside: ", bodies_inside.size())
 	

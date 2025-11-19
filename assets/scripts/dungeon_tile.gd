@@ -14,10 +14,26 @@ class_name DungeonTile
 @onready var torch_point_left: Node3D = %TorchPointLeft
 @onready var torch_point_front: Node3D = %TorchPointFront
 
+const FLOOR_PATH = "res://assets/prefabs/environment/dungeon_walls/floor_1.tscn"
 var is_dead_end = false
 var master_dungeon: LevelGenerator
 
-func configure_tile_based_on_neighbours(neighbor_tiles: Array[DungeonTile], ask_neighbor_to_reconfigure = false):
+func spawn_floor():
+	var new_node = Node3D.new()
+	add_child(new_node)
+	new_node.position = Vector3.ZERO
+	new_node.rotation_degrees = Vector3.ZERO
+	new_node.name = 'Floor'
+	await get_tree().process_frame
+	
+	floor = new_node
+	var new_floor = load(FLOOR_PATH).instantiate()
+	floor.add_child(new_floor)
+	new_floor.position = Vector3(2, 0, -2)
+	new_floor.rotation_degrees = Vector3(0, 0, 0)
+	pass
+
+func configure_tile_based_on_neighbours(neighbor_tiles: Array[DungeonTile], ask_neighbor_to_reconfigure = false, force_spawn_floor = false):
 	# should check every direction - top for ceiling, bottom for floor, and walls
 	# no floor or ceiling or wall should be present between two neighboring tiles
 	is_dead_end = false
@@ -69,7 +85,9 @@ func configure_tile_based_on_neighbours(neighbor_tiles: Array[DungeonTile], ask_
 
 	if walls_amount == 3:
 		is_dead_end = true
-
+	if force_spawn_floor and is_instance_valid(floor) == false:
+		spawn_floor()
+		
 
 func configure_tile_based_on_neighbours_with_room_check(neighbor_tiles: Array[DungeonTile], room_assignment: Dictionary[DungeonTile, ResourceDungeonRoom], doors_coords: Dictionary[String, Node] = {}):
 	# should check every direction - top for ceiling, bottom for floor, and walls

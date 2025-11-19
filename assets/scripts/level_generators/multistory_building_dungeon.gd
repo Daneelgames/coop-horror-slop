@@ -186,6 +186,8 @@ func generate_dungeon():
 	# Финальный проход - спавн заблокированных дверей на краях открытых в пустоту направлений
 	await _spawn_blocked_doors_on_open_edges(floor_y_positions)
 	await _await_frame()
+
+	await spawn_debug_spheres_on_stairs_ends()
 	await spawn_props()
 	await spawn_pickups()
 	await spawn_mobs()
@@ -1760,11 +1762,25 @@ func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector
 	var pending_doors: Array = []
 	var existing_room_connection_created := false
 	
-	### ХУЙ ЗНАЕТ ПОМОЖЕТ НЕТ
-	end_coord.y -= 1
-	#########################################################
-	# ПОМОГЛО!!!
-	#########################################################
+	# Find the correct floor Y for the end coordinate
+	# The target_global position is on the upper floor, we need to find which floor that is
+	var target_floor_y = end_coord.y
+	
+	# Calculate actual floor Y positions from floors_heights (cumulative heights)
+	var floor_y_positions: Array[int] = []
+	var current_y: int = 0
+	for floor_height in floors_heights:
+		floor_y_positions.append(current_y)
+		current_y += floor_height
+	
+	# Find the closest floor that matches or is below end_coord.y
+	for i in range(floor_y_positions.size() - 1, -1, -1): # Iterate backwards
+		if floor_y_positions[i] <= end_coord.y:
+			target_floor_y = floor_y_positions[i]
+			break
+	
+	# Update end_coord to use the correct floor Y
+	end_coord.y = target_floor_y
 
 	var end_tile: DungeonTile = _get_tile_at_coord(end_coord)
 	var end_tile_room = all_spawned_tiles.get(end_tile, null) if end_tile else null
@@ -1799,74 +1815,9 @@ func _on_stairs_tunnel_requested(_stairs_tile: StairsTile, origin_global: Vector
 				
 	
 				pending_doors.append({
-					"room_tile": nearest_room_tile,
-					"tunnel_coord": top_adjacent_coord
-				})
-
-
-	# DEBUG: Spawn debug marker at the ACTUAL stair endpoint using stair_end_platform
-	# Only spawn for DIAGONAL tunnels (not horizontal) to avoid duplicates
-	# Each stair calls this function twice: once for diagonal, once for horizontal
-	if tunnel_type != STAIRS_TUNNEL_TYPE_HORIZONTAL and _stairs_tile != null and is_instance_valid(_stairs_tile.stair_end_platform):
-		var debug_sphere = MeshInstance3D.new()
-		var sphere_mesh = SphereMesh.new()
-		sphere_mesh.radius = 0.5
-		sphere_mesh.height = 1.0
-		debug_sphere.mesh = sphere_mesh
-		debug_sphere.name = "STAIR_ENDPOINT_DEBUG"
-		
-		# Create yellow emissive material
-		var debug_material = StandardMaterial3D.new()
-		debug_material.albedo_color = Color(1.0, 1.0, 0.0, 1.0) # Yellow
-		debug_material.emission_enabled = true
-		debug_material.emission = Color(1.0, 1.0, 0.0, 1.0) # Yellow emission
-		debug_material.emission_energy_multiplier = 2.0
-		debug_sphere.material_override = debug_material
-		
-		# Get stair end position then find the horizontal tile coordinate
-		var stair_end_pos = _stairs_tile.stair_end_platform.global_position
-		
-		# Convert to tile coordinate, but use the target floor Y level (end_coord.y)
-		var stair_end_coord_raw: Vector3i = _world_to_tile_coord(stair_end_pos)
-		var stair_end_coord = Vector3i(stair_end_coord_raw.x, end_coord.y, stair_end_coord_raw.z)
-		
-		# Find the tile at this horizontal position
-		var endpoint_tile: DungeonTile = _get_tile_at_coord(stair_end_coord)
-		
-		# Position the sphere at the center of the tile on the floor level
-		var sphere_pos = Vector3(
-			stair_end_coord.x * TILE_SIZE.x,
-			stair_end_coord.y * TILE_SIZE.y + 1.0, # Slightly above floor
-			stair_end_coord.z * TILE_SIZE.z
-		)
-		debug_sphere.position = sphere_pos
-		dungeon_tiles.add_child(debug_sphere)
-		debug_sphere.owner = _get_edited_scene_root()
-		
-		# DEBUG: Log wall information for the tile where stairs actually end
-		if endpoint_tile != null:
-			var wall_count = 0
-			if endpoint_tile.wall_f != null and not endpoint_tile.wall_f.is_queued_for_deletion():
-				wall_count += 1
-			if endpoint_tile.wall_r != null and not endpoint_tile.wall_r.is_queued_for_deletion():
-				wall_count += 1
-			if endpoint_tile.wall_b != null and not endpoint_tile.wall_b.is_queued_for_deletion():
-				wall_count += 1
-			if endpoint_tile.wall_l != null and not endpoint_tile.wall_l.is_queued_for_deletion():
-				wall_count += 1
-			
-			print("=== STAIR ENDPOINT DEBUG ===")
-			print("  Stair end coord: ", stair_end_coord)
-			print("  Stair end platform pos: ", stair_end_pos)
-			print("  Wall count: ", wall_count)
-			print("  Has floor: ", endpoint_tile.floor != null and not endpoint_tile.floor.is_queued_for_deletion())
-			print("============================")
-		else:
-			print("=== STAIR ENDPOINT DEBUG ===")
-			print("  Stair end coord: ", stair_end_coord)
-			print("  Stair end platform pos: ", stair_end_pos)
-			print("  ERROR: No tile found at stair endpoint!")
-			print("============================")
+				"room_tile": nearest_room_tile,
+				"tunnel_coord": top_adjacent_coord
+			})
 
 
 	var tunnel_coords: Array[Vector3i] = []
@@ -2671,3 +2622,169 @@ func spawn_wall_torches():
 			await _await_frame()
 	
 	print("spawn_wall_torches: Total torches spawned: ", torches_spawned)
+
+func spawn_debug_spheres_on_stairs_ends():
+	# Spawn debug spheres at the end of each staircase to visualize where they lead
+	print("DEBUG: Spawning debug spheres for ", spawned_stairs_coords.size(), " stairs")
+	
+	for stair_coord in spawned_stairs_coords.keys():
+		var stairs_tile: StairsTile = spawned_stairs_coords[stair_coord]
+		
+		if stairs_tile == null or not is_instance_valid(stairs_tile):
+			continue
+			
+		if not is_instance_valid(stairs_tile.stair_end_platform):
+			continue
+		
+		# Create debug sphere
+		var debug_sphere = MeshInstance3D.new()
+		var sphere_mesh = SphereMesh.new()
+		sphere_mesh.radius = 0.5
+		sphere_mesh.height = 1.0
+		debug_sphere.mesh = sphere_mesh
+		debug_sphere.name = "STAIR_ENDPOINT_DEBUG"
+		
+		# Create yellow emissive material
+		var debug_material = StandardMaterial3D.new()
+		debug_material.albedo_color = Color(1.0, 1.0, 0.0, 1.0) # Yellow
+		debug_material.emission_enabled = true
+		debug_material.emission = Color(1.0, 1.0, 0.0, 1.0) # Yellow emission
+		debug_material.emission_energy_multiplier = 2.0
+		debug_sphere.material_override = debug_material
+		
+		# Get stair end position
+		var stair_end_pos = stairs_tile.stair_end_platform.global_position
+		
+		# Convert to tile coordinate for X and Z only
+		var stair_end_coord_raw: Vector3i = _world_to_tile_coord(stair_end_pos)
+		
+		# Find the NEXT floor after the stair's current floor
+		var stair_floor_y = stair_coord.y
+		var target_floor_y = stair_floor_y # Default to same floor if not found
+		
+		# Calculate actual floor Y positions from floors_heights (cumulative heights)
+		var floor_y_positions: Array[int] = []
+		var current_y: int = 0
+		for floor_height in floors_heights:
+			floor_y_positions.append(current_y)
+			current_y += floor_height
+		
+		print("DEBUG FLOOR CALC: stair at y=", stair_floor_y, " floor_positions=", floor_y_positions)
+		
+		# Find the current floor index and get the NEXT floor
+		for i in range(floor_y_positions.size()):
+			if floor_y_positions[i] == stair_floor_y:
+				# Found the current floor, now get the NEXT floor
+				if i + 1 < floor_y_positions.size():
+					target_floor_y = floor_y_positions[i + 1]
+					print("  -> Found floor at index ", i, ", next floor y=", target_floor_y)
+				break
+		
+		var stair_end_coord = Vector3i(stair_end_coord_raw.x, target_floor_y, stair_end_coord_raw.z)
+		
+		print("DEBUG: Stair at ", stair_coord, " -> looking for endpoint at: ", stair_end_coord)
+		
+		# Find the tile at this position
+		var endpoint_tile: DungeonTile = _get_tile_at_coord(stair_end_coord)
+		
+		# DEBUG: Check if tile exists and what room it belongs to
+		if endpoint_tile != null:
+			var tile_room = all_spawned_tiles.get(endpoint_tile, null)
+			print("  Tile found! Room: ", tile_room, " (is tunnel: ", tile_room == tunnel_room, ")")
+		else:
+			print("  Tile NOT found! Checking all_spawned_tiles...")
+			# Check if ANY tile exists at this coordinate
+			var found_any_tile_at_coord = false
+			for tile in all_spawned_tiles.keys():
+				if tile.coord == stair_end_coord:
+					found_any_tile_at_coord = true
+					var room = all_spawned_tiles.get(tile, null)
+					print("    -> Found tile in all_spawned_tiles at ", stair_end_coord, " room: ", room)
+					break
+			if not found_any_tile_at_coord:
+				print("    -> NO tile exists at coord ", stair_end_coord, " in all_spawned_tiles!")
+		
+		# Position the sphere at the center of the tile on the floor level
+		var sphere_pos = Vector3(
+			stair_end_coord.x * TILE_SIZE.x,
+			stair_end_coord.y * TILE_SIZE.y + 1.0, # Slightly above floor
+			stair_end_coord.z * TILE_SIZE.z
+		)
+		debug_sphere.position = sphere_pos
+		dungeon_tiles.add_child(debug_sphere)
+		debug_sphere.owner = _get_edited_scene_root()
+		if Engine.is_editor_hint() == false:
+			debug_sphere.visible = false
+		# Log wall information for the endpoint tile
+		if endpoint_tile != null:
+			var wall_count = 0
+			if endpoint_tile.wall_f != null and not endpoint_tile.wall_f.is_queued_for_deletion():
+				wall_count += 1
+			if endpoint_tile.wall_r != null and not endpoint_tile.wall_r.is_queued_for_deletion():
+				wall_count += 1
+			if endpoint_tile.wall_b != null and not endpoint_tile.wall_b.is_queued_for_deletion():
+				wall_count += 1
+			if endpoint_tile.wall_l != null and not endpoint_tile.wall_l.is_queued_for_deletion():
+				wall_count += 1
+			
+			var tile_room = all_spawned_tiles.get(endpoint_tile, null)
+			var is_in_tunnel = (tile_room == tunnel_room)
+			
+			print("  Sphere: ", stair_end_coord, " walls: ", wall_count, " is_tunnel: ", is_in_tunnel)
+			
+			# Check if we need to create a connecting tunnel
+			if wall_count >= 3 or is_in_tunnel:
+				print("  -> PROBLEMATIC endpoint! Creating connecting tunnel...")
+				
+				# Find nearest room tile on this floor (not tunnel)
+				var nearest_room_tile: DungeonTile = _find_nearest_room_tile_on_floor(stair_end_coord, target_floor_y)
+				
+				if nearest_room_tile != null:
+					print("    Found nearest room tile at: ", nearest_room_tile.coord)
+					
+					# Create orthogonal path to the nearest room
+					var connecting_path: Array[Vector3i] = _create_orthogonal_path(
+						stair_end_coord,
+						nearest_room_tile.coord,
+						target_floor_y
+					)
+					
+					if not connecting_path.is_empty():
+						print("    Creating tunnel with ", connecting_path.size(), " tiles")
+						
+						# Spawn tunnel tiles along the path
+						var spawned_tunnel_tiles: Array[DungeonTile] = []
+						for path_coord in connecting_path:
+							var existing_tile = _get_tile_at_coord(path_coord)
+							if existing_tile == null:
+								# Create new tile
+								var world_position := Vector3(
+									path_coord.x * TILE_SIZE.x,
+									path_coord.y * TILE_SIZE.y,
+									path_coord.z * TILE_SIZE.z
+								)
+								var tunnel_tile: DungeonTile = DUNGEON_TILE.instantiate()
+								tunnel_tile.position = world_position
+								tunnel_tile.coord = path_coord
+								tunnel_tile.master_dungeon = self
+								dungeon_tiles.add_child(tunnel_tile)
+								tunnel_tile.owner = _get_edited_scene_root()
+								all_spawned_tiles[tunnel_tile] = tunnel_room
+								spawned_tunnel_tiles.append(tunnel_tile)
+							else:
+								spawned_tunnel_tiles.append(existing_tile)
+						
+						# Configure tiles to remove walls
+						
+						for index in spawned_tunnel_tiles.size():
+							var tile = spawned_tunnel_tiles[index]
+							if is_instance_valid(tile):
+								tile.configure_tile_based_on_neighbours(_get_neighbor_tiles(tile), true, index > 0)
+						
+						print("    Created connection from tunnel to room (configured ", spawned_tunnel_tiles.size(), " tiles)")
+					else:
+						print("    WARNING: Could not create path to nearest room")
+				else:
+					print("    WARNING: No nearest room found on floor y=", target_floor_y)
+		else:
+			print("  Sphere: ", stair_end_coord, " ERROR: No tile found!")

@@ -66,7 +66,7 @@ props_by_weight = Dictionary[StringName, float]({
 floors_heights = Array[int]([3, 3, 3, 3])
 min_stairs_per_floor = 2
 max_stairs_per_floor = 2
-dungeon_seed = 1763571872
+dungeon_seed = 1763578280
 
 [node name="DungeonTiles" type="Node3D" parent="MultistoryBuildingDungeon"]
 unique_name_in_owner = true
