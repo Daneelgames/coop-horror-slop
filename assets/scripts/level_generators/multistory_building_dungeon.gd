@@ -8,6 +8,8 @@ const DOORS_PREFABS = [preload("res://assets/prefabs/environment/dungeon_doors/d
 const ELEVATOR = preload("uid://d1fhekbr7wjf3")
 const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom center
 
+@export var items_to_spawn_amount = 30
+@export var item_spawns : Array[ResourceItemSpawn]
 @export var floors_heights: Array[int] = [2, 3, 4, 5, 6]
 @export var rooms_per_floor_min_max: Vector2i = Vector2i(3, 8) # Минимальное и максимальное количество комнат на этаж
 @export var apartment_side_size_min_max: Vector2i = Vector2i(2, 5)
