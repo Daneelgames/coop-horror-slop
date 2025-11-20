@@ -141,8 +141,10 @@ class_name PlayerCharacter
 # These are variables used in this script that don't need to be exposed in the editor.
 var speed: float = base_speed
 var current_speed: float = 0.0
-# States: normal, sprinting
-@export var state: String = "normal"
+# States: normal, sprinting, crouching
+# CRITICAL: Must NOT be @export! State is synchronized ONLY via RPC calls (rpc_enter_crouch_state, etc)
+# If @export is added, MultiplayerSynchronizer will sync it automatically, causing all players to share state
+var state: String = "normal"
 var low_ceiling: bool = false # This is for when the ceiling is too low and the player needs to crouch.
 var was_on_floor: bool = true # Was the player on the floor last frame (for landing animation)
 var attack_push_velocity: Vector3 = Vector3.ZERO # Store push velocity from attacks
@@ -217,7 +219,7 @@ func _ready():
 	# Initialize target rotations to match current rotations
 	target_head_rotation_x = HEAD.rotation.x
 	target_character_rotation_y = rotation.y
-
+	COLLISION_MESH.shape = COLLISION_MESH.shape.duplicate()
 	initialize_animations()
 	check_controls()
 	enter_normal_state()
@@ -311,6 +313,7 @@ func _physics_process(delta): # Most things happen here.
 	_ensure_authority_state()
 	#if mesh_animation_player and _has_input_authority:
 	if mesh_animation_player:
+		#print("[ANIMATION] %s: Calling play_mesh_animation - state='%s', has_input=%s, input_dir=%s" % [name, state, _has_input_authority, input_dir])
 		play_mesh_animation(input_dir, _has_input_authority, state)
 	if !_has_input_authority:
 		return
@@ -322,6 +325,7 @@ func _physics_process(delta): # Most things happen here.
 	if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
 		handle_attacking()
 		handle_blocking()
+		handle_crouching()
 		handle_vaulting()
 		handle_jumping()
 		handle_interaction()
@@ -341,16 +345,19 @@ func _physics_process(delta): # Most things happen here.
 	handle_head_rotation()
 	apply_rotation_smoothing(delta)
 	
-	# Handle head height interpolation
+	# Handle head height interpolation based on state
+	# The state is synchronized via RPC, so this applies correctly to all characters
 	var target_head_height = head_height_idle
 	var target_collision_height = collision_idle_height
-	if state == "crouching":
+	if state == "crouching" and _has_input_authority:
 		target_head_height = head_height_crouch
 		target_collision_height = collision_crouch_height
 	
-	HEAD.position.y = lerp(HEAD.position.y, target_head_height, 10 * delta)
+	# Only modify HEAD for characters with input authority (camera is attached to HEAD)
+	if _has_input_authority:
+		HEAD.position.y = lerp(HEAD.position.y, target_head_height, 10 * delta)
 	
-	# Handle collision height interpolation
+	# Handle collision height interpolation for ALL characters based on their state
 	if COLLISION_MESH and COLLISION_MESH.shape is CapsuleShape3D:
 		var current_height = COLLISION_MESH.shape.height
 		var new_height = lerp(current_height, target_collision_height, 10 * delta)
@@ -360,7 +367,11 @@ func _physics_process(delta): # Most things happen here.
 	# The player is not able to stand up if the ceiling is too low
 	low_ceiling = $CrouchCeilingDetection.is_colliding()
 
+	# Track state changes
+	var prev_state = state
 	handle_state(input_dir)
+	if prev_state != state:
+		print("[STATE CHANGE] %s: state changed from '%s' to '%s' (has_input=%s, authority=%d)" % [name, prev_state, state, _has_input_authority, get_multiplayer_authority()])
 	if dynamic_fov and _has_input_authority: # This may be changed to an AnimationPlayer
 		update_camera_fov()
 
@@ -763,6 +774,77 @@ func rpc_melee_attack(attack_string: String):
 	if item_in_hands:
 		item_in_hands.set_dangerous(false, self)
 	is_attacking = false
+@onready var camera: Camera3D = %Camera
+
+func handle_crouching():
+	if !_has_input_authority:
+		return
+	if !crouch_enabled:
+		return
+	#if is_multiplayer_authority() == false:
+		#return
+	if camera.current == false:
+		return
+	if crouch_mode == 0: # Hold to crouch
+		if Input.is_action_pressed(controls.CROUCH) and state != "sprinting":
+			if state != "crouching":
+				print("[CROUCH DEBUG] %s: Entering crouch state" % name)
+				rpc_enter_crouch_state.rpc()
+		elif state == "crouching":
+			if !low_ceiling:
+				print("[CROUCH DEBUG] %s: Exiting crouch state" % name)
+				rpc_enter_normal_state.rpc()
+	elif crouch_mode == 1: # Toggle crouch
+		if Input.is_action_just_pressed(controls.CROUCH):
+			if state == "crouching":
+				if !low_ceiling:
+					print("[CROUCH DEBUG] %s: Exiting crouch state (toggle)" % name)
+					rpc_enter_normal_state.rpc()
+			elif state != "sprinting":
+				print("[CROUCH DEBUG] %s: Entering crouch state (toggle)" % name)
+				rpc_enter_crouch_state.rpc()
+
+@rpc("any_peer", "call_local")
+func rpc_enter_crouch_state():
+	# Only execute this RPC for the character that has the same authority as the RPC sender
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id == 0:
+		# Local call (on server), use the authority of this character instance
+		sender_id = get_multiplayer_authority()
+	
+	# Only apply state change if this character's authority matches the RPC sender
+	if get_multiplayer_authority() != sender_id:
+		return
+	
+	# Don't change if already crouching
+	if state == "crouching":
+		return
+	
+	print("[STATE] %s: rpc_enter_crouch_state() - prev=%s, has_input=%s, authority=%d, sender=%d" % [name, state, _has_input_authority, get_multiplayer_authority(), sender_id])
+	state = "crouching"
+	speed = crouch_speed
+	is_crouching = true
+
+@rpc("any_peer", "call_local")
+func rpc_enter_normal_state():
+	# Only execute this RPC for the character that has the same authority as the RPC sender
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id == 0:
+		# Local call (on server), use the authority of this character instance
+		sender_id = get_multiplayer_authority()
+	
+	# Only apply state change if this character's authority matches the RPC sender
+	if get_multiplayer_authority() != sender_id:
+		return
+	
+	# Don't change if already normal
+	if state == "normal":
+		return
+	
+	print("[STATE] %s: rpc_enter_normal_state() - prev=%s, has_input=%s, authority=%d, sender=%d" % [name, state, _has_input_authority, get_multiplayer_authority(), sender_id])
+	state = "normal"
+	speed = base_speed
+	is_crouching = false
 
 func handle_jumping():
 	if !_has_input_authority:
@@ -931,31 +1013,17 @@ func handle_state(moving):
 					match state:
 						"normal":
 							enter_sprint_state()
-						"sprinting":
+						"sprinting": # Corrected from `elif state == "sprinting":`
 							enter_normal_state()
 			elif state == "sprinting":
 				enter_normal_state()
 	
-	if crouch_enabled and is_multiplayer_authority():
-		if crouch_mode == 0: # Hold to crouch
-			if Input.is_action_pressed(controls.CROUCH) and state != "sprinting":
-				if state != "crouching":
-					enter_crouch_state()
-			elif state == "crouching":
-				if !low_ceiling:
-					enter_normal_state()
-		elif crouch_mode == 1: # Toggle crouch
-			if Input.is_action_just_pressed(controls.CROUCH):
-				if state == "crouching":
-					if !low_ceiling:
-						enter_normal_state()
-				elif state != "sprinting":
-					enter_crouch_state()
+	# Crouch handling is now in handle_crouching() function which uses RPC calls
 
 
 # Any enter state function should only be called once when you want to enter that state, not every frame.
 func enter_normal_state():
-	#print("entering normal state ")
+	print("[STATE] %s: enter_normal_state() - prev=%s, has_input=%s, authority=%d" % [name, state, _has_input_authority, get_multiplayer_authority()])
 	var prev_state = state
 	state = "normal"
 	speed = base_speed
@@ -970,7 +1038,7 @@ func enter_sprint_state():
 	is_crouching = false
 
 func enter_crouch_state():
-	#print("entering crouch state")
+	print("[STATE] %s: enter_crouch_state() - prev=%s, has_input=%s, authority=%d" % [name, state, _has_input_authority, get_multiplayer_authority()])
 	var prev_state = state
 	state = "crouching"
 	speed = crouch_speed

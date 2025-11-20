@@ -585,27 +585,24 @@ properties/1/replication_mode = 2
 properties/2/path = NodePath(".:input_dir")
 properties/2/spawn = true
 properties/2/replication_mode = 2
-properties/3/path = NodePath(".:state")
+properties/3/path = NodePath(".:is_attacking")
 properties/3/spawn = true
 properties/3/replication_mode = 2
-properties/4/path = NodePath(".:is_attacking")
+properties/4/path = NodePath(".:is_blocking")
 properties/4/spawn = true
 properties/4/replication_mode = 2
-properties/5/path = NodePath(".:is_blocking")
+properties/5/path = NodePath(".:is_taking_damage")
 properties/5/spawn = true
 properties/5/replication_mode = 2
-properties/6/path = NodePath(".:is_taking_damage")
+properties/6/path = NodePath(".:is_blocking_react")
 properties/6/spawn = true
 properties/6/replication_mode = 2
-properties/7/path = NodePath(".:is_blocking_react")
+properties/7/path = NodePath(".:is_stun_lock")
 properties/7/spawn = true
 properties/7/replication_mode = 2
-properties/8/path = NodePath(".:is_stun_lock")
+properties/8/path = NodePath(".:is_crouching")
 properties/8/spawn = true
 properties/8/replication_mode = 2
-properties/9/path = NodePath(".:is_crouching")
-properties/9/spawn = true
-properties/9/replication_mode = 2
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_ra850"]
 random_pitch = 1.1
@@ -1203,6 +1200,7 @@ max_distance = 60.0
 bus = &"VoicePlayback"
 
 [node name="Camera" type="Camera3D" parent="Head"]
+unique_name_in_owner = true
 near = 0.001
 
 [node name="InteractionRayCast3D" type="RayCast3D" parent="Head/Camera"]

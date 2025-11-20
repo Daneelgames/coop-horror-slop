@@ -1,19 +1,19 @@
 extends Unit
 class_name AiCharacter
-@export var visual_node_3d : Node3D
-@export var visible_enemies : Array[Unit] = []
-@export var input_dir : Vector2
-@export var random_weapons : Array[ResourceWeapon]
-var state = 'normal'
-@export var rotation_speed: float = 5.0  # How fast the AI rotates towards enemies
-@export var debug_ai_combat : bool = true  # Enable debug prints for AI combat
-@export var attack_range_multiplier : float = 2.5  # Multiplier for weapon_active_distance to account for character reach
-@export var blocking_range_multiplier : float = 3.5  # Multiplier for enemy weapon range when checking if should block (larger than attack range)
-@export var base_speed: float = 3.0  # Base movement speed for AI
-@export var home_position: Vector3  # Home/spawn position for patrol
-@export var patrol_from_home_distance_min_max: Vector2 = Vector2(5.0, 15.0)  # Min and max distance from home for patrol points
+@export var visual_node_3d: Node3D
+@export var visible_enemies: Array[Unit] = []
+@export var input_dir: Vector2
+@export var random_weapons: Array[ResourceWeapon]
+@export var state: String = "normal"
+@export var rotation_speed: float = 5.0 # How fast the AI rotates towards enemies
+@export var debug_ai_combat: bool = true # Enable debug prints for AI combat
+@export var attack_range_multiplier: float = 2.5 # Multiplier for weapon_active_distance to account for character reach
+@export var blocking_range_multiplier: float = 3.5 # Multiplier for enemy weapon range when checking if should block (larger than attack range)
+@export var base_speed: float = 3.0 # Base movement speed for AI
+@export var home_position: Vector3 # Home/spawn position for patrol
+@export var patrol_from_home_distance_min_max: Vector2 = Vector2(5.0, 15.0) # Min and max distance from home for patrol points
 @export var combat_from_home_distance_max: float = 30
-@export var combat_strafe_distance_max: float = 3.0  # Distance to maintain from enemy when circling in combat
+@export var combat_strafe_distance_max: float = 3.0 # Distance to maintain from enemy when circling in combat
 @export var navigation_agent_3d: NavigationAgent3D
 
 # Movement control
@@ -63,7 +63,7 @@ func interaction_raycast_coroutine():
 var _last_position: Vector3 = Vector3.ZERO
 var _smoothed_input_dir: Vector2 = Vector2.ZERO
 
-func _physics_process(_delta): # Most things happen here. 
+func _physics_process(_delta): # Most things happen here.
 	if GameManager._game_level.is_game_level_ready == false:
 		return
 	super._physics_process(_delta)
@@ -81,9 +81,9 @@ func _physics_process(_delta): # Most things happen here.
 		var target_input_dir: Vector2
 		
 		# Use a larger threshold to prevent jitter from small position changes
-		if position_delta.length_squared() > 0.001:  # Increased threshold
+		if position_delta.length_squared() > 0.001: # Increased threshold
 			# Normalize and convert to Vector2 for input_dir
-			position_delta.y = 0  # Ignore vertical movement
+			position_delta.y = 0 # Ignore vertical movement
 			position_delta = position_delta.normalized()
 			target_input_dir = Vector2(position_delta.x, position_delta.z)
 		else:
@@ -180,7 +180,7 @@ func _spawn_weapon(weapon_resource: ResourceWeapon):
 	# Remove existing weapon if any
 	if item_in_hands != null:
 		print("[AI_WEAPON_SPAWN] %s: Removing existing weapon: %s" % [name, item_in_hands])
-		item_in_hands.queue_free()						
+		item_in_hands.queue_free()
 		item_in_hands = null
 	
 	# Validate weapon path
@@ -257,7 +257,7 @@ func rpc_start_attacking():
 				velocity += direction_to_enemy * push_force
 			else:
 				# Fallback to forward direction if no enemy
-				var forward_direction = -transform.basis.z.normalized()
+				var forward_direction = - transform.basis.z.normalized()
 				velocity += forward_direction * push_force
 	
 	# Choose attack animation similar to character.gd
@@ -401,7 +401,7 @@ func _get_closest_visible_enemy() -> Unit:
 	
 	return closest_enemy
 	
-@export var resurrect_after_death_seconds : float = -1
+@export var resurrect_after_death_seconds: float = -1
 
 func death():
 	super.death()
