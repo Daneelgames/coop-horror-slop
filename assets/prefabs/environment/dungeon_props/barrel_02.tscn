@@ -65,6 +65,7 @@ shape = SubResource("ConvexPolygonShape3D_v8nsl")
 
 [node name="Barrel02" type="MeshInstance3D" parent="."]
 top_level = true
+cast_shadow = 0
 mesh = SubResource("ArrayMesh_n6pbk")
 skeleton = NodePath("")
 

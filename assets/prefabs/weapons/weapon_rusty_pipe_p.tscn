@@ -83,6 +83,7 @@ top_level = true
 [node name="Rusty_Pipe" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -4.4703485e-09, 0.071912356, 2.2351743e-09)
 material_override = SubResource("StandardMaterial3D_go8lt")
+cast_shadow = 0
 mesh = SubResource("ArrayMesh_06hom")
 skeleton = NodePath("")
 

@@ -699,6 +699,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13531351, 0, 0)
 [node name="Mesh" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 visible = false
+cast_shadow = 0
 mesh = SubResource("CapsuleMesh_jw1de")
 skeleton = NodePath("../..")
 
@@ -1166,6 +1167,7 @@ bones/64/rotation = Quaternion(-1.589001e-08, 3.402647e-09, 3.742435e-09, 1)
 bones/64/scale = Vector3(1, 1, 0.99999994)
 
 [node name="Mesh" type="MeshInstance3D" parent="VisualParent/soldier_low_poly/Armature/Skeleton3D"]
+cast_shadow = 0
 mesh = SubResource("ArrayMesh_go8lt")
 skin = SubResource("Skin_hifgq")
 

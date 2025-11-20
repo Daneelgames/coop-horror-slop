@@ -435,6 +435,7 @@ top_level = true
 [node name="Mesh" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 visible = false
+cast_shadow = 0
 mesh = SubResource("CapsuleMesh_jw1de")
 skeleton = NodePath("../..")
 

@@ -63,6 +63,7 @@ transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.74
 [node name="FireAxe2" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -0.002145201, 0.33522686, 0)
 material_override = SubResource("StandardMaterial3D_prdun")
+cast_shadow = 0
 mesh = SubResource("ArrayMesh_dthjc")
 skeleton = NodePath("")
 

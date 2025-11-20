@@ -36,6 +36,7 @@ top_level = true
 
 [node name="Light02" parent="VisualParent" instance=ExtResource("3_hd0x4")]
 transform = Transform3D(-0.024370365, 0.9825986, -0.18413815, -0.9997015, -0.02362913, 0.006218956, 0.0017596785, 0.18423466, 0.98288107, 0.0032012353, 0.009509222, -0.00480187)
+cast_shadow = 0
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 unique_name_in_owner = true
