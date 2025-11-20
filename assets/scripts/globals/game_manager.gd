@@ -514,6 +514,7 @@ func serialize_weapon_resource(weapon_resource: ResourceWeapon) -> Dictionary:
 		"pickup_prefab_path": weapon_resource.pickup_prefab_path,
 		"weapon_prefab_path": weapon_resource.weapon_prefab_path,
 		"damage_min_max": weapon_resource.damage_min_max,
+		"fire_damage_min_max": weapon_resource.fire_damage_min_max,
 		"weapon_blocking_angle": weapon_resource.weapon_blocking_angle,
 		"push_forward_on_attack_force": weapon_resource.push_forward_on_attack_force,
 		"weapon_durability_current": weapon_resource.weapon_durability_current,
@@ -531,6 +532,7 @@ func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
 	weapon_resource.pickup_prefab_path = data.get("pickup_prefab_path", "")
 	weapon_resource.weapon_prefab_path = data.get("weapon_prefab_path", "")
 	weapon_resource.damage_min_max = data.get("damage_min_max", Vector2i(30, 60))
+	weapon_resource.fire_damage_min_max = data.get("fire_damage_min_max", Vector2i(0, 0))
 	weapon_resource.weapon_blocking_angle = data.get("weapon_blocking_angle", 160)
 	weapon_resource.push_forward_on_attack_force = data.get("push_forward_on_attack_force", 5.0)
 	weapon_resource.weapon_durability_current = data.get("weapon_durability_current", 100.0)
@@ -661,43 +663,63 @@ func rpc_destroy_pickup_by_name(pickup_name: String) -> void:
 # RPC function to handle prop damage requests from clients
 # Position is used as fallback when name doesn't match
 @rpc("any_peer", "reliable")
-func rpc_prop_take_damage(prop_name: String, prop_position: Vector3, damage: float, hit_position: Vector3, attacker_position: Vector3) -> void:
+func rpc_prop_take_damage(prop_name: String, prop_position: Vector3, damage: float, fire_damage: float, hit_position: Vector3, attacker_position: Vector3) -> void:
 	# Only server processes this
 	if !multiplayer.is_server():
 		return
-	
-	# Find the prop by name
-	var prop: PhysicalPropRigidbody3D = null
+
+	# Find the prop by name - check both PhysicalPropRigidbody3D and LightStandProp
+	var prop = null
 	if is_instance_valid(_game_level):
 		# Check ProceduralDungeon/DungeonTiles for procedurally spawned props
 		var dungeon_tiles = _game_level.get_node_or_null("ProceduralDungeon/DungeonTiles")
 		if dungeon_tiles != null:
-			prop = dungeon_tiles.get_node_or_null(prop_name) as PhysicalPropRigidbody3D
-	
+			prop = dungeon_tiles.get_node_or_null(prop_name)
+			if prop != null and not (prop is PhysicalPropRigidbody3D or prop is LightStandProp):
+				prop = null
+
+		# Check MultistoryBuildingDungeon/DungeonTiles for procedurally spawned props (including LightStandProp)
+		if prop == null:
+			var multistory_dungeon_tiles = _game_level.get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+			if multistory_dungeon_tiles != null:
+				prop = multistory_dungeon_tiles.get_node_or_null(prop_name)
+				if prop != null and not (prop is PhysicalPropRigidbody3D or prop is LightStandProp):
+					prop = null
+
 	# If not found by name and we have a position, try to find by position
 	if prop == null and prop_position != Vector3.ZERO:
 		if is_instance_valid(_game_root):
 			var all_props = _find_all_props_recursive(_game_root)
-			var closest_prop: PhysicalPropRigidbody3D = null
+			var closest_prop = null
 			var closest_distance = INF
 			for p in all_props:
-				if p.is_dead:
+				# Check if prop is dead (only for PhysicalPropRigidbody3D)
+				if p is PhysicalPropRigidbody3D and p.is_dead:
 					continue
 				var distance = p.global_position.distance_to(prop_position)
-				# If prop is very close (within 0.5 units), it's likely the right one
-				if distance < 0.5 and distance < closest_distance:
+				# If prop is very close (within 1.0 units for better reliability), it's likely the right one
+				if distance < 1.0 and distance < closest_distance:
 					closest_prop = p
 					closest_distance = distance
 			if closest_prop != null:
 				prop = closest_prop
-				print("[GameManager] Found prop by position: '%s' at distance %.2f (was looking for '%s')" % [prop.name, closest_distance, prop_name])
-	
+				print("[GameManager] Found prop by position: '%s' (type: %s) at distance %.2f (was looking for '%s' at %s)" % [
+					prop.name, prop.get_class(), closest_distance, prop_name, prop_position
+				])
+
 	if prop == null:
 		print("[GameManager] Could not find prop '%s' for damage request (position: %s)" % [prop_name, prop_position])
+		# Debug: list all available props
+		if is_instance_valid(_game_root):
+			var all_props = _find_all_props_recursive(_game_root)
+			print("[GameManager] Available props:")
+			for p in all_props:
+				var distance = p.global_position.distance_to(prop_position) if prop_position != Vector3.ZERO else -1.0
+				print("[GameManager]   - %s (type: %s) at %s (distance: %.2f)" % [p.name, p.get_class(), p.global_position, distance])
 		return
-	
+
 	# Call take_damage on the prop
-	prop.rpc_take_damage(damage, hit_position, attacker_position)
+	prop.rpc_take_damage(damage, fire_damage, hit_position, attacker_position)
 
 # RPC function to handle prop death requests from server
 # This ensures death particles spawn on all clients
@@ -747,10 +769,10 @@ func _spawn_prop_death_particles_at_position(_death_position: Vector3):
 	pass
 
 # Helper function to find all props recursively
-func _find_all_props_recursive(node: Node) -> Array[PhysicalPropRigidbody3D]:
-	var props: Array[PhysicalPropRigidbody3D] = []
-	if node is PhysicalPropRigidbody3D:
-		props.append(node as PhysicalPropRigidbody3D)
+func _find_all_props_recursive(node: Node) -> Array:
+	var props: Array = []
+	if node is PhysicalPropRigidbody3D or node is LightStandProp:
+		props.append(node)
 	for child in node.get_children():
 		props.append_array(_find_all_props_recursive(child))
 	return props

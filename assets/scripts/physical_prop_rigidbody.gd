@@ -24,7 +24,7 @@ func _process(delta: float) -> void:
 
 # RPC method to handle damage from any source (players or mobs)
 @rpc("any_peer", "call_local", "reliable")
-func rpc_take_damage(damage: float, hit_position: Vector3, attacker_position: Vector3):
+func rpc_take_damage(damage: float, fire_damage: float, hit_position: Vector3, attacker_position: Vector3):
 	# Only allow server to process damage
 	var sender_id = multiplayer.get_remote_sender_id()
 	if !multiplayer.is_server():
@@ -32,9 +32,9 @@ func rpc_take_damage(damage: float, hit_position: Vector3, attacker_position: Ve
 		if sender_id != 1:
 			return
 	# On server, sender_id will be 0 (local call) which is fine
-	take_damage(damage, hit_position, attacker_position)
+	take_damage(damage, fire_damage, hit_position, attacker_position)
 
-func take_damage(damage: float, hit_position: Vector3, attacker_position: Vector3):
+func take_damage(damage: float, fire_damage: float, hit_position: Vector3, attacker_position: Vector3):
 	if is_dead:
 		return
 	

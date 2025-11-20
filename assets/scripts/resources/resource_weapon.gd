@@ -9,6 +9,7 @@ enum WEAPON_TYPE {TORCH, RUSTY_PIPE, FIRE_AXE, GOLD}
 @export var weapon_prefab_path: StringName
 
 @export var damage_min_max: Vector2i = Vector2i(30, 60)
+@export var fire_damage_min_max: Vector2i = Vector2i(0, 0)
 @export var weapon_blocking_angle = 160
 @export var push_forward_on_attack_force: float = 5
 @export var weapon_durability_current: float = 100

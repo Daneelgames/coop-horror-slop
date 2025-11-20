@@ -183,7 +183,9 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 		print("[MELEE HIT] Hit unit: ", hit_unit.name, " at position: ", hit_result.get("position"))
 		# if attack_was_blocked(hit_unit, hit_position) == false:
 		if attack_was_blocked(hit_unit, owner_position) == false:
-			hit_unit.rpc_take_damage.rpc(randi_range(weapon_resource.damage_min_max.x,weapon_resource.damage_min_max.y))
+			var damage = randi_range(weapon_resource.damage_min_max.x,weapon_resource.damage_min_max.y)
+			var fire_damage = randi_range(weapon_resource.fire_damage_min_max.x, weapon_resource.fire_damage_min_max.y)
+			hit_unit.rpc_take_damage.rpc(damage, fire_damage)
 			var danger_direction = point.direction_to(prev_point)
 			GameManager.particles_manager.spawn_blood_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2, danger_direction)
 		else:
@@ -197,23 +199,29 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 		GameManager.particles_manager.spawn_solid_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
 		weapon_owner.rpc_play_hit_solid.rpc()
 		
-		# Check if hit RigidBody3D on layer 5 (PhysicalProp)
-		if collider is PhysicalPropRigidbody3D:
-			# Check if prop is still valid and not dead
-			if is_instance_valid(collider) and not collider.is_dead:
+		# Check if hit RigidBody3D on layer 5 (PhysicalProp) or LightStandProp
+		if collider is PhysicalPropRigidbody3D or collider is LightStandProp:
+			# Check if prop is still valid and not dead (only for PhysicalPropRigidbody3D)
+			var is_valid_prop = is_instance_valid(collider)
+			if collider is PhysicalPropRigidbody3D:
+				is_valid_prop = is_valid_prop and not collider.is_dead
+
+			if is_valid_prop:
 				# Calculate damage (use average or random)
 				var damage = randi_range(weapon_resource.damage_min_max.x, weapon_resource.damage_min_max.y)
+				var fire_damage = randi_range(weapon_resource.fire_damage_min_max.x, weapon_resource.fire_damage_min_max.y)
 				# Use GameManager to avoid path resolution issues
+				# For better reliability, use position-based search primarily, name as fallback
 				var prop_name = collider.name
 				var prop_position = collider.global_position
 				if multiplayer.is_server():
 					# Server can call directly through GameManager
 					if is_instance_valid(GameManager):
-						GameManager.rpc_prop_take_damage(prop_name, prop_position, damage, hit_position, owner_position)
+						GameManager.rpc_prop_take_damage(prop_name, prop_position, damage, fire_damage, hit_position, owner_position)
 				else:
 					# Client sends RPC to server via GameManager
 					if is_instance_valid(GameManager):
-						GameManager.rpc_prop_take_damage.rpc_id(1, prop_name, prop_position, damage, hit_position, owner_position)
+						GameManager.rpc_prop_take_damage.rpc_id(1, prop_name, prop_position, damage, fire_damage, hit_position, owner_position)
 		
 	hit_objects_this_attack.append(collider)
 
