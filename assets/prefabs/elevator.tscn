@@ -855,8 +855,8 @@ shape = SubResource("BoxShape3D_5iafp")
 
 [node name="SpotLight3D" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6371827, -4.1246414e-05)
-light_color = Color(1, 0.80784315, 0.31764707, 1)
-light_energy = 5.0
+light_color = Color(1, 0.703, 0.33999997, 1)
+light_energy = 0.5
 shadow_enabled = true
 omni_range = 10.0
 omni_attenuation = 0.1
