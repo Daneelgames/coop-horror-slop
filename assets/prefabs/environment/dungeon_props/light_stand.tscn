@@ -124,7 +124,7 @@ omni_attenuation = 1.5
 unique_name_in_owner = true
 stream = ExtResource("4_sycu5")
 unit_size = 1.0
-max_db = 0.0
+max_db = -5.0
 autoplay = true
 max_distance = 20.0
 

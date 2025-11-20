@@ -24,8 +24,8 @@ func _ready() -> void:
 
 func _initialize_lights() -> void:
 	if multiplayer.is_server():
-		rpc_set_lights_active.rpc(randf() < 0.2)
-		#rpc_set_lights_active.rpc(true)
+		lights_active = randf() < 0.2
+		#lights_active = true
 
 func _update_lights_state():
 	if fire_gpu_particles_3d:
@@ -35,9 +35,11 @@ func _update_lights_state():
 	if fire_audio_stream_player_3d:
 		fire_audio_stream_player_3d.playing = lights_active
 
-@rpc("any_peer", "call_local", "reliable")
+@rpc("authority", "call_local", "reliable")
 func rpc_set_lights_active(active):
-	lights_active = active
+	# Only server can change this via RPC, clients get it via synchronization
+	if multiplayer.is_server():
+		lights_active = active
 	
 	
 # RPC method to handle damage from any source (players or mobs)
@@ -53,9 +55,10 @@ func rpc_take_damage(damage: float, fire_damage, hit_position: Vector3, attacker
 	take_damage(damage, fire_damage, hit_position, attacker_position)
 
 func take_damage(damage: float, fire_damage, hit_position: Vector3, attacker_position: Vector3):
-	if fire_damage > 0:
-		# fire light up
-		rpc_set_lights_active.rpc(true)
-	else:
-		# put lights down
-		rpc_set_lights_active.rpc(false)
+	if multiplayer.is_server():  # Only server can change synchronized properties
+		if fire_damage > 0:
+			# fire light up
+			lights_active = true
+		else:
+			# put lights down
+			lights_active = false
