@@ -1,6 +1,6 @@
 [gd_scene load_steps=13 format=3 uid="uid://cwp26fwkagdg5"]
 
-[ext_resource type="Script" path="res://assets/scripts/interactive_pickup.gd" id="1_42bkh"]
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive_pickup.gd" id="1_42bkh"]
 [ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="2_b0smw"]
 [ext_resource type="PackedScene" uid="uid://b1yn1qhuou6kw" path="res://assets/prefabs/environment/dungeon_props/light_02.tscn" id="3_yu0nx"]
 [ext_resource type="Texture2D" uid="uid://dixv7of6phw28" path="res://addons/kenney_particle_pack/fire_02.png" id="4_yu0nx"]
@@ -91,6 +91,9 @@ light_color = Color(1, 0.74333334, 0.56, 1)
 light_energy = 1.5
 light_size = 0.01
 shadow_enabled = true
+distance_fade_enabled = true
+distance_fade_begin = 20.0
+distance_fade_shadow = 30.0
 omni_range = 7.0
 omni_attenuation = 1.5
 

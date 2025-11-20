@@ -117,6 +117,9 @@ light_color = Color(1, 0.74333334, 0.56, 1)
 light_energy = 1.5
 light_size = 0.01
 shadow_enabled = true
+distance_fade_enabled = true
+distance_fade_begin = 20.0
+distance_fade_shadow = 30.0
 omni_range = 7.0
 omni_attenuation = 1.5
 

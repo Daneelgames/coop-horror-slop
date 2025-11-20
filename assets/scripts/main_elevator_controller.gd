@@ -246,6 +246,7 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 		bodies_inside = bodies_to_move_inside.duplicate()
 		bodies_to_move_inside = []
 		update_door_anim()
+		elevator_area_3d.monitoring = true
 	else:
 		# Начало движения
 		var is_server = multiplayer.has_multiplayer_peer() and multiplayer.is_server()
@@ -275,3 +276,4 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 		
 		bodies_inside = []
 		update_door_anim()
+		elevator_area_3d.monitoring = false

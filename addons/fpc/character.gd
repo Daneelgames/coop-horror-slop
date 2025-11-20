@@ -149,12 +149,13 @@ var low_ceiling: bool = false # This is for when the ceiling is too low and the 
 var was_on_floor: bool = true # Was the player on the floor last frame (for landing animation)
 var attack_push_velocity: Vector3 = Vector3.ZERO # Store push velocity from attacks
 
-# Vaulting 
+# Vaulting
 var is_vaulting: bool = false
 var vault_target_height: float = 0.0
 var vault_target_pos: Vector3 = Vector3.ZERO
 var vault_start_pos: Vector3 = Vector3.ZERO
 var vault_progress: float = 0.0
+var vault_timer: float = 0.0
 
 # The reticle should always have a Control node as the root
 var RETICLE: Control
@@ -1209,27 +1210,36 @@ func start_vault_or_climb(type: String, target_height: float, wall_normal: Vecto
 	wall_dir = wall_dir.normalized()
 	
 	# Move 1 meter past the hit point
-	vault_target_pos = wall_point + (wall_dir * 1)
+	vault_target_pos = wall_point + (wall_dir * 0.2)
 	vault_target_pos.y = target_height
-	
+
 	vault_start_pos = global_position
 	vault_progress = 0.0
+	vault_timer = 0.0
 
 func process_vault_climb(delta):
+	# Increment vault timer
+	vault_timer += delta
+
+	# Fallback: force finish vault after 1 second
+	if vault_timer >= 1.0:
+		finish_vault_climb()
+		return
+
 	# Simple procedural animation for movement: Up then Forward
 	# Adjust speed as needed
 	var move_speed = 2
-		
+	var target_xz = Vector3(vault_target_pos.x, global_position.y, vault_target_pos.z)
+	var dir = global_position.direction_to(target_xz)
+	var dist = global_position.distance_to(target_xz)
+
 	# Phase 1: Move Up
 	if global_position.y < vault_target_height - 0.1:
-		velocity = Vector3(0, move_speed, 0)
+		velocity = Vector3(dir.x, move_speed, dir.y)
 		#move_and_slide()
 	else:
 		# Phase 2: Move Forward
-		var target_xz = Vector3(vault_target_pos.x, global_position.y, vault_target_pos.z)
-		var dir = global_position.direction_to(target_xz)
-		var dist = global_position.distance_to(target_xz)
-		
+
 		if dist > 0.2:
 			velocity = dir * move_speed
 			#move_and_slide()
@@ -1240,6 +1250,7 @@ func process_vault_climb(delta):
 func finish_vault_climb():
 	is_vaulting = false
 	velocity = Vector3.ZERO
+	vault_timer = 0.0
 	if !low_ceiling:
 		enter_normal_state()
 #endregion
