@@ -99,6 +99,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7696533, 0)
 shape = SubResource("CapsuleShape3D_fyso2")
 
 [node name="LightCandleHolderB01" type="MeshInstance3D" parent="."]
+cast_shadow = 0
 mesh = SubResource("ArrayMesh_s01r3")
 skeleton = NodePath("")
 
