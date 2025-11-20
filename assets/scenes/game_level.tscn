@@ -45,7 +45,7 @@ uv1_scale = Vector3(0.5, 0.5, 0.5)
 uv1_triplanar = true
 texture_filter = 2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_adyel"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_q5pb2"]
 resource_local_to_scene = true
 render_priority = 0
 shader = ExtResource("13_q5pb2")
@@ -74,7 +74,7 @@ shader_parameter/interactive_level_xz = 3.0
 shader_parameter/interactive_level_y = 0.3
 
 [sub_resource type="QuadMesh" id="QuadMesh_l2gu8"]
-material = SubResource("ShaderMaterial_adyel")
+material = SubResource("ShaderMaterial_q5pb2")
 
 [sub_resource type="MultiMesh" id="MultiMesh_w8vy0"]
 transform_format = 1
