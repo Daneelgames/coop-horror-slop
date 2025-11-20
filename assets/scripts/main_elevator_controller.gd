@@ -59,11 +59,19 @@ func _physics_process(delta: float) -> void:
 					continue
 				
 				if is_server:
-					# На хосте двигаем все тела внутри лифта
-					body.global_position.y += movement_distance
+					# На хосте двигаем все тела внутри лифта (игроки и RigidBody3D объекты)
+					if body is RigidBody3D:
+						# Для RigidBody3D (пикапы) двигаем напрямую
+						body.global_position.y += movement_distance
+						# Также сбрасываем вертикальную скорость чтобы предотвратить падение
+						if body.linear_velocity.y < 0:
+							body.linear_velocity.y = 0
+					else:
+						body.global_position.y += movement_distance
 				else:
 					# На клиентах двигаем только своего игрока (у которого есть authority)
-					if body.is_multiplayer_authority():
+					# RigidBody3D объекты двигаются только на сервере
+					if body is PlayerCharacter and body.is_multiplayer_authority():
 						body.global_position.y += movement_distance
 
 func on_elevator_button_interacted():
@@ -97,12 +105,17 @@ func on_elevator_button_interacted():
 		bodies_inside = []
 		
 		# Установить is_moving_by_elevator = true для всех игроков на сервере
+		# Для RigidBody3D (пикапов) заморозить физику чтобы они двигались вместе с лифтом
 		for body in bodies_to_move_inside:
 			if not is_instance_valid(body):
 				continue
 			if body is PlayerCharacter:
 				body.is_moving_by_elevator = true
 				print("[ELEVATOR] Set is_moving_by_elevator=true for player: ", body.name)
+			elif body is RigidBody3D:
+				# Заморозить RigidBody3D чтобы он двигался вместе с лифтом
+				body.freeze = true
+				print("[ELEVATOR] Frozen RigidBody3D for movement: ", body.name)
 	else:
 		# Остановка движения
 		print("[ELEVATOR] Button pressed! Stopping movement.")
@@ -127,8 +140,10 @@ func _on_elevator_area_3d_body_entered(body: Node3D) -> void:
 		return
 	if bodies_inside.has(body):
 		return
-	bodies_inside.append(body)
-	update_door_anim()
+	# Добавлять игроков и RigidBody3D объекты (пикапы) в bodies_inside
+	if body is PlayerCharacter or body is RigidBody3D:
+		bodies_inside.append(body)
+		update_door_anim()
 
 
 func _on_elevator_area_3d_body_exited(body: Node3D) -> void:
@@ -159,11 +174,18 @@ func _stop_elevator_at_target():
 	is_elevator_moving_down = false
 	
 	# Установить is_moving_by_elevator = false для всех игроков внутри
+	# Разморозить RigidBody3D объекты (пикапы) чтобы они могли нормально взаимодействовать с физикой
 	for body in bodies_to_move_inside:
 		if not is_instance_valid(body):
 			continue
 		if body is PlayerCharacter:
 			body.is_moving_by_elevator = false
+		elif body is RigidBody3D:
+			# Разморозить RigidBody3D чтобы он мог нормально взаимодействовать с физикой
+			body.freeze = false
+			# Сбросить вертикальную скорость чтобы предотвратить падение
+			body.linear_velocity.y = 0
+			print("[ELEVATOR] Unfrozen RigidBody3D after stop: ", body.name)
 	
 	# Вернуть тела обратно в bodies_inside
 	bodies_inside = bodies_to_move_inside.duplicate()
@@ -213,8 +235,14 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 	if not moving:
 		# Остановка движения - очистить список тел для движения
 		for body in bodies_to_move_inside:
+			if not is_instance_valid(body):
+				continue
 			if body is PlayerCharacter:
 				body.is_moving_by_elevator = false
+			elif body is RigidBody3D:
+				# Разморозить RigidBody3D объекты при остановке
+				body.freeze = false
+				body.linear_velocity.y = 0
 		bodies_inside = bodies_to_move_inside.duplicate()
 		bodies_to_move_inside = []
 		update_door_anim()
@@ -231,6 +259,9 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 					continue
 				if body is PlayerCharacter:
 					body.is_moving_by_elevator = true
+				elif body is RigidBody3D:
+					# Заморозить RigidBody3D объекты на сервере
+					body.freeze = true
 		else:
 			# На клиентах: сохраняем текущие тела внутри перед очисткой
 			# (они могут отличаться от сервера, но мы будем двигать только своих игроков)
@@ -240,6 +271,7 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 					continue
 				if body is PlayerCharacter:
 					body.is_moving_by_elevator = true
+				# RigidBody3D объекты обрабатываются только на сервере
 		
 		bodies_inside = []
 		update_door_anim()
