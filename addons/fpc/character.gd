@@ -323,6 +323,7 @@ func _physics_process(delta): # Most things happen here.
 	if not is_on_floor() and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
 	if is_moving_by_elevator == false and is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
+	#if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
 		handle_attacking()
 		handle_blocking()
 		handle_crouching()
@@ -333,14 +334,21 @@ func _physics_process(delta): # Most things happen here.
 
 	input_dir = Vector2.ZERO
 
-	#if not immobile and is_dead() == false and is_taking_damage == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false: # Immobility works by interrupting user input, so other forces can still be applied to the player
-	if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false:
-		input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
+	if is_moving_by_elevator == false:
+		if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false:
+			input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
 
+	#if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false:
+		#input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
+			
 	if is_vaulting:
 		process_vault_climb(delta)
-	else:
+	elif is_moving_by_elevator == false:
 		handle_movement(delta, input_dir)
+	else:
+		# Когда лифт движется, сбросить горизонтальную скорость чтобы предотвратить движение
+		velocity.x = 0.0
+		velocity.z = 0.0
 
 	handle_head_rotation()
 	apply_rotation_smoothing(delta)
@@ -869,6 +877,12 @@ func handle_jumping():
 
 func handle_movement(delta, input_dir):
 	if !_has_input_authority:
+		return
+	
+	# Если игрок движется лифтом, не обрабатывать движение
+	if is_moving_by_elevator:
+		velocity.x = 0.0
+		velocity.z = 0.0
 		return
 
 	var direction = input_dir.rotated(-rotation.y)

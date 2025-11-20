@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=18 format=3 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
 [ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
@@ -8,8 +8,10 @@
 [ext_resource type="Script" uid="uid://cbv5dn1i0igk3" path="res://assets/scripts/resources/resource_item_spawn.gd" id="7_dc4xw"]
 [ext_resource type="Resource" uid="uid://st1qaks76e1l" path="res://assets/resources/rw_gold.tres" id="8_0ts1u"]
 [ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="10_58q7l"]
+[ext_resource type="Texture2D" uid="uid://ws8nahbmaufs" path="res://assets/meshes/grass/grass_diffuse.tga" id="11_0ts1u"]
 [ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="11_q5pb2"]
 [ext_resource type="Script" uid="uid://d0keev2dq3y6g" path="res://assets/scripts/level_generators/multistory_building_dungeon.gd" id="12_0ts1u"]
+[ext_resource type="Texture2D" uid="uid://bqth6ss84k1a5" path="res://assets/meshes/grass/grass_normal.tga" id="12_jbp4y"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_ax1lr"]
 geometry_parsed_geometry_type = 1
@@ -30,6 +32,14 @@ metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
 script = ExtResource("7_dc4xw")
 item_resource = ExtResource("11_q5pb2")
 metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_58q7l"]
+albedo_texture = ExtResource("11_0ts1u")
+normal_enabled = true
+normal_texture = ExtResource("12_jbp4y")
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+texture_filter = 2
 
 [node name="GameLevel" type="NavigationRegion3D" node_paths=PackedStringArray("level_generator")]
 navigation_mesh = SubResource("NavigationMesh_ax1lr")
@@ -70,3 +80,18 @@ dungeon_seed = 1763578280
 
 [node name="DungeonTiles" type="Node3D" parent="MultistoryBuildingDungeon"]
 unique_name_in_owner = true
+
+[node name="HubField" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="FieldCSGCylinder3D" type="CSGCylinder3D" parent="HubField"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.95099366, 0)
+material_override = SubResource("StandardMaterial3D_58q7l")
+use_collision = true
+collision_mask = 0
+radius = 100.0
+sides = 32
+
+[node name="CSGBox3D" type="CSGBox3D" parent="HubField/FieldCSGCylinder3D"]
+operation = 2
+size = Vector3(4, 4, 4)

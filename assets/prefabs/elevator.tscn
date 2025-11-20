@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=4 uid="uid://d1fhekbr7wjf3"]
+[gd_scene load_steps=52 format=4 uid="uid://d1fhekbr7wjf3"]
 
 [ext_resource type="Texture2D" uid="uid://x5ctr86ri1dx" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_AlbedoTransparency.png" id="1_e4udu"]
 [ext_resource type="Script" uid="uid://cepasvg8pm00v" path="res://assets/scripts/main_elevator_controller.gd" id="1_hvhng"]
@@ -500,6 +500,9 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_8c8nv")
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_iktdn"]
+size = Vector3(5, 0.927, 5)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_e4udu"]
 size = Vector3(4.868164, 0.15039063, 4.6933594)
 
@@ -684,7 +687,7 @@ height = 0.84851074
 [node name="Elevator" type="StaticBody3D" node_paths=PackedStringArray("elevator_button")]
 script = ExtResource("1_hvhng")
 elevator_button = NodePath("ButonStaticBody3D")
-elevator_movement_speed = 100.0
+elevator_movement_speed = 30.0
 
 [node name="Visual" type="Node3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.14813232, 0)
@@ -824,13 +827,13 @@ mesh = SubResource("ArrayMesh_a1gf3")
 skeleton = NodePath("")
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.081311345, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.23306024, 0)
 material_override = ExtResource("7_2rv35")
-size = Vector3(4.316162, 0.1, 4.411865)
+size = Vector3(5, 0.1, 5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.022064209, 0)
-shape = SubResource("BoxShape3D_e4udu")
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, -0.17214966, 0)
+shape = SubResource("BoxShape3D_iktdn")
 
 [node name="CollisionShape3D5" type="CollisionShape3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 3.0182023, 0)

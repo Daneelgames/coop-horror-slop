@@ -5,6 +5,7 @@ extends NavigationRegion3D
 @export var level_generator: Node # Changed from ProceduralDungeon to Node to avoid casting issues in exported builds
 var players_placed: bool = false
 @onready var world_environment: WorldEnvironment = %WorldEnvironment
+@onready var hub_field: Node3D = %HubField
 
 func _ready() -> void:
 	is_game_level_ready = false
@@ -48,12 +49,20 @@ func toggle_cheat_environment():
 		return
 	is_dark_env = !is_dark_env
 	if is_dark_env:
-		world_environment.environment = load('res://game_darkness_environment.tres')
+		set_dark_environment()
 	else:
-		world_environment.environment = load('res://game_light_environment.tres')
+		set_light_environment()
 	cheat_env_cooldown = true
 	await get_tree().create_timer(0.2).timeout
 	cheat_env_cooldown = false
+
+func set_light_environment():
+	world_environment.environment = load('res://game_light_environment.tres')
+	pass
+	
+func set_dark_environment():
+	world_environment.environment = load('res://game_darkness_environment.tres')
+	pass
 
 func _find_elevator_location_multistory_building() -> Vector3i:
 	# Найти позицию для лифта в multistory building dungeon
@@ -377,10 +386,31 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	if multiplayer.has_multiplayer_peer():
 		elevator.set_multiplayer_authority(1)
 	
+	# Вычислить позиции верхней и нижней точки движения лифта
+	var shaft_height: int = 100  # Количество тайлов вверх
+	var TILE_HEIGHT: float = float(TILE_SIZE.y)  # Высота одного тайла (2 единицы)
+	var elevator_movement_bottom_position: Vector3 = elevator_pos
+	var elevator_movement_top_position: Vector3 = elevator_pos + Vector3(0, shaft_height * TILE_HEIGHT, 0)
+	
+	# Сохранить позиции в контроллер лифта
+	if elevator is MainElevatorController:
+		elevator.elevator_movement_bottom_position = elevator_movement_bottom_position
+		elevator.elevator_movement_top_position = elevator_movement_top_position + Vector3.UP * 2
+		print("_spawn_elevator_at_position: Set elevator positions - bottom: %s, top: %s" % [elevator_movement_bottom_position, elevator_movement_top_position])
+	else:
+		push_warning("_spawn_elevator_at_position: Elevator is not MainElevatorController, cannot set movement positions")
+	
 	print("_spawn_elevator_at_position: Spawned elevator at position %s [is_server=%s]" % [elevator_pos, multiplayer.is_server()])
 	
 	# Заспавнить шахту лифта - 100 тайлов вверх без потолка и пола
-	_spawn_elevator_shaft(elevator_coord, 100)
+	_spawn_elevator_shaft(elevator_coord, shaft_height)
+	
+	# Установить hub_field на позицию самой верхней точки шахты
+	if is_instance_valid(hub_field):
+		hub_field.global_position = elevator_movement_top_position + Vector3.UP * 2
+		print("_spawn_elevator_at_position: Set hub_field position to top of elevator shaft: %s" % elevator_movement_top_position)
+	else:
+		push_warning("_spawn_elevator_at_position: hub_field is not valid, cannot set position")
 
 func _spawn_elevator_shaft(elevator_coord: Vector3i, shaft_height: int):
 	# Спавнить шахту лифта над тайлом с лифтом
