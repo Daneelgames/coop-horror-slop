@@ -112,7 +112,8 @@ props_amount_to_spawn = 100
 props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
+&"res://assets/prefabs/environment/dungeon_props/light_stand.tscn": 1.0
 })
 floors_heights = Array[int]([3, 3, 3, 3])
 min_stairs_per_floor = 2
