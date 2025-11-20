@@ -48,7 +48,7 @@ func rpc_take_attack_blocked():
 	is_blocking_react = false
 
 @rpc("any_peer", "call_local", "reliable")
-func rpc_take_damage(dmg):
+func rpc_take_damage(dmg, fire_dmg = 0):
 	# Only allow server to call this RPC
 	# When server calls .rpc(), remote_sender_id is 0 on server, 1 on clients
 	# When client calls, remote_sender_id is the client's peer ID
@@ -58,9 +58,9 @@ func rpc_take_damage(dmg):
 		if sender_id != 1:
 			return
 	# On server, sender_id will be 0 (local call) which is fine
-	take_damage(dmg)
+	take_damage(dmg, fire_dmg)
 
-func take_damage(dmg):
+func take_damage(dmg, fire_dmg = 0):
 	play_take_damage()
 	if is_dead():
 		return

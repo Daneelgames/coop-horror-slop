@@ -8,8 +8,10 @@ const DOORS_PREFABS = [preload("res://assets/prefabs/environment/dungeon_doors/d
 const ELEVATOR = preload("uid://d1fhekbr7wjf3")
 const AI_CHARACTER = preload("res://addons/fpc/ai_character.tscn")
 const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom center
+const LIGHT_STAND = preload("uid://dm6w6626ynucp")
 
 @export var torches_on_walls_amount = 30
+@export var light_stands_amount = 30
 @export var items_to_spawn_amount = 30
 @export var item_spawns: Array[ResourceItemSpawn]
 @export var mobs_amount_to_spawn = 30
@@ -199,6 +201,7 @@ func generate_dungeon():
 	await spawn_pickups()
 	await spawn_mobs()
 	await spawn_wall_torches()
+	await spawn_light_stands()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
 	level_generated.emit()
@@ -2821,3 +2824,126 @@ func spawn_debug_spheres_on_stairs_ends():
 					print("    WARNING: No nearest room found on floor y=", target_floor_y)
 		else:
 			print("  Sphere: ", stair_end_coord, " ERROR: No tile found!")
+			
+func spawn_light_stands():
+	# Don't spawn light stands in editor
+	if Engine.is_editor_hint():
+		return
+	
+	# Ensure GameSpawner spawn_path is set to DungeonTiles
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		var dungeon_tiles_node = GameManager._game_level.get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+		if dungeon_tiles_node != null:
+			var dungeon_tiles_path = GameManager._game_spawner.get_path_to(dungeon_tiles_node)
+			GameManager._game_spawner.spawn_path = dungeon_tiles_path
+	
+	# Check if we have light stands to spawn
+	if light_stands_amount <= 0:
+		return
+	
+	# Gather all tiles with floors and NO walls (excluding tiles with stairs)
+	var tiles_with_floors_no_walls: Array[DungeonTile] = []
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile) or not is_instance_valid(tile.floor):
+			continue
+		# Skip tiles that have stairs
+		if spawned_stairs_coords.has(tile.coord):
+			continue
+		
+		# Check if tile has NO walls (all walls are null or deleted)
+		var has_wall: bool = false
+		if tile.wall_f != null and is_instance_valid(tile.wall_f) and not tile.wall_f.is_queued_for_deletion():
+			has_wall = true
+		if tile.wall_r != null and is_instance_valid(tile.wall_r) and not tile.wall_r.is_queued_for_deletion():
+			has_wall = true
+		if tile.wall_b != null and is_instance_valid(tile.wall_b) and not tile.wall_b.is_queued_for_deletion():
+			has_wall = true
+		if tile.wall_l != null and is_instance_valid(tile.wall_l) and not tile.wall_l.is_queued_for_deletion():
+			has_wall = true
+		
+		# Only add tiles with no walls
+		if not has_wall:
+			tiles_with_floors_no_walls.append(tile)
+	
+	# Sort tiles to ensure deterministic order
+	tiles_with_floors_no_walls.sort_custom(_sort_tiles_by_coord)
+	
+	if tiles_with_floors_no_walls.is_empty():
+		print("spawn_light_stands: No tiles with floors and no walls found")
+		return
+	
+	print("spawn_light_stands: Found ", tiles_with_floors_no_walls.size(), " tiles with floors and no walls, spawning up to ", light_stands_amount, " light stands")
+	
+	# Get the resource path from LIGHT_STAND PackedScene
+	var light_stand_path: String = LIGHT_STAND.resource_path
+	if light_stand_path.is_empty():
+		push_error("spawn_light_stands: LIGHT_STAND resource_path is empty!")
+		return
+	
+	# Track spawned light stand positions for Farthest Point Sampling
+	var spawned_positions: Array[Vector3] = []
+	var light_stands_remaining: int = min(light_stands_amount, tiles_with_floors_no_walls.size())
+	var total_light_stands_spawned: int = 0
+	
+	# Spawn light stands using Farthest Point Sampling
+	# This ensures light stands are well-distributed across the level
+	while light_stands_remaining > 0:
+		var farthest_tile: DungeonTile = null
+		var max_min_distance: float = 0.0
+		
+		# Find the tile with the maximum minimum distance to all spawned positions
+		for tile in tiles_with_floors_no_walls:
+			if not is_instance_valid(tile):
+				continue
+			
+			var tile_center = tile.position
+			var min_distance: float = INF
+			
+			# Calculate minimum distance to any spawned light stand
+			if spawned_positions.is_empty():
+				# First light stand - just pick this tile
+				farthest_tile = tile
+				break
+			else:
+				for spawned_pos in spawned_positions:
+					var distance = tile_center.distance_to(spawned_pos)
+					if distance < min_distance:
+						min_distance = distance
+			
+			# Update farthest tile if this is farther from all spawned light stands
+			if min_distance > max_min_distance:
+				max_min_distance = min_distance
+				farthest_tile = tile
+		
+		if farthest_tile == null:
+			# No suitable tile found - break
+			break
+		
+		# Randomize light stand position within tile bounds
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+		var light_stand_position = farthest_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+		
+		# Spawn light stand through MultiplayerSpawner for synchronization
+		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+			var spawn_data = {"type": "prop", "path": light_stand_path}
+			var light_stand = GameManager._game_spawner.spawn(spawn_data)
+			if light_stand != null:
+				# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+				light_stand.position = light_stand_position
+				light_stand.owner = _get_edited_scene_root()
+				# Set multiplayer authority to server
+				light_stand.set_multiplayer_authority(1)
+				
+				spawned_positions.append(light_stand_position)
+				light_stands_remaining -= 1
+				total_light_stands_spawned += 1
+				
+				# Remove tile from available tiles to avoid placing multiple light stands on same tile
+				tiles_with_floors_no_walls.erase(farthest_tile)
+		
+		# Yield every 10 light stands to avoid frame drops
+		if total_light_stands_spawned % 10 == 0:
+			await _await_frame()
+	
+	print("spawn_light_stands: Total light stands spawned: ", total_light_stands_spawned)

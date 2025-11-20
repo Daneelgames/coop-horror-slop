@@ -1,6 +1,13 @@
-[gd_scene load_steps=4 format=4 uid="uid://dm6w6626ynucp"]
+[gd_scene load_steps=13 format=4 uid="uid://dm6w6626ynucp"]
 
 [ext_resource type="Material" uid="uid://5elf8vn6ehxd" path="res://assets/meshes/modularDungeon/m_lights_b.tres" id="1_6klxm"]
+[ext_resource type="Script" uid="uid://tkg5445vnis0" path="res://assets/prefabs/environment/dungeon_props/light_stand_prop.gd" id="1_8tswf"]
+[ext_resource type="Texture2D" uid="uid://dixv7of6phw28" path="res://addons/kenney_particle_pack/fire_02.png" id="3_ejgwc"]
+[ext_resource type="AudioStream" uid="uid://cdqlejb6d7sfg" path="res://assets/audio/fire.wav" id="4_sycu5"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fyso2"]
+radius = 0.13378906
+height = 1.6281738
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_j57su"]
 _surfaces = [{
@@ -36,6 +43,76 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_j57su")
 
-[node name="LightCandleHolderB01" type="MeshInstance3D"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tjmfj"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.67058825, 0, 1)
+albedo_texture = ExtResource("3_ejgwc")
+texture_filter = 2
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_gvqur"]
+_data = [Vector2(0, 0.04147482), 0.0, 0.0, 0, 0, Vector2(0.06071428, 0.97432524), 0.0, 0.0, 0, 0, Vector2(1, 0.05431211), -2.1861095, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_2im4t"]
+curve = SubResource("Curve_gvqur")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_3jg6g"]
+emission_shape = 6
+emission_ring_axis = Vector3(0, 0, 1)
+emission_ring_height = 0.1
+emission_ring_radius = 0.45
+emission_ring_inner_radius = 0.35
+emission_ring_cone_angle = 90.0
+angle_min = -720.0
+angle_max = 720.0
+gravity = Vector3(0, 2, 0)
+scale_min = 0.19999999
+scale_max = 0.5
+scale_curve = SubResource("CurveTexture_2im4t")
+
+[sub_resource type="QuadMesh" id="QuadMesh_fjoj4"]
+
+[node name="LightStandStaticBody3D" type="StaticBody3D"]
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("1_8tswf")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7696533, 0)
+shape = SubResource("CapsuleShape3D_fyso2")
+
+[node name="LightCandleHolderB01" type="MeshInstance3D" parent="."]
 mesh = SubResource("ArrayMesh_s01r3")
 skeleton = NodePath("")
+
+[node name="FireGPUParticles3D" type="GPUParticles3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 1.6294442, 0)
+material_override = SubResource("StandardMaterial3D_tjmfj")
+amount = 16
+lifetime = 0.5
+process_material = SubResource("ParticleProcessMaterial_3jg6g")
+draw_pass_1 = SubResource("QuadMesh_fjoj4")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="FireGPUParticles3D"]
+unique_name_in_owner = true
+light_color = Color(1, 0.74333334, 0.56, 1)
+light_energy = 1.5
+light_size = 0.01
+shadow_enabled = true
+omni_range = 7.0
+omni_attenuation = 1.5
+
+[node name="FireAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="FireGPUParticles3D"]
+unique_name_in_owner = true
+stream = ExtResource("4_sycu5")
+unit_size = 1.0
+max_db = 0.0
+autoplay = true
+max_distance = 20.0

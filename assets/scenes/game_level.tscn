@@ -45,7 +45,7 @@ uv1_scale = Vector3(0.5, 0.5, 0.5)
 uv1_triplanar = true
 texture_filter = 2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_adyel"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_q5pb2"]
 resource_local_to_scene = true
 render_priority = 0
 shader = ExtResource("13_q5pb2")
@@ -74,7 +74,7 @@ shader_parameter/interactive_level_xz = 3.0
 shader_parameter/interactive_level_y = 0.3
 
 [sub_resource type="QuadMesh" id="QuadMesh_l2gu8"]
-material = SubResource("ShaderMaterial_adyel")
+material = SubResource("ShaderMaterial_q5pb2")
 
 [sub_resource type="MultiMesh" id="MultiMesh_w8vy0"]
 transform_format = 1
@@ -106,6 +106,7 @@ transform = Transform3D(0.7283828, 0.011957396, 0.68506604, 0, 0.9998477, -0.017
 
 [node name="MultistoryBuildingDungeon" type="Node3D" parent="." groups=["navigation_mesh_source_group"]]
 script = ExtResource("12_0ts1u")
+torches_on_walls_amount = 10
 item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
 mobs_amount_to_spawn = 0
 props_amount_to_spawn = 100
