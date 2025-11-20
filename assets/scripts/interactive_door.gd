@@ -47,7 +47,7 @@ func get_player_side(player_position: Vector3) -> STATE:
 	var dist_to_inside = player_position.distance_to(inside_point.global_position)
 	
 	# Player is on the side they're closer to
-	return STATE.OPENED_OUTSIDE if dist_to_outside < dist_to_inside else STATE.OPENED_INSIDE
+	return STATE.OPENED_OUTSIDE if dist_to_outside > dist_to_inside else STATE.OPENED_INSIDE
 
 # Toggle door state (open/close)
 func toggle_door(player_position: Vector3):
