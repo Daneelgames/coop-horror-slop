@@ -94,6 +94,10 @@ func _spawn_prop_scene(prop_prefab_path: String) -> Node:
 	if prop == null:
 		push_error("GameManager._spawn_prop_scene: Failed to instantiate scene from path: %s" % prop_prefab_path)
 		return null
+	# Set a unique name to avoid conflicts when MultiplayerSpawner adds it to tree
+	# This name will be used for synchronization - it should be consistent across clients
+	# Using a more unique name to avoid conflicts
+	prop.name = "Prop_%d_%d" % [Time.get_ticks_msec(), randi()]
 	# Note: Don't add to scene tree here - MultiplayerSpawner handles that
 	return prop
 

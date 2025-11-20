@@ -659,7 +659,7 @@ carrying_items = Dictionary[StringName, ExtResource("2_mo3xr")]({
 &"fire axe": ExtResource("4_8bp5q")
 })
 inventory_slots_max = 4
-vaulting_raycasts = [NodePath("VaultingRaycasts/RayCast3D"), NodePath("VaultingRaycasts/RayCast3D2"), NodePath("VaultingRaycasts/RayCast3D3"), NodePath("VaultingRaycasts/RayCast3D4"), NodePath("VaultingRaycasts/RayCast3D5"), NodePath("VaultingRaycasts/RayCast3D6"), NodePath("VaultingRaycasts/RayCast3D7")]
+vaulting_raycasts = [NodePath("VaultingRaycasts/RayCast3D"), NodePath("VaultingRaycasts/RayCast3D2"), NodePath("VaultingRaycasts/RayCast3D3"), NodePath("VaultingRaycasts/RayCast3D4"), NodePath("VaultingRaycasts/RayCast3D5"), NodePath("VaultingRaycasts/RayCast3D6"), NodePath("VaultingRaycasts/RayCast3D7"), NodePath("VaultingRaycasts/RayCast3D8"), NodePath("VaultingRaycasts/RayCast3D9"), NodePath("VaultingRaycasts/RayCast3D10"), NodePath("VaultingRaycasts/RayCast3D11"), NodePath("VaultingRaycasts/RayCast3D12"), NodePath("VaultingRaycasts/RayCast3D13")]
 base_speed = 2.0
 sprint_speed = 4.0
 vaulting_threshold = 2.0
@@ -1197,7 +1197,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
 
 [node name="VoicePlayer3D" type="AudioStreamPlayer3D" parent="Head"]
 max_distance = 60.0
-bus = &"VoicePlayback"
 
 [node name="Camera" type="Camera3D" parent="Head"]
 unique_name_in_owner = true
@@ -1317,13 +1316,11 @@ stream = SubResource("AudioStreamRandomizer_ra850")
 volume_db = -2.0
 unit_size = 5.0
 max_db = 0.0
-bus = &"SFX"
 
 [node name="AttackWooshAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0577155, -0.37791863)
 stream = SubResource("AudioStreamRandomizer_mo3xr")
-bus = &"SFX"
 
 [node name="HitSolidAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
 unique_name_in_owner = true
@@ -1331,86 +1328,83 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1509476, -0.32575524)
 stream = SubResource("AudioStreamRandomizer_5d3cd")
 unit_size = 2.0
 pitch_scale = 0.8
-bus = &"SFX"
 
 [node name="TakeDamageAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0413975, 0.09894803)
 stream = SubResource("AudioStreamRandomizer_xo647")
 pitch_scale = 0.8
-bus = &"SFX"
 
 [node name="DeathAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0413975, 0.09894803)
 stream = SubResource("AudioStreamRandomizer_6pqx7")
 pitch_scale = 0.6
-bus = &"SFX"
 
 [node name="VaultingRaycasts" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29995745, 0)
 
 [node name="RayCast3D" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 0.24998584, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 0.24998584, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D2" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 0.39998585, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 0.39998585, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D3" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 0.5499858, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 0.5499858, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D4" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 0.69998586, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 0.69998586, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D5" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 0.84998584, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 0.84998584, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D6" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 0.9999858, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 0.9999858, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D7" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 1.1499858, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 1.1499858, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D8" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 1.2999859, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 1.2999859, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D9" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 1.4499859, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 1.4499859, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D10" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 1.5999858, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 1.5999858, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D11" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 1.7499858, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 1.7499858, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D12" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 1.8999858, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 1.8999858, 1.4901161e-08)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5
 
 [node name="RayCast3D13" type="RayCast3D" parent="VaultingRaycasts"]
-transform = Transform3D(1, 0, 0, 0, 0.9958479, -0.09103234, 0, 0.09103234, 0.9958479, 0, 2.0999858, 0)
+transform = Transform3D(1, 0, 0, 0, 0.94971, -0.31313065, 0, 0.31313065, 0.94971, 0, 2.0999858, 0)
 target_position = Vector3(0, 0, -1.5)
 collision_mask = 5

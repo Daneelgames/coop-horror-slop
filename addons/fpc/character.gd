@@ -182,28 +182,45 @@ var _cached_local_peer_id: int = -1
 #endregion
 @onready var dust_gpu_particles_3d: GPUParticles3D = %DustGPUParticles3D
 var is_moving_by_elevator = false
+var _last_elevator_check_result: bool = false  # Для отладки: последний результат проверки лифта
 
 #region Main Control Flow
 
 func _enter_tree():
 	# Set multiplayer authority on this node (recursively sets authority for child nodes including MultiplayerSynchronizer)
 	if multiplayer.has_multiplayer_peer():
+		# Cache local peer ID early so _has_local_control() can use it
+		# Убедимся, что multiplayer полностью инициализирован
+		var local_peer_id = multiplayer.get_unique_id()
+		if local_peer_id > 0:  # Проверяем, что peer ID валидный
+			_cached_local_peer_id = local_peer_id
 		# Extract peer ID from character name format: "Player_{peer_id}"
 		var name_parts = name.split("_")
 		if name_parts.size() >= 2:
 			_cached_peer_id = name_parts[1].to_int()
 			set_multiplayer_authority(_cached_peer_id, true)
 			if debug_authority:
-				_debug_print("Set multiplayer authority to %d in _enter_tree" % _cached_peer_id)
+				_debug_print("Set multiplayer authority to %d in _enter_tree (local_peer_id=%d, name=%s)" % [_cached_peer_id, _cached_local_peer_id, name])
+		else:
+			if debug_authority:
+				_debug_print("WARNING: Could not parse peer ID from name '%s' in _enter_tree" % name)
+	# Отложим проверку authority до _ready(), чтобы убедиться, что все инициализировано
 	call_deferred("_refresh_authority_state", true)
 
 
 func _ready():
 	_debug_print("Character ready, name=%s, multiplayer_peer=%s, debug_authority=%s" % [name, str(multiplayer.has_multiplayer_peer()), str(debug_authority)])
 
-	# Cache local peer ID if in multiplayer
+	# Cache local peer ID if in multiplayer (if not already cached in _enter_tree)
 	if multiplayer.has_multiplayer_peer():
-		_cached_local_peer_id = multiplayer.get_unique_id()
+		var local_peer_id = multiplayer.get_unique_id()
+		if _cached_local_peer_id < 0 or _cached_local_peer_id != local_peer_id:
+			# Обновляем, если не установлен или изменился
+			if debug_authority and _cached_local_peer_id >= 0:
+				_debug_print("WARNING: Local peer ID changed from %d to %d in _ready()" % [_cached_local_peer_id, local_peer_id])
+			_cached_local_peer_id = local_peer_id
+		if debug_authority:
+			_debug_print("_ready: _cached_peer_id=%d, _cached_local_peer_id=%d, name=%s" % [_cached_peer_id, _cached_local_peer_id, name])
 	
 	# Register this character in GameManager._player_nodes
 	# This ensures all clients have all players registered, not just the server
@@ -334,6 +351,49 @@ func _physics_process(delta): # Most things happen here.
 
 	input_dir = Vector2.ZERO
 
+	# Отладка: проверяем состояние is_moving_by_elevator
+	# Проверяем только если флаг установлен и состояние изменилось (чтобы не спамить в лог)
+	if is_moving_by_elevator:
+		# Проверяем, действительно ли лифт двигается
+		# Ищем лифт в сцене и проверяем его состояние
+		var elevator_found = false
+		var elevator_moving = false
+		if is_instance_valid(GameManager) and is_instance_valid(GameManager._game_level):
+			var elevator = GameManager._game_level.get_node_or_null("MultistoryBuildingDungeon/MainElevator")
+			if elevator == null:
+				elevator = GameManager._game_level.get_node_or_null("ProceduralDungeon/MainElevator")
+			if elevator != null:
+				elevator_found = true
+				# Проверяем свойство is_elevator_moving через get() или прямое обращение
+				if elevator.has("is_elevator_moving"):
+					elevator_moving = elevator.is_elevator_moving
+					# Если лифт найден и не двигается, но флаг установлен - сбросить его
+					if not elevator_moving:
+						# Печатаем только если это новое состояние (чтобы не спамить)
+						if _last_elevator_check_result != false:
+							print("[CHARACTER DEBUG] %s: Лифт найден, но не двигается (is_elevator_moving=false). Сбрасываем is_moving_by_elevator" % name)
+							_last_elevator_check_result = false
+						is_moving_by_elevator = false
+					else:
+						_last_elevator_check_result = true
+				else:
+					# Лифт найден, но нет свойства is_elevator_moving - возможно старая версия
+					# В этом случае сбрасываем флаг на всякий случай
+					if _last_elevator_check_result != false:
+						print("[CHARACTER DEBUG] %s: Лифт найден, но нет свойства is_elevator_moving. Сбрасываем is_moving_by_elevator" % name)
+						_last_elevator_check_result = false
+					is_moving_by_elevator = false
+		
+		if not elevator_found:
+			# Лифт не найден - возможно игрок не в лифте, сбросить флаг
+			if _last_elevator_check_result != false:
+				print("[CHARACTER DEBUG] %s: Лифт не найден, но is_moving_by_elevator=true. Сбрасываем флаг" % name)
+				_last_elevator_check_result = false
+			is_moving_by_elevator = false
+	else:
+		# Флаг сброшен - сбросить и флаг проверки
+		_last_elevator_check_result = false
+
 	if is_moving_by_elevator == false:
 		if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false:
 			input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
@@ -350,7 +410,9 @@ func _physics_process(delta): # Most things happen here.
 		velocity.x = 0.0
 		velocity.z = 0.0
 
-	handle_head_rotation()
+	# Вращение камеры должно обрабатываться только если есть input authority
+	if _has_input_authority:
+		handle_head_rotation()
 	apply_rotation_smoothing(delta)
 	
 	# Handle head height interpolation based on state
@@ -1271,18 +1333,26 @@ func update_debug_menu_per_tick():
 
 func _unhandled_input(event: InputEvent):
 	if !_has_input_authority:
+		if debug_authority:
+			_debug_print("_unhandled_input: BLOCKED - _has_input_authority=false")
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		mouseInput = event.relative
 		if debug_authority:
 			_debug_print("Mouse input: %s" % str(mouseInput))
 	elif Input.is_action_just_pressed('switch_inventory_item'):
+		if debug_authority:
+			_debug_print("_unhandled_input: switch_inventory_item pressed, _has_input_authority=%s" % _has_input_authority)
 		change_selected_item_index(1)
 	elif event is InputEventMouseButton and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle mouse wheel for inventory selection
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+			if debug_authority:
+				_debug_print("_unhandled_input: WHEEL_UP, _has_input_authority=%s" % _has_input_authority)
 			change_selected_item_index(-1)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+			if debug_authority:
+				_debug_print("_unhandled_input: WHEEL_DOWN, _has_input_authority=%s" % _has_input_authority)
 			change_selected_item_index(1)
 	elif event is InputEventKey:
 		# Handle number keys 1-5 for direct item selection
@@ -1345,7 +1415,11 @@ func handle_pausing():
 var on_change_item_cooldown = false
 func change_selected_item_index(delta: int):
 	if !_has_input_authority:
+		if debug_authority:
+			_debug_print("change_selected_item_index: BLOCKED - _has_input_authority=false")
 		return
+	if debug_authority:
+		_debug_print("change_selected_item_index: ALLOWED - _has_input_authority=true, delta=%d" % delta)
 	if on_change_item_cooldown:
 		return
 	var item_count = carrying_items.size()
@@ -1605,27 +1679,82 @@ func _clamp_selected_index():
 func _has_local_control() -> bool:
 	if !multiplayer.has_multiplayer_peer():
 		return true
+	
+	# Убедимся, что _cached_local_peer_id установлен
+	if _cached_local_peer_id < 0:
+		_cached_local_peer_id = multiplayer.get_unique_id()
+		if debug_authority:
+			_debug_print("_has_local_control: Cached local peer ID (late init): %d" % _cached_local_peer_id)
+	
 	# Use cached peer IDs to avoid parsing name and calling get_unique_id() every frame
 	if _cached_peer_id >= 0:
-		if _cached_local_peer_id < 0:
-			_cached_local_peer_id = multiplayer.get_unique_id()
-		return _cached_peer_id == _cached_local_peer_id
+		var has_control = _cached_peer_id == _cached_local_peer_id
+		# Отладка только при первой проверке или при изменении состояния
+		if debug_authority:
+			if not has_control and (_debug_last_should_control != has_control or _debug_last_should_control == false):
+				_debug_print("_has_local_control: NO CONTROL - cached_peer_id=%d, cached_local_peer_id=%d, name=%s" % [_cached_peer_id, _cached_local_peer_id, name])
+			elif has_control and _debug_last_should_control != has_control:
+				_debug_print("_has_local_control: HAS CONTROL - cached_peer_id=%d, cached_local_peer_id=%d, name=%s" % [_cached_peer_id, _cached_local_peer_id, name])
+		_debug_last_should_control = has_control
+		return has_control
+	
 	# Fallback: parse name if cache not set (shouldn't happen normally)
 	var name_parts = name.split("_")
 	if name_parts.size() >= 2:
 		_cached_peer_id = name_parts[1].to_int()
-		if _cached_local_peer_id < 0:
-			_cached_local_peer_id = multiplayer.get_unique_id()
-		return _cached_peer_id == _cached_local_peer_id
-	return is_multiplayer_authority()
+		var has_control = _cached_peer_id == _cached_local_peer_id
+		if debug_authority:
+			_debug_print("_has_local_control: Fallback check - cached_peer_id=%d, cached_local_peer_id=%d, has_control=%s, name=%s" % [_cached_peer_id, _cached_local_peer_id, has_control, name])
+		_debug_last_should_control = has_control
+		return has_control
+	
+	var has_control = is_multiplayer_authority()
+	if debug_authority:
+		_debug_print("_has_local_control: Final fallback - is_multiplayer_authority=%s, name=%s" % [has_control, name])
+	_debug_last_should_control = has_control
+	return has_control
 
 
 func _refresh_authority_state(force: bool = false):
-	var new_authority_state := _has_local_control()
-	if !force and new_authority_state == _has_input_authority:
+	# Убедимся, что все кэшированные значения установлены перед проверкой
+	if multiplayer.has_multiplayer_peer():
+		# Убедимся, что _cached_local_peer_id установлен
+		var current_local_peer_id = multiplayer.get_unique_id()
+		if _cached_local_peer_id < 0 or _cached_local_peer_id != current_local_peer_id:
+			_cached_local_peer_id = current_local_peer_id
+			if debug_authority:
+				_debug_print("_refresh_authority_state: Cached local peer ID: %d" % _cached_local_peer_id)
+		
+		# Убедимся, что _cached_peer_id установлен из имени
+		if _cached_peer_id < 0:
+			var name_parts = name.split("_")
+			if name_parts.size() >= 2:
+				_cached_peer_id = name_parts[1].to_int()
+				if debug_authority:
+					_debug_print("_refresh_authority_state: Cached peer ID from name: %d" % _cached_peer_id)
+		
+		# Проверяем control
+		var new_authority_state := _has_local_control()
+		
+		# Дополнительная проверка: если authority совпадает с локальным peer ID, но _has_local_control() вернул false,
+		# принудительно устанавливаем true (это должно быть локальный игрок)
+		if get_multiplayer_authority() == current_local_peer_id and not new_authority_state:
+			if debug_authority:
+				_debug_print("_refresh_authority_state: WARNING - authority matches but _has_local_control() returned false! Forcing true. (authority=%d, local_peer_id=%d, cached_peer_id=%d, cached_local_peer_id=%d)" % [
+					get_multiplayer_authority(), 
+					current_local_peer_id,
+					_cached_peer_id,
+					_cached_local_peer_id
+				])
+			new_authority_state = true
+		
+		if !force and new_authority_state == _has_input_authority:
+			return
+		_has_input_authority = new_authority_state
+	else:
+		# Single player - всегда true
+		_has_input_authority = true
 		return
-
-	_has_input_authority = new_authority_state
 	if _has_input_authority:
 		#var bone_idx = skeleton_3d.find_bone('mixamorig_Spine2')
 		var bone_idx = skeleton_3d.find_bone('mixamorig_Neck')
@@ -1668,11 +1797,28 @@ func _refresh_authority_state(force: bool = false):
 
 
 func _ensure_authority_state():
+	# Принудительно обновляем кэшированные значения перед проверкой
+	if multiplayer.has_multiplayer_peer():
+		if _cached_local_peer_id < 0:
+			_cached_local_peer_id = multiplayer.get_unique_id()
+		if _cached_peer_id < 0:
+			var name_parts = name.split("_")
+			if name_parts.size() >= 2:
+				_cached_peer_id = name_parts[1].to_int()
+	
 	var should_have_control := _has_local_control()
 	if should_have_control != _has_input_authority:
 		if debug_authority:
 			var ctx := _debug_authority_context()
 			_debug_print("Authority change: was=%s, now=%s (%s)" % [str(_has_input_authority), str(should_have_control), ctx])
+			# Дополнительная отладка для диагностики проблемы
+			_debug_print("DEBUG: _cached_peer_id=%d, _cached_local_peer_id=%d, name=%s, get_unique_id()=%d, is_multiplayer_authority()=%s" % [
+				_cached_peer_id,
+				_cached_local_peer_id,
+				name,
+				multiplayer.get_unique_id() if multiplayer.has_multiplayer_peer() else -1,
+				is_multiplayer_authority()
+			])
 		_refresh_authority_state()
 
 #endregion

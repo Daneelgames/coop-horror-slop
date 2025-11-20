@@ -24,7 +24,18 @@ func _physics_process(delta: float) -> void:
 		# Проверить, что позиции инициализированы
 		if elevator_movement_top_position == Vector3.ZERO and elevator_movement_bottom_position == Vector3.ZERO:
 			push_warning("[ELEVATOR] Movement positions not initialized, cannot move")
-			is_elevator_moving = false
+			# Синхронизировать остановку с клиентами через RPC
+			if multiplayer.has_multiplayer_peer():
+				rpc_set_elevator_moving.rpc(false, false)
+			else:
+				# Single player: установить состояние локально
+				is_elevator_moving = false
+				# Сбросить флаг для всех игроков в лифте
+				for body in bodies_to_move_inside:
+					if not is_instance_valid(body):
+						continue
+					if body is PlayerCharacter:
+						body.is_moving_by_elevator = false
 			return
 		
 		# Определить направление движения и скорость
@@ -230,19 +241,44 @@ func update_door_anim():
 @rpc("authority", "call_local", "reliable")
 func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 	# Синхронизация состояния движения лифта с клиентами
+	var is_server_instance = multiplayer.has_multiplayer_peer() and multiplayer.is_server()
+	var instance_type = "SERVER" if is_server_instance else "CLIENT"
+	print("[ELEVATOR RPC] [%s] rpc_set_elevator_moving(moving=%s, moving_down=%s)" % [instance_type, moving, moving_down])
 	is_elevator_moving = moving
 	is_elevator_moving_down = moving_down
 	if not moving:
 		# Остановка движения - очистить список тел для движения
+		# Сбрасываем флаг для всех тел в bodies_to_move_inside
 		for body in bodies_to_move_inside:
 			if not is_instance_valid(body):
 				continue
 			if body is PlayerCharacter:
 				body.is_moving_by_elevator = false
+				print("[ELEVATOR RPC] Сброшен is_moving_by_elevator для %s (из bodies_to_move_inside)" % body.name)
 			elif body is RigidBody3D:
 				# Разморозить RigidBody3D объекты при остановке
 				body.freeze = false
 				body.linear_velocity.y = 0
+		
+		# Также сбрасываем флаг для всех игроков в bodies_inside (на случай если они там есть)
+		for body in bodies_inside:
+			if not is_instance_valid(body):
+				continue
+			if body is PlayerCharacter:
+				body.is_moving_by_elevator = false
+				print("[ELEVATOR RPC] Сброшен is_moving_by_elevator для %s (из bodies_inside)" % body.name)
+		
+		# На клиентах: также проверяем всех игроков в Area3D и сбрасываем флаг
+		# Это важно, потому что bodies_inside может быть не синхронизирован на клиенте
+		if is_instance_valid(elevator_area_3d):
+			var overlapping_bodies = elevator_area_3d.get_overlapping_bodies()
+			for body in overlapping_bodies:
+				if not is_instance_valid(body):
+					continue
+				if body is PlayerCharacter and body.is_moving_by_elevator:
+					body.is_moving_by_elevator = false
+					print("[ELEVATOR RPC] Сброшен is_moving_by_elevator для %s (из Area3D)" % body.name)
+		
 		bodies_inside = bodies_to_move_inside.duplicate()
 		bodies_to_move_inside = []
 		update_door_anim()

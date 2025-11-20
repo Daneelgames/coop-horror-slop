@@ -2880,6 +2880,10 @@ func spawn_light_stands():
 		push_error("spawn_light_stands: LIGHT_STAND resource_path is empty!")
 		return
 	
+	# Register light stand scene with MultiplayerSpawner before spawning
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		GameManager._game_spawner.add_spawnable_scene(light_stand_path)
+	
 	# Track spawned light stand positions for Farthest Point Sampling
 	var spawned_positions: Array[Vector3] = []
 	var light_stands_remaining: int = min(light_stands_amount, tiles_with_floors_no_walls.size())
