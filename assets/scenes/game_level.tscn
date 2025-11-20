@@ -107,7 +107,7 @@ transform = Transform3D(0.7283828, 0.011957396, 0.68506604, 0, 0.9998477, -0.017
 [node name="MultistoryBuildingDungeon" type="Node3D" parent="." groups=["navigation_mesh_source_group"]]
 script = ExtResource("12_0ts1u")
 item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
-mobs_amount_to_spawn = 0
+mobs_amount_to_spawn = 20
 props_amount_to_spawn = 100
 props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,

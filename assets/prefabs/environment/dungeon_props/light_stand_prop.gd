@@ -6,6 +6,13 @@ class_name LightStandProp
 
 func _ready() -> void:
 	if multiplayer.is_server():
+		# Defer RPC call to next frame to ensure prop is fully synchronized on all clients
+		# This prevents "Failed to get path from RPC" errors when clients receive RPC
+		# before the prop node is fully added to the scene tree
+		call_deferred("_initialize_lights")
+
+func _initialize_lights() -> void:
+	if multiplayer.is_server():
 		#rpc_set_lights_active.rpc(randf() < 0.2)
 		rpc_set_lights_active.rpc(true)
 
