@@ -684,6 +684,7 @@ height = 0.84851074
 [node name="Elevator" type="StaticBody3D" node_paths=PackedStringArray("elevator_button")]
 script = ExtResource("1_hvhng")
 elevator_button = NodePath("ButonStaticBody3D")
+elevator_movement_speed = 100.0
 
 [node name="Visual" type="Node3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.14813232, 0)
