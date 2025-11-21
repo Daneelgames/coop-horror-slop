@@ -106,9 +106,11 @@ transform = Transform3D(0.7283828, 0.011957396, 0.68506604, 0, 0.9998477, -0.017
 
 [node name="MultistoryBuildingDungeon" type="Node3D" parent="." groups=["navigation_mesh_source_group"]]
 script = ExtResource("12_0ts1u")
+torches_on_walls_amount = 10
+items_to_spawn_amount = 20
 item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
-mobs_amount_to_spawn = 20
-props_amount_to_spawn = 100
+mobs_amount_to_spawn = 15
+props_amount_to_spawn = 50
 props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_01.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/barrel_02.tscn": 1.0,
@@ -116,6 +118,8 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/light_stand.tscn": 1.0
 })
 floors_heights = Array[int]([3, 3, 3, 3])
+rooms_per_floor_min_max = Vector2i(5, 8)
+apartment_side_size_min_max = Vector2i(2, 3)
 min_stairs_per_floor = 2
 max_stairs_per_floor = 2
 dungeon_seed = 1763578280
