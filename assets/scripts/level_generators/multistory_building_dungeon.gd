@@ -8,7 +8,7 @@ const DOORS_PREFABS = [preload("res://assets/prefabs/environment/dungeon_doors/d
 const ELEVATOR = preload("uid://d1fhekbr7wjf3")
 const AI_CHARACTER = preload("res://addons/fpc/ai_character.tscn")
 const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom center
-
+@export var mobs_spawns : Array[ResourceMobSpawn]
 @export var torches_on_walls_amount = 30
 @export var items_to_spawn_amount = 30
 @export var item_spawns: Array[ResourceItemSpawn]

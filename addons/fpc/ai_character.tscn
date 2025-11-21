@@ -1,4 +1,4 @@
-[gd_scene load_steps=53 format=4 uid="uid://b1wtst1i1aqdl"]
+[gd_scene load_steps=54 format=4 uid="uid://b1wtst1i1aqdl"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_q1sc8"]
 [ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="2_cf55f"]
@@ -18,6 +18,7 @@
 [ext_resource type="AudioStream" uid="uid://bivv20wktglii" path="res://assets/audio/FootStepRun_4.wav" id="9_4lhb8"]
 [ext_resource type="Script" uid="uid://cwvfv0f6chws0" path="res://assets/scripts/ai_state_investigate.gd" id="9_s55pi"]
 [ext_resource type="AudioStream" uid="uid://h1oyim2hlk1x" path="res://assets/audio/FootStepRun_5.wav" id="10_6g6u1"]
+[ext_resource type="Texture2D" uid="uid://b7yokovtxcvy5" path="res://assets/sprites/white_blob.png" id="10_lpatj"]
 [ext_resource type="AudioStream" uid="uid://bp2qfvsnyvymj" path="res://assets/audio/FootStepRun_6.wav" id="11_3emgj"]
 [ext_resource type="AudioStream" uid="uid://c1mondumgl5km" path="res://assets/audio/FootStepRun_7.wav" id="12_s55pi"]
 [ext_resource type="AudioStream" uid="uid://fqbys1ukw7j6" path="res://assets/audio/weapon_woosh_1.mp3" id="13_mgdb5"]
@@ -348,24 +349,6 @@ properties/0/replication_mode = 2
 properties/1/path = NodePath(".:rotation:y")
 properties/1/spawn = true
 properties/1/replication_mode = 2
-properties/2/path = NodePath(".:is_attacking")
-properties/2/spawn = true
-properties/2/replication_mode = 2
-properties/3/path = NodePath(".:is_blocking")
-properties/3/spawn = true
-properties/3/replication_mode = 2
-properties/4/path = NodePath(".:is_taking_damage")
-properties/4/spawn = true
-properties/4/replication_mode = 2
-properties/5/path = NodePath(".:is_stun_lock")
-properties/5/spawn = true
-properties/5/replication_mode = 2
-properties/6/path = NodePath(".:is_blocking_react")
-properties/6/spawn = true
-properties/6/replication_mode = 2
-properties/7/path = NodePath(".:input_dir")
-properties/7/spawn = true
-properties/7/replication_mode = 2
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_6cget"]
 random_pitch = 1.1
@@ -924,6 +907,13 @@ libraries = {
 &"": ExtResource("5_m2jqq")
 }
 autoplay = "idle"
+
+[node name="ShadowDecal" type="Decal" parent="VisualParent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.11157805)
+size = Vector3(2, 0.40844727, 2)
+texture_albedo = ExtResource("10_lpatj")
+modulate = Color(0, 0, 0, 1)
+cull_mask = 29
 
 [node name="Collision" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.825, 0)

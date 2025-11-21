@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=27 format=3 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
 [ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://u4gnigntn7gi" path="res://assets/scripts/ai_hearing_manager.gd" id="4_bk6l6"]
 [ext_resource type="Environment" uid="uid://k1g2psxie2ou" path="res://game_darkness_environment.tres" id="5_dc4xw"]
 [ext_resource type="Script" uid="uid://cbv5dn1i0igk3" path="res://assets/scripts/resources/resource_item_spawn.gd" id="7_dc4xw"]
+[ext_resource type="Script" uid="uid://b3uurm37r68ag" path="res://assets/scripts/resources/resource_mob_spawn.gd" id="7_roc3w"]
 [ext_resource type="Resource" uid="uid://st1qaks76e1l" path="res://assets/resources/rw_gold.tres" id="8_0ts1u"]
 [ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="10_58q7l"]
 [ext_resource type="Texture2D" uid="uid://ws8nahbmaufs" path="res://assets/meshes/grass/grass_diffuse.tga" id="11_0ts1u"]
@@ -21,6 +22,19 @@ geometry_parsed_geometry_type = 1
 geometry_collision_mask = 4278190081
 geometry_source_geometry_mode = 1
 agent_radius = 0.25
+
+[sub_resource type="Resource" id="Resource_s1m6h"]
+script = ExtResource("7_roc3w")
+mob_prefab_path = &"res://addons/fpc/ai_character.tscn"
+mobs_to_spawn_amount = 10
+metadata/_custom_type_script = "uid://b3uurm37r68ag"
+
+[sub_resource type="Resource" id="Resource_w8vy0"]
+script = ExtResource("7_roc3w")
+mob_prefab_path = &"res://assets/prefabs/ai_arms_mob.tscn"
+mobs_to_spawn_amount = 1
+spawn_distance_min = 40
+metadata/_custom_type_script = "uid://b3uurm37r68ag"
 
 [sub_resource type="Resource" id="Resource_roc3w"]
 script = ExtResource("7_dc4xw")
@@ -106,6 +120,7 @@ transform = Transform3D(0.7283828, 0.011957396, 0.68506604, 0, 0.9998477, -0.017
 
 [node name="MultistoryBuildingDungeon" type="Node3D" parent="." groups=["navigation_mesh_source_group"]]
 script = ExtResource("12_0ts1u")
+mobs_spawns = Array[ExtResource("7_roc3w")]([SubResource("Resource_s1m6h"), SubResource("Resource_w8vy0")])
 torches_on_walls_amount = 10
 items_to_spawn_amount = 20
 item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
