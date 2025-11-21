@@ -303,9 +303,22 @@ func _ensure_mob_spawner() -> void:
 		_mob_spawner.spawn_path = NodePath("../GameLevelSpawner/GameLevel")
 
 func _spawn_mob_scene(spawn_data_dict: Dictionary) -> Node:
-	# spawn_data_dict should contain: mob_name, position, home_position
+	# spawn_data_dict should contain: mob_name, position, home_position, mob_prefab_path
 	# This function is called by MultiplayerSpawner on both server and clients
-	var mob := AI_CHARACTER_SCENE.instantiate()
+
+	var mob_prefab_path = spawn_data_dict.get("mob_prefab_path", "")
+	var mob: Node
+
+	if mob_prefab_path != "" and ResourceLoader.exists(mob_prefab_path):
+		var prefab = load(mob_prefab_path)
+		if prefab:
+			mob = prefab.instantiate()
+		else:
+			push_error("Failed to load mob prefab: %s" % mob_prefab_path)
+			mob = AI_CHARACTER_SCENE.instantiate()
+	else:
+		mob = AI_CHARACTER_SCENE.instantiate()
+
 	var mob_name = spawn_data_dict.get("mob_name", "Mob_Unknown")
 	mob.name = mob_name
 	
@@ -337,7 +350,7 @@ func _spawn_mob_scene(spawn_data_dict: Dictionary) -> Node:
 
 # Public function to spawn a mob through MultiplayerSpawner
 # This should ONLY be called on the server - uses RPC to ensure clients spawn too
-func spawn_mob(mob_name: String, position: Vector3, home_position: Vector3) -> void:
+func spawn_mob(mob_name: String, position: Vector3, home_position: Vector3, mob_prefab_path: String = "") -> void:
 	if !multiplayer.is_server():
 		push_error("spawn_mob called on client! This should only be called on server.")
 		return
@@ -374,7 +387,8 @@ func spawn_mob(mob_name: String, position: Vector3, home_position: Vector3) -> v
 	var spawn_data = {
 		"mob_name": mob_name,
 		"position": position,
-		"home_position": home_position
+		"home_position": home_position,
+		"mob_prefab_path": mob_prefab_path
 	}
 	
 	# Spawn on server first

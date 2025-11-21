@@ -1,11 +1,32 @@
-[gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://dub4c7jcm6efa"]
+[gd_resource type="StandardMaterial3D" load_steps=7 format=3 uid="uid://dub4c7jcm6efa"]
 
 [ext_resource type="Texture2D" uid="uid://c5ywf3rljeuxq" path="res://assets/meshes/monster/ArmsTexD.jpg" id="1_g10b0"]
 [ext_resource type="Texture2D" uid="uid://cq3gj3ycp8yj1" path="res://assets/meshes/monster/ArmsTexN.jpg" id="2_qitqb"]
 
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_g10b0"]
+frequency = 0.0697
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_qitqb"]
+noise = SubResource("FastNoiseLite_g10b0")
+seamless = true
+in_3d_space = true
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_qitqb"]
+frequency = 0.0173
+fractal_gain = 2.34
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_hfpjl"]
+noise = SubResource("FastNoiseLite_qitqb")
+seamless = true
+in_3d_space = true
+
 [resource]
-albedo_color = Color(0.44291076, 0.44291076, 0.44291073, 1)
+albedo_color = Color(0.39179927, 0.44329584, 0.56251293, 1)
 albedo_texture = ExtResource("1_g10b0")
+metallic = 0.7
+metallic_specular = 0.35
+metallic_texture = SubResource("NoiseTexture2D_qitqb")
+roughness_texture = SubResource("NoiseTexture2D_hfpjl")
 normal_enabled = true
 normal_texture = ExtResource("2_qitqb")
 texture_filter = 2

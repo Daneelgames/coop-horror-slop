@@ -1,9 +1,10 @@
-[gd_scene load_steps=14 format=4 uid="uid://bc73sgn7yj34n"]
+[gd_scene load_steps=15 format=4 uid="uid://bc73sgn7yj34n"]
 
 [ext_resource type="Material" uid="uid://5elf8vn6ehxd" path="res://assets/meshes/modularDungeon/m_lights_b.tres" id="1_6klxm"]
 [ext_resource type="Script" uid="uid://c2eceklk8el6u" path="res://assets/prefabs/environment/dungeon_props/light_stand_prop.gd" id="1_8tswf"]
 [ext_resource type="Texture2D" uid="uid://dixv7of6phw28" path="res://addons/kenney_particle_pack/fire_02.png" id="3_ejgwc"]
 [ext_resource type="AudioStream" uid="uid://cdqlejb6d7sfg" path="res://assets/audio/fire.wav" id="4_sycu5"]
+[ext_resource type="Texture2D" uid="uid://b7yokovtxcvy5" path="res://assets/sprites/white_blob.png" id="5_sycu5"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fyso2"]
 radius = 0.13378906
@@ -136,3 +137,9 @@ max_distance = 20.0
 replication_interval = 0.1
 delta_interval = 0.1
 replication_config = SubResource("SceneReplicationConfig_ejgwc")
+
+[node name="ShadowDecal" type="Decal" parent="."]
+size = Vector3(1, 0.408, 1)
+texture_albedo = ExtResource("5_sycu5")
+modulate = Color(0, 0, 0, 1)
+cull_mask = 1

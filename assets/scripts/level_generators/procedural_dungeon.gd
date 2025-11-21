@@ -1435,7 +1435,7 @@ func spawn_mobs():
 		# Only spawn on server - MultiplayerSpawner will replicate to all clients
 		if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
 			if is_instance_valid(GameManager):
-				GameManager.spawn_mob(mob_name, mob_position, mob_position)
+				GameManager.spawn_mob(mob_name, mob_position, mob_position, "res://addons/fpc/ai_character.tscn")
 		elif not multiplayer.has_multiplayer_peer():
 			# Single player - spawn directly
 			var mob = AI_CHARACTER.instantiate()

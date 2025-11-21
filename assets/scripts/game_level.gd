@@ -336,7 +336,6 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	elevator.name = "Elevator"
 	dungeon_tiles_node.add_child(elevator)
 	elevator.owner = get_tree().edited_scene_root
-	
 	# Повернуть лифт к одному из горизонтальных соседей
 	# Преобразовать позицию в координату тайла
 	var TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # Должно совпадать с TILE_SIZE в procedural_dungeon.gd
@@ -412,6 +411,9 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	else:
 		push_warning("_spawn_elevator_at_position: hub_field is not valid, cannot set position")
 
+	if level_generator is MultistoryBuildingDungeon:
+		level_generator.spawned_elevator = elevator
+		
 func _spawn_elevator_shaft(elevator_coord: Vector3i, shaft_height: int):
 	# Спавнить шахту лифта над тайлом с лифтом
 	# shaft_height - количество тайлов вверх

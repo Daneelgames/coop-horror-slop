@@ -12,7 +12,6 @@ const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom c
 @export var torches_on_walls_amount = 30
 @export var items_to_spawn_amount = 30
 @export var item_spawns: Array[ResourceItemSpawn]
-@export var mobs_amount_to_spawn = 30
 @export var props_amount_to_spawn: int = 400 # Общее количество пропов для спавна
 @export var props_by_weight: Dictionary[StringName, float] # prop path, drop weight - единый словарь для всего данжа
 @export var floors_heights: Array[int] = [2, 3, 4, 5, 6]
@@ -51,7 +50,7 @@ var seed_received: bool = false
 @export var apartment_rooms_by_floor: Dictionary[int, Array] = {} # floor_y -> Array[ResourceDungeonRoom]
 @export var room_connections: Dictionary[ResourceDungeonRoom, Array] = {} # room -> Array[connected_room]
 @export var tunnel_room: ResourceDungeonRoom = null # Special room for all tunnel tiles
-
+var spawned_elevator : MainElevatorController = null
 func _ready() -> void:
 	print("MultistoryBuildingDungeon ready - node: ", name, ", path: ", get_path(), ", is_inside_tree: ", is_inside_tree())
 
@@ -196,12 +195,17 @@ func generate_dungeon():
 
 	await spawn_debug_spheres_on_stairs_ends()
 	await spawn_props()
-	await spawn_pickups()
-	await spawn_mobs()
 	await spawn_wall_torches()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
 	level_generated.emit()
+	
+
+	while spawned_elevator == null:
+		await _await_frame()
+	await spawn_pickups()
+	await spawn_mobs()
+
 
 
 func _generate_floor(floor_y: int, floor_height: int):
@@ -2411,95 +2415,185 @@ func _choose_weighted_item_spawn(items: Array[ResourceItemSpawn], total_weight: 
 	return null
 
 func spawn_mobs():
+	await get_tree().process_frame
 	# Don't spawn mobs in editor
 	if Engine.is_editor_hint():
 		return
-	
-	# Use mobs_amount_to_spawn to spawn mobs in random tiles with floor (except first floor)
-	# Spawn on all peers using seeded RNG for consistency (same as dungeon generation and pickups)
-	if mobs_amount_to_spawn <= 0:
+
+	# Check if mobs_spawns is configured
+	print("spawn_mobs: mobs_spawns array size: ", mobs_spawns.size())
+	if mobs_spawns.is_empty():
+		push_warning("spawn_mobs: No mob spawns configured in mobs_spawns array")
 		return
-	
+	print("spawn_mobs: Using configured mob spawns")
+
 	# Get game_level (NavigationRegion3D) as parent for mobs so they can use navigation
 	var game_level = get_parent()
 	if not is_instance_valid(game_level):
 		push_warning("spawn_mobs: Could not find game_level parent")
 		return
-	
-	# Collect tiles with floors from all floors except the first (floor_y = 0)
-	var available_tiles: Array[DungeonTile] = []
-	
+	if spawned_elevator == null:
+		print('NO SPAWNED ELEVATOR CANT SPAWN MOBS')
+		return
+	# Determine spawn point (elevator position for distance calculations)
+	var spawn_point: Vector3 = Vector3(0, 0, 0)
+	if spawned_elevator != null:
+		spawn_point = spawned_elevator.global_position
+		print("spawn_mobs: Using elevator position as spawn point: ", spawn_point)
+
 	# Determine the first floor Y value (should be 0, but let's get it from floors_heights)
 	var first_floor_y: int = 0
-	
+
+	# Collect tiles with floors from all floors except the first (floor_y = 0)
+	var base_available_tiles: Array[DungeonTile] = []
+
 	for tile in all_spawned_tiles.keys():
 		if not is_instance_valid(tile) or not is_instance_valid(tile.floor):
 			continue
 		# Skip tiles on first floor (Y = 0)
-		if tile.coord.y == first_floor_y:
-			continue
+		# if tile.coord.y == first_floor_y:
+			# continue
 		# Skip tiles that have stairs
 		if spawned_stairs_coords.has(tile.coord):
 			continue
-		available_tiles.append(tile)
-	
-	if available_tiles.is_empty():
+		base_available_tiles.append(tile)
+
+	if base_available_tiles.is_empty():
 		push_warning("spawn_mobs: No available tiles found for spawning mobs")
 		return
-	
-	print("spawn_mobs: Found ", available_tiles.size(), " available tiles for mob spawning")
-	
-	# Spawn mobs
-	var mobs_to_spawn: int = min(mobs_amount_to_spawn, available_tiles.size())
-	for i in range(mobs_to_spawn):
-		# Choose a random tile using seeded RNG (ensures same selection on all clients)
-		var random_tile: DungeonTile = available_tiles[rng.randi() % available_tiles.size()]
-		
-		# Randomize mob position within tile bounds using seeded RNG
-		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
-		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
-		var mob_position = random_tile.position + Vector3(random_offset_x, 1.0, random_offset_z) # 1 unit above floor
-		
-		# Give mob a unique, consistent name based on spawn order and tile coordinate
-		# This ensures RPCs can find the correct mob on all peers
-		var mob_name = "Mob_%d_%d_%d_%d" % [
-			random_tile.coord.x,
-			random_tile.coord.y,
-			random_tile.coord.z,
-			i
-		]
-		
-		# Spawn mob through MultiplayerSpawner for proper synchronization
-		# Only spawn on server - MultiplayerSpawner will replicate to all clients
-		if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
-			if is_instance_valid(GameManager):
-				GameManager.spawn_mob(mob_name, mob_position, mob_position)
-		elif not multiplayer.has_multiplayer_peer():
-			# Single player - spawn directly
-			var mob = AI_CHARACTER.instantiate()
-			if mob != null:
-				mob.name = mob_name
-				mob.position = mob_position
-				if mob is AiCharacter:
-					mob.home_position = mob_position
-				game_level.add_child(mob)
-				mob.owner = _get_edited_scene_root()
-		
-		# Yield every 10 mobs to avoid frame drops
-		if i % 10 == 0:
-			await _await_frame()
-	
-	print("spawn_mobs: Total mobs spawned: ", mobs_to_spawn)
+
+	print("spawn_mobs: Found ", base_available_tiles.size(), " base available tiles for mob spawning")
+
+	# Spawn mobs for each mob spawn configuration
+	var total_mobs_spawned = 0
+	var mob_spawn_index = 0
+
+	print("spawn_mobs: Processing ", mobs_spawns.size(), " mob spawn configurations")
+	for mob_spawn in mobs_spawns:
+		print("spawn_mobs: Processing mob spawn config: ", mob_spawn, ", amount: ", mob_spawn.mobs_to_spawn_amount if mob_spawn != null else 0)
+		if mob_spawn == null:
+			push_warning("spawn_mobs: Null mob spawn configuration found, skipping")
+			continue
+
+		if mob_spawn.mobs_to_spawn_amount <= 0:
+			print("spawn_mobs: Mob spawn has amount <= 0, skipping")
+			continue
+
+		print("spawn_mobs: Loading prefab: ", mob_spawn.mob_prefab_path)
+		# Load mob prefab
+		var mob_prefab = null
+		if mob_spawn.mob_prefab_path != null and mob_spawn.mob_prefab_path != "":
+			mob_prefab = load(str(mob_spawn.mob_prefab_path))
+			if mob_prefab == null:
+				push_warning("spawn_mobs: Could not load mob prefab at path: ", mob_spawn.mob_prefab_path)
+				continue
+		else:
+			push_warning("spawn_mobs: Mob spawn has no prefab path specified")
+			continue
+
+		print("spawn_mobs: Loaded prefab successfully")
+
+		# Filter tiles by distance from elevator
+		print("spawn_mobs: Filtering ", base_available_tiles.size(), " tiles by distance range [", mob_spawn.spawn_distance_from_elevator_min, ", ", mob_spawn.spawn_distance_from_elevator_max, "] from spawn_point: ", spawn_point)
+
+		# Calculate min/max distances for debugging
+		var min_distance = INF
+		var max_distance = 0
+		for tile in base_available_tiles:
+			var tile_distance = _get_tile_distance_from_spawn_point(tile, spawn_point)
+			min_distance = min(min_distance, tile_distance)
+			max_distance = max(max_distance, tile_distance)
+		print("spawn_mobs: Available tile distances range: [", min_distance, ", ", max_distance, "] world units")
+
+		var available_tiles: Array[DungeonTile] = []
+		for tile in base_available_tiles:
+			var tile_distance = _get_tile_distance_from_spawn_point(tile, spawn_point)
+			if tile_distance >= mob_spawn.spawn_distance_from_elevator_min and tile_distance <= mob_spawn.spawn_distance_from_elevator_max:
+				available_tiles.append(tile)
+
+		print("spawn_mobs: After filtering, found ", available_tiles.size(), " tiles for mob type: ", mob_spawn.mob_prefab_path)
+
+		var final_tiles: Array[DungeonTile]
+		var spawn_anyway = false
+
+		if available_tiles.is_empty():
+			print("spawn_mobs: No tiles found in distance range, spawning anyway using all available tiles")
+			final_tiles = base_available_tiles
+			spawn_anyway = true
+		else:
+			final_tiles = available_tiles
+
+		if final_tiles.is_empty():
+			push_warning("spawn_mobs: No tiles found for spawning mobs of type: %s" % mob_spawn.mob_prefab_path)
+			continue
+
+		# Spawn mobs of this type
+		var actual_mobs_to_spawn = min(mob_spawn.mobs_to_spawn_amount, final_tiles.size())
+		if actual_mobs_to_spawn < mob_spawn.mobs_to_spawn_amount:
+			print("spawn_mobs: Warning - only ", final_tiles.size(), " tiles available, but requested ", mob_spawn.mobs_to_spawn_amount, " mobs. Spawning ", actual_mobs_to_spawn, " mobs instead.")
+		elif spawn_anyway:
+			print("spawn_mobs: Spawning ", actual_mobs_to_spawn, " mobs despite distance range (no tiles in range)")
+
+		print("spawn_mobs: Spawning ", actual_mobs_to_spawn, " mobs of type ", mob_spawn.mob_prefab_path)
+		for i in range(actual_mobs_to_spawn):
+			# Choose a random tile using seeded RNG (ensures same selection on all clients)
+			var random_tile: DungeonTile = final_tiles[rng.randi() % final_tiles.size()]
+
+			# Randomize mob position within tile bounds using seeded RNG
+			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
+			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+			var mob_position = random_tile.position + Vector3(random_offset_x, 1.0, random_offset_z) # 1 unit above floor
+
+			# Give mob a unique, consistent name based on spawn config index, tile coordinate and spawn order
+			# This ensures RPCs can find the correct mob on all peers
+			var mob_name = "Mob_%d_%d_%d_%d_%d" % [
+				mob_spawn_index,
+				random_tile.coord.x,
+				random_tile.coord.y,
+				random_tile.coord.z,
+				i
+			]
+
+			# Spawn mob through MultiplayerSpawner for proper synchronization
+			# Only spawn on server - MultiplayerSpawner will replicate to all clients
+			print("spawn_mobs: Spawning mob at position: ", mob_position, ", name: ", mob_name, ", prefab: ", mob_spawn.mob_prefab_path)
+			if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+				if is_instance_valid(GameManager):
+					GameManager.spawn_mob(mob_name, mob_position, mob_position, mob_spawn.mob_prefab_path)
+					print("spawn_mobs: Spawned mob via GameManager")
+				else:
+					print("spawn_mobs: GameManager not valid, cannot spawn mob")
+			elif not multiplayer.has_multiplayer_peer():
+				# Single player - spawn directly
+				var mob = mob_prefab.instantiate()
+				if mob != null:
+					mob.name = mob_name
+					mob.position = mob_position
+					if mob is AiCharacter:
+						mob.home_position = mob_position
+					game_level.add_child(mob)
+					mob.owner = _get_edited_scene_root()
+					print("spawn_mobs: Spawned mob directly in single player mode")
+				else:
+					print("spawn_mobs: Failed to instantiate mob")
+
+			# Yield every 10 mobs to avoid frame drops
+			if total_mobs_spawned % 10 == 0:
+				await _await_frame()
+
+			total_mobs_spawned += 1
+
+		mob_spawn_index += 1
+
+	print("spawn_mobs: Total mobs spawned: ", total_mobs_spawned)
 
 func _get_tile_distance_from_spawn_point(tile: DungeonTile, spawn_point: Vector3) -> float:
-	# Calculate horizontal distance (ignoring Y) from tile to spawn point in tile units
+	# Calculate horizontal distance (ignoring Y) from tile to spawn point in world units
 	# This approximates the distance players would walk
 	var tile_pos_2d = Vector2(tile.position.x, tile.position.z)
 	var spawn_pos_2d = Vector2(spawn_point.x, spawn_point.z)
 	var distance_world = tile_pos_2d.distance_to(spawn_pos_2d)
-	# Convert to tile units (TILE_SIZE.x = 4)
-	var distance_tiles = distance_world / TILE_SIZE.x
-	return distance_tiles
+	return distance_world
 
 func spawn_props():
 	# Spawn props to random tiles with floor using global props_by_weight dictionary

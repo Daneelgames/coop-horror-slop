@@ -16,7 +16,7 @@ var item_in_hands: Weapon = null
 @export var is_blocking_react = false
 @export var is_stun_lock = false
 @export var is_taking_damage = false
-@onready var eyes: BoneAttachment3D = %Eyes
+@onready var eyes: Node3D = %Eyes
 
 func _ready():
 	is_stun_lock = false
