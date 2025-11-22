@@ -1,5 +1,8 @@
 extends Unit
 class_name AiCharacter
+
+@export var attack_strings : Array[String] = ['attack_vertical', 'attack_horizontal']
+@export var weapon_in_hands_scaler : float = 1
 @export var visual_node_3d: Node3D
 @export var visible_enemies: Array[Unit] = []
 @export var input_dir: Vector2
@@ -218,7 +221,8 @@ func _spawn_weapon(weapon_resource: ResourceWeapon):
 		item_in_hands.weapon_resource = item_in_hands.weapon_resource.duplicate()
 	
 	item_in_hands.position = item_in_hands.weapon_slot_position
-	item_in_hands.scale = Vector3.ONE * 100
+	
+	item_in_hands.scale = Vector3.ONE * weapon_in_hands_scaler
 	print("[AI_WEAPON_SPAWN] %s: SUCCESS - Weapon spawned and attached! (position: %s, scale: %s)" % [name, item_in_hands.position, item_in_hands.scale])
 
 #region RPC Methods for Combat
@@ -254,13 +258,7 @@ func rpc_start_attacking():
 	
 	# Choose attack animation similar to character.gd
 	var attack_string = ''
-	if input_dir.y != 0:
-		attack_string = 'attack_vertical'
-	elif input_dir.x != 0:
-		attack_string = 'attack_horizontal'
-	else:
-		attack_string = ['attack_vertical', 'attack_horizontal'].pick_random()
-	
+	attack_string = attack_strings.pick_random()
 	if debug_ai_combat:
 		print("[AI_ATTACK] %s: Playing attack animation: %s" % [name, attack_string])
 	

@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="2_cf55f"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_pjyar"]
 [ext_resource type="Texture2D" uid="uid://8mo78r7i5pk3" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_normal.png" id="3_dqj5t"]
-[ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="3_lpatj"]
+[ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_machete.tres" id="3_lpatj"]
 [ext_resource type="Texture2D" uid="uid://bjbg7bb722uhe" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios_diffuse.png" id="4_72wbg"]
 [ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="4_ithmg"]
 [ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="5_0yo82"]
@@ -402,6 +402,7 @@ collision_mask = 7
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_q1sc8")
+weapon_in_hands_scaler = 100.0
 visual_node_3d = NodePath("VisualParent")
 random_weapons = Array[ExtResource("2_cf55f")]([ExtResource("3_lpatj"), ExtResource("4_ithmg"), ExtResource("5_0yo82")])
 debug_ai_combat = false
