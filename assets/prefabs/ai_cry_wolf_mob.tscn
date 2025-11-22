@@ -1,13 +1,16 @@
-[gd_scene load_steps=67 format=4 uid="uid://17o2n8fjmf7y"]
+[gd_scene load_steps=70 format=4 uid="uid://17o2n8fjmf7y"]
 
-[ext_resource type="Script" uid="uid://b4ql5ls7it834" path="res://assets/scripts/ai_monster_mob.gd" id="1_wql8g"]
+[ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_dlup7"]
 [ext_resource type="Texture2D" uid="uid://b7yokovtxcvy5" path="res://assets/sprites/white_blob.png" id="3_eduwc"]
 [ext_resource type="Script" uid="uid://b0eohos8rbidu" path="res://assets/scripts/ai_state_machine.gd" id="4_06rqj"]
 [ext_resource type="Texture2D" uid="uid://ccldggwb6e8va" path="res://assets/meshes/cry_wolf/BODY PAINT_Cry_Wolf_Main_BaseColor.tga" id="4_n8adn"]
 [ext_resource type="Texture2D" uid="uid://fqlm3wil21fr" path="res://assets/meshes/cry_wolf/BODY PAINT_Cry_Wolf_Main_Normal.tga" id="5_2mbhy"]
 [ext_resource type="AudioStream" uid="uid://b7ys0ad0k7jx5" path="res://assets/audio/FootStepRun_1.wav" id="5_ac633"]
+[ext_resource type="Script" uid="uid://da5x2814yek6y" path="res://assets/scripts/ai_state_patrol.gd" id="6_ac633"]
 [ext_resource type="AudioStream" uid="uid://bwkgkhr2wv6xn" path="res://assets/audio/FootStepRun_2.wav" id="6_n8adn"]
 [ext_resource type="AudioStream" uid="uid://bne603ivdekwc" path="res://assets/audio/FootStepRun_3.wav" id="7_2mbhy"]
+[ext_resource type="Script" uid="uid://jtkn6iklin45" path="res://assets/scripts/ai_state_combat.gd" id="7_n8adn"]
+[ext_resource type="Script" uid="uid://cwvfv0f6chws0" path="res://assets/scripts/ai_state_investigate.gd" id="8_2mbhy"]
 [ext_resource type="AudioStream" uid="uid://bivv20wktglii" path="res://assets/audio/FootStepRun_4.wav" id="8_a8fy8"]
 [ext_resource type="AudioStream" uid="uid://h1oyim2hlk1x" path="res://assets/audio/FootStepRun_5.wav" id="9_eno48"]
 [ext_resource type="AudioStream" uid="uid://bp2qfvsnyvymj" path="res://assets/audio/FootStepRun_6.wav" id="10_oondh"]
@@ -52132,13 +52135,17 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("27_0bd7f")
 
-[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
+[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 platform_on_leave = 2
 platform_floor_layers = 4294965247
-script = ExtResource("1_wql8g")
+script = ExtResource("1_dlup7")
 visual_node_3d = NodePath("VisualParent")
+patrol_from_home_distance_min_max = Vector2(20, 100)
+combat_from_home_distance_max = 600.0
+combat_strafe_distance_max = 10.0
+navigation_agent_3d = NodePath("NavigationAgent3D")
 team = 1
 mesh_animation_player = NodePath("VisualParent/AnimationPlayer")
 health_current = 1000.0
@@ -52152,7 +52159,7 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
 top_level = true
 
 [node name="Cry Wolf" type="Node3D" parent="VisualParent"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.29694295)
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -4.5741313e-08, 0, 0.22627664)
 
 [node name="rig" type="Node3D" parent="VisualParent/Cry Wolf"]
 transform = Transform3D(318.7938, 0, 0, 0, -1.39349195e-05, 318.7938, 0, -318.7938, -1.39349195e-05, 0, 0, 0)
@@ -54072,6 +54079,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.50551975, 0)
 [node name="AiStateMachine" type="Node3D" parent="."]
 unique_name_in_owner = true
 script = ExtResource("4_06rqj")
+
+[node name="PatrolState" type="Node3D" parent="AiStateMachine"]
+unique_name_in_owner = true
+script = ExtResource("6_ac633")
+
+[node name="CombatState" type="Node3D" parent="AiStateMachine"]
+unique_name_in_owner = true
+script = ExtResource("7_n8adn")
+
+[node name="InvestigateState" type="Node3D" parent="AiStateMachine"]
+unique_name_in_owner = true
+script = ExtResource("8_2mbhy")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_interval = 0.05

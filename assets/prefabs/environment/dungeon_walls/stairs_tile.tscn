@@ -4,8 +4,9 @@
 [ext_resource type="Script" uid="uid://cyq3us8aur1s6" path="res://addons/linear_stairs/nodes/csg_linear_stairs.gd" id="2_swxl6"]
 [ext_resource type="Material" uid="uid://dah4n64qkc4lm" path="res://assets/meshes/modularDungeon/m_stone_3.tres" id="3_5g42u"]
 
-[node name="StairsTile" type="Node3D"]
+[node name="StairsTile" type="Node3D" node_paths=PackedStringArray("all_collision_parts")]
 script = ExtResource("1_dovlt")
+all_collision_parts = [NodePath("CSGLinearStairs"), NodePath("CSGBox3D"), NodePath("CSGBox3D2"), NodePath("CSGBox3D3"), NodePath("Platform/StairEndPlatformCSGBox3D")]
 
 [node name="CSGLinearStairs" type="CSGCombiner3D" parent="."]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, -1.1444887)
@@ -18,15 +19,6 @@ stair_height = 0.13
 stair_depth = 0.21
 material = ExtResource("3_5g42u")
 metadata/_custom_type_script = "uid://cyq3us8aur1s6"
-
-[node name="StairRaycastOrigin" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9899013, -2.1601546)
-
-[node name="DiagonalTunnelRaycastDirection" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.015349, 2.5449781)
-
-[node name="HorizontalTunnelRaycastDirection" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0013819, 2.5449781)
 
 [node name="CSGBox3D" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.048171997, -1.8132579)
@@ -51,6 +43,15 @@ collision_layer = 4
 collision_mask = 0
 size = Vector3(4.199463, 0.10220337, 1.1499023)
 material = ExtResource("3_5g42u")
+
+[node name="StairRaycastOrigin" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9899013, -2.1601546)
+
+[node name="DiagonalTunnelRaycastDirection" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.015349, 2.5449781)
+
+[node name="HorizontalTunnelRaycastDirection" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0013819, 2.5449781)
 
 [node name="Platform" type="Node3D" parent="."]
 unique_name_in_owner = true

@@ -12,3 +12,4 @@ fire_damage_min_max = Vector2i(10, 20)
 weapon_blocking_angle = 60
 push_forward_on_attack_force = 1.0
 reducing_durability_when_in_hands = true
+in_hands_reduce_durability_speed = 1.0

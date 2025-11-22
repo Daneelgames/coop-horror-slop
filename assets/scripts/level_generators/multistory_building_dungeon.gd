@@ -198,6 +198,10 @@ func generate_dungeon():
 	await spawn_wall_torches()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
+	for node in spawned_stairs_coords.values():
+		if node is StairsTile:
+			node.set_collisions_to_solid()
+	await get_tree().process_frame
 	level_generated.emit()
 	
 

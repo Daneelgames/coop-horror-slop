@@ -6,7 +6,7 @@ class_name StairsTile
 @onready var stair_diagonal_raycast_direction: Node3D = $DiagonalTunnelRaycastDirection
 @onready var stair_horizontal_raycast_direction: Node3D = $HorizontalTunnelRaycastDirection
 @onready var stair_end_platform: Node3D = %Platform
-
+@export var all_collision_parts : Array[CSGShape3D]
 signal tunnel_requested(stairs_tile: StairsTile, origin_global: Vector3, target_global: Vector3, tunnel_type: String)
 
 
@@ -195,3 +195,9 @@ func _is_solid_object(obj: Node) -> bool:
 			return true
 	
 	return false
+
+func set_collisions_to_solid():
+	for body in all_collision_parts:
+		body.set_collision_layer_value(3,false)
+		body.set_collision_layer_value(1,true)
+	pass

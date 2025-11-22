@@ -1738,8 +1738,8 @@ func death():
 	super.death()
 	if _has_input_authority:
 		await get_tree().create_timer(5).timeout
-		rpc_full_heal_and_resurrect.rpc()
-		enter_normal_state()
+		#rpc_full_heal_and_resurrect.rpc()
+		#enter_normal_state()
 
 
 func cheat_codes():

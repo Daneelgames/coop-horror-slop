@@ -50,6 +50,8 @@ func _ready():
 	interaction_raycast_coroutine()
 	
 func interaction_raycast_coroutine():
+	if interaction_ray_cast_3d == null:
+		return
 	if is_dead() == false and is_attacking == false and is_taking_damage == false and is_blocking == false:
 		interaction_ray_cast_3d.force_raycast_update()
 		if interaction_ray_cast_3d.is_colliding():
