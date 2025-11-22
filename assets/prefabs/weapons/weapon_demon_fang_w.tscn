@@ -1,0 +1,57 @@
+[gd_scene load_steps=5 format=3 uid="uid://oxjxky0w2v4a"]
+
+[ext_resource type="Script" uid="uid://cbpt8dfmd3loy" path="res://assets/scripts/weapon.gd" id="1_8k6dw"]
+[ext_resource type="Resource" uid="uid://dnebdghxk0fne" path="res://assets/resources/rw_demon_fang.tres" id="2_8k6dw"]
+[ext_resource type="Material" uid="uid://bjqqdorre4j0n" path="res://assets/meshes/metal_material.tres" id="3_02cuu"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_8k6dw"]
+top_radius = 0.0
+bottom_radius = 0.05
+height = 1.74
+
+[node name="WeaponDemonFang" type="Node3D" node_paths=PackedStringArray("attack_points")]
+transform = Transform3D(0.9999999, 0, 0, 0, 1.0000002, 0, 0, 0, 0.99999994, 0, 0, 0)
+script = ExtResource("1_8k6dw")
+weapon_resource = ExtResource("2_8k6dw")
+attack_points = [NodePath("AttackPointNode3D"), NodePath("AttackPointNode3D2"), NodePath("AttackPointNode3D3"), NodePath("AttackPointNode3D4"), NodePath("AttackPointNode3D5"), NodePath("AttackPointNode3D6"), NodePath("AttackPointNode3D7"), NodePath("AttackPointNode3D8"), NodePath("AttackPointNode3D9"), NodePath("AttackPointNode3D10"), NodePath("AttackPointNode3D11")]
+weapon_slot_position = Vector3(0.17316498, 8.294342, 3.78641)
+
+[node name="VisualParent" type="Node3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="VisualParent"]
+transform = Transform3D(-4.371139e-08, 1, -4.371139e-08, 0, -4.3711402e-08, -1, -1, -4.371139e-08, 1.9106855e-15, 0.81363714, -3.7758127e-08, -0.0045064692)
+material_override = ExtResource("3_02cuu")
+mesh = SubResource("CylinderMesh_8k6dw")
+
+[node name="AttackPointNode3D" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, -0.024032835, 0.005398661, -2.7171476e-10)
+
+[node name="AttackPointNode3D2" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.3711402e-08, 8.742279e-08, 8.742278e-08, 3.8213718e-15, -1, 0.069384106, 0.0050000004, 0)
+
+[node name="AttackPointNode3D3" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.3711406e-08, 8.74228e-08, 8.742278e-08, 3.8213718e-15, -1, 0.240531, 0.005000001, 0)
+
+[node name="AttackPointNode3D4" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.371141e-08, 8.7422805e-08, 8.742278e-08, 3.8213718e-15, -1, 0.41630346, 0.0050000013, 0)
+
+[node name="AttackPointNode3D5" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.3711413e-08, 8.742281e-08, 8.742278e-08, 3.8213718e-15, -1, 0.6152037, 0.0050000018, 0)
+
+[node name="AttackPointNode3D6" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.3711417e-08, 8.742282e-08, 8.742278e-08, 3.8213718e-15, -1, 0.83723176, 0.005000002, 0)
+
+[node name="AttackPointNode3D7" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.371142e-08, 8.7422826e-08, 8.742278e-08, 3.8213718e-15, -1, 1.0222555, 0.0050000027, 0)
+
+[node name="AttackPointNode3D8" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.3711424e-08, 8.742283e-08, 8.742278e-08, 3.8213718e-15, -1, 1.1166307, 0.005000003, 0)
+
+[node name="AttackPointNode3D9" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.3711427e-08, 8.742284e-08, 8.742278e-08, 3.8213718e-15, -1, 1.2668793, 0.0050000036, 0)
+
+[node name="AttackPointNode3D10" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.371143e-08, 8.742285e-08, 8.742278e-08, 3.8213718e-15, -1, 1.4225817, 0.005000004, 0)
+
+[node name="AttackPointNode3D11" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.3711434e-08, 8.7422855e-08, 8.742278e-08, 3.8213718e-15, -1, 1.5572864, 0.0050000045, 0)

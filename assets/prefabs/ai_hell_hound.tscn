@@ -1,9 +1,11 @@
-[gd_scene load_steps=57 format=4 uid="uid://ds1rydx78nuea"]
+[gd_scene load_steps=59 format=4 uid="uid://ds1rydx78nuea"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_7ewkr"]
 [ext_resource type="Texture2D" uid="uid://cb8khongailbl" path="res://assets/meshes/bio_hound/hell_hound_rigged_HOUND_Diffuse.png" id="2_7ewkr"]
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="2_lqevu"]
 [ext_resource type="Texture2D" uid="uid://b7yokovtxcvy5" path="res://assets/sprites/white_blob.png" id="3_bnxa7"]
 [ext_resource type="Texture2D" uid="uid://dfgiqklj34k1g" path="res://assets/meshes/bio_hound/HOUND Normal.png" id="3_p0ufm"]
+[ext_resource type="Resource" uid="uid://dnebdghxk0fne" path="res://assets/resources/rw_demon_fang.tres" id="3_ufhfl"]
 [ext_resource type="Script" uid="uid://b0eohos8rbidu" path="res://assets/scripts/ai_state_machine.gd" id="4_one3p"]
 [ext_resource type="Texture2D" uid="uid://bvnu8g6okgq2h" path="res://assets/meshes/bio_hound/TEETHs Roughness.png" id="4_xmckb"]
 [ext_resource type="Texture2D" uid="uid://bcdj8c0gpalqe" path="res://assets/meshes/bio_hound/hell_hound_rigged_MUD_Diffuse-MUD_Opacity.png" id="5_4hhsc"]
@@ -1891,6 +1893,7 @@ platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_7ewkr")
 visual_node_3d = NodePath("VisualParent")
+random_weapons = Array[ExtResource("2_lqevu")]([ExtResource("3_ufhfl")])
 patrol_from_home_distance_min_max = Vector2(5, 30)
 combat_from_home_distance_max = 600.0
 combat_strafe_distance_max = 1.0
@@ -1900,6 +1903,10 @@ mesh_animation_player = NodePath("VisualParent/hell_hound_rigged/AnimationPlayer
 take_damage_anims = Array[StringName]([&"take_damage_0"])
 death_anims = Array[StringName]([&"death_0"])
 PLAYER_COLLIDER = NodePath("Collision")
+
+[node name="WeaponBoneAttachment3D" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-8.742277e-08, 0, 1.9999995, 0, 2, 0, -1.9999999, 0, -8.7422755e-08, 0, 0.4449659, 0.061041594)
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)

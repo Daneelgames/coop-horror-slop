@@ -8,11 +8,11 @@
 [ext_resource type="Script" uid="uid://cbv5dn1i0igk3" path="res://assets/scripts/resources/resource_item_spawn.gd" id="7_dc4xw"]
 [ext_resource type="Script" uid="uid://b3uurm37r68ag" path="res://assets/scripts/resources/resource_mob_spawn.gd" id="7_roc3w"]
 [ext_resource type="Resource" uid="uid://st1qaks76e1l" path="res://assets/resources/rw_gold.tres" id="8_0ts1u"]
-[ext_resource type="Resource" uid="uid://bu6nd4i40ikd2" path="res://assets/resources/rw_rusty_pipe.tres" id="10_58q7l"]
 [ext_resource type="Texture2D" uid="uid://ws8nahbmaufs" path="res://assets/meshes/grass/grass_diffuse.tga" id="11_0ts1u"]
 [ext_resource type="Resource" uid="uid://dti0fg7i0mpnf" path="res://assets/resources/rw_fire_axe.tres" id="11_q5pb2"]
 [ext_resource type="Script" uid="uid://d0keev2dq3y6g" path="res://assets/scripts/level_generators/multistory_building_dungeon.gd" id="12_0ts1u"]
 [ext_resource type="Texture2D" uid="uid://bqth6ss84k1a5" path="res://assets/meshes/grass/grass_normal.tga" id="12_jbp4y"]
+[ext_resource type="Resource" uid="uid://dnebdghxk0fne" path="res://assets/resources/rw_demon_fang.tres" id="12_s1m6h"]
 [ext_resource type="Shader" uid="uid://c56hanl0enhx2" path="res://addons/simplegrasstextured/shaders/grass_nearest_mipmap.gdshader" id="13_q5pb2"]
 [ext_resource type="Texture2D" uid="uid://c4ggdp0kg5wjk" path="res://addons/simplegrasstextured/textures/grassbushcc008.png" id="14_roc3w"]
 [ext_resource type="Script" uid="uid://2juaclm8gc1n" path="res://addons/simplegrasstextured/grass.gd" id="15_s1m6h"]
@@ -54,14 +54,14 @@ script = ExtResource("7_dc4xw")
 item_resource = ExtResource("8_0ts1u")
 metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
 
-[sub_resource type="Resource" id="Resource_adyel"]
-script = ExtResource("7_dc4xw")
-item_resource = ExtResource("10_58q7l")
-metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
-
 [sub_resource type="Resource" id="Resource_l2gu8"]
 script = ExtResource("7_dc4xw")
 item_resource = ExtResource("11_q5pb2")
+metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
+
+[sub_resource type="Resource" id="Resource_o6wii"]
+script = ExtResource("7_dc4xw")
+item_resource = ExtResource("12_s1m6h")
 metadata/_custom_type_script = "uid://cbv5dn1i0igk3"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_58q7l"]
@@ -136,7 +136,7 @@ script = ExtResource("12_0ts1u")
 mobs_spawns = Array[ExtResource("7_roc3w")]([SubResource("Resource_s1m6h"), SubResource("Resource_w8vy0"), SubResource("Resource_j62y2"), SubResource("Resource_5vcca")])
 torches_on_walls_amount = 10
 items_to_spawn_amount = 20
-item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_adyel"), SubResource("Resource_l2gu8")])
+item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_l2gu8"), SubResource("Resource_o6wii")])
 props_amount_to_spawn = 50
 props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,

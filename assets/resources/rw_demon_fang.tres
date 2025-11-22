@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://dnebdghxk0fne"]
+
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="1_ixt6x"]
+
+[resource]
+script = ExtResource("1_ixt6x")
+weapon_name = &"Demon Fang"
+weapon_type = 4
+pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_demon_fang_p.tscn"
+weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_demon_fang_w.tscn"
+damage_min_max = Vector2i(40, 60)
+weapon_blocking_angle = 60
+push_forward_on_attack_force = 6.0

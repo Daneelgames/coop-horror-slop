@@ -1,0 +1,56 @@
+[gd_scene load_steps=7 format=3 uid="uid://0y0enhpf8mvj"]
+
+[ext_resource type="Script" uid="uid://becckwcve5pba" path="res://assets/scripts/interactive_pickup.gd" id="1_0xame"]
+[ext_resource type="Resource" uid="uid://dnebdghxk0fne" path="res://assets/resources/rw_demon_fang.tres" id="2_0xame"]
+[ext_resource type="Material" uid="uid://bjqqdorre4j0n" path="res://assets/meshes/metal_material.tres" id="3_mpmee"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0xame"]
+size = Vector3(0.34960938, 0.36914063, 1.6451721)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_0xame"]
+top_radius = 0.0
+bottom_radius = 0.1
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dgubb"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[node name="WeaponDemonFang" type="RigidBody3D"]
+transform = Transform3D(0.9999999, 0, 0, 0, 1.0000002, 0, 0, 0, 0.99999994, 0, 0, 0)
+collision_layer = 4
+freeze_mode = 1
+continuous_cd = true
+linear_damp = 1.0
+angular_damp = 1.0
+script = ExtResource("1_0xame")
+weapon_resource = ExtResource("2_0xame")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6302646)
+shape = SubResource("BoxShape3D_0xame")
+
+[node name="VisualParent" type="Node3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1.0000002, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
+top_level = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="VisualParent"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -3.7758113e-08, 0.86380494)
+material_override = ExtResource("3_mpmee")
+mesh = SubResource("CylinderMesh_0xame")
+
+[node name="AttackPointNode3D" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, -0.024032835, 0.005398661, -2.7171476e-10)
+
+[node name="AttackPointNode3D2" type="Node3D" parent="."]
+transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.21114565, 0.0053986907, -2.7171218e-10)
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+unique_name_in_owner = true
+replication_interval = 0.1
+delta_interval = 0.1
+replication_config = SubResource("SceneReplicationConfig_dgubb")
