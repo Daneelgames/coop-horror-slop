@@ -46,6 +46,7 @@ func _ready():
 	if GameManager.ai_visibility_manager:
 		GameManager.ai_visibility_manager.register_ai_character(self)
 	super._ready()
+	combat_strafe_distance_max = randf_range(2.0,3.0)
 	interaction_raycast_coroutine()
 	
 func interaction_raycast_coroutine():
@@ -146,17 +147,6 @@ func spawn_random_weapon_to_hands():
 	# Spawn weapon directly on all clients (no RPC needed since selection is deterministic)
 	# This ensures all clients spawn the same weapon for the same mob
 	_spawn_weapon(weapon)
-
-@rpc("authority", "call_local", "reliable")
-func rpc_spawn_weapon(weapon_data: Dictionary):
-	print("[AI_WEAPON_SPAWN] %s: rpc_spawn_weapon RPC received (is_server: %s)" % [name, multiplayer.is_server()])
-	# Deserialize weapon resource from data
-	var weapon_resource = GameManager.deserialize_weapon_resource(weapon_data)
-	if weapon_resource == null:
-		print("[AI_WEAPON_SPAWN] %s: ERROR - Failed to deserialize weapon_resource from RPC!" % name)
-		return
-	_spawn_weapon(weapon_resource)
-
 
 func _spawn_weapon(weapon_resource: ResourceWeapon):
 	print("[AI_WEAPON_SPAWN] %s: _spawn_weapon called with weapon_resource: %s" % [name, weapon_resource])

@@ -349,6 +349,9 @@ properties/0/replication_mode = 2
 properties/1/path = NodePath(".:rotation:y")
 properties/1/spawn = true
 properties/1/replication_mode = 2
+properties/2/path = NodePath(".:combat_strafe_distance_max")
+properties/2/spawn = true
+properties/2/replication_mode = 2
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_6cget"]
 random_pitch = 1.1
@@ -907,6 +910,7 @@ libraries = {
 &"": ExtResource("5_m2jqq")
 }
 autoplay = "idle"
+speed_scale = 0.9
 
 [node name="ShadowDecal" type="Decal" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.11157805)

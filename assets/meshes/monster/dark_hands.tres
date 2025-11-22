@@ -23,9 +23,10 @@ in_3d_space = true
 [resource]
 albedo_color = Color(0.39179927, 0.44329584, 0.56251293, 1)
 albedo_texture = ExtResource("1_g10b0")
-metallic = 0.7
-metallic_specular = 0.35
+metallic = 0.43
+metallic_specular = 0.42
 metallic_texture = SubResource("NoiseTexture2D_qitqb")
+roughness = 0.95
 roughness_texture = SubResource("NoiseTexture2D_hfpjl")
 normal_enabled = true
 normal_texture = ExtResource("2_qitqb")
