@@ -2590,14 +2590,15 @@ func spawn_mobs():
 
 		mob_spawn_index += 1
 	
-	for mob_a : Unit in spawned_mobs:
-		for mob_b : Unit in spawned_mobs:
-			if mob_a == mob_b:
-				continue
-			PhysicsServer3D.body_add_collision_exception(mob_b.get_rid(), mob_b.get_rid())
+	if mobs_ignore_each_other_collisions:
+		for mob_a : Unit in spawned_mobs:
+			for mob_b : Unit in spawned_mobs:
+				if mob_a == mob_b:
+					continue
+				PhysicsServer3D.body_add_collision_exception(mob_b.get_rid(), mob_b.get_rid())
 			
 	print("spawn_mobs: Total mobs spawned: ", total_mobs_spawned)
-
+@export var mobs_ignore_each_other_collisions = false
 func _get_tile_distance_from_spawn_point(tile: DungeonTile, spawn_point: Vector3) -> float:
 	# Calculate horizontal distance (ignoring Y) from tile to spawn point in world units
 	# This approximates the distance players would walk
