@@ -2423,7 +2423,7 @@ func spawn_mobs():
 	# Don't spawn mobs in editor
 	if Engine.is_editor_hint():
 		return
-
+	var spawned_mobs = []
 	# Check if mobs_spawns is configured
 	print("spawn_mobs: mobs_spawns array size: ", mobs_spawns.size())
 	if mobs_spawns.is_empty():
@@ -2573,6 +2573,7 @@ func spawn_mobs():
 				if mob != null:
 					mob.name = mob_name
 					mob.position = mob_position
+					spawned_mobs.append(mob)
 					if mob is AiCharacter:
 						mob.home_position = mob_position
 					game_level.add_child(mob)
@@ -2588,7 +2589,13 @@ func spawn_mobs():
 			total_mobs_spawned += 1
 
 		mob_spawn_index += 1
-
+	
+	for mob_a : Unit in spawned_mobs:
+		for mob_b : Unit in spawned_mobs:
+			if mob_a == mob_b:
+				continue
+			PhysicsServer3D.body_add_collision_exception(mob_b.get_rid(), mob_b.get_rid())
+			
 	print("spawn_mobs: Total mobs spawned: ", total_mobs_spawned)
 
 func _get_tile_distance_from_spawn_point(tile: DungeonTile, spawn_point: Vector3) -> float:
