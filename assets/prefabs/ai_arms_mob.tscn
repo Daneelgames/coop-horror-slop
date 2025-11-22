@@ -683,6 +683,30 @@ tracks/12/keys = {
 "update": 0,
 "values": [Vector3(-0.098029315, 0.44889706, 0.03250447)]
 }
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("%WeaponBoneAttachment3D:position")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0.14024407, 0.765161, 0.5736973)]
+}
+tracks/14/type = "value"
+tracks/14/imported = false
+tracks/14/enabled = true
+tracks/14/path = NodePath("%WeaponBoneAttachment3D:rotation")
+tracks/14/interp = 1
+tracks/14/loop_wrap = true
+tracks/14/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 2.5611136, 0)]
+}
 
 [sub_resource type="Animation" id="Animation_xkaag"]
 resource_name = "idle"
@@ -842,6 +866,30 @@ tracks/12/keys = {
 "update": 0,
 "values": [Vector3(-0.098029315, 0.44889706, 0.03250447)]
 }
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("%WeaponBoneAttachment3D:rotation")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 1.5707964, 0)]
+}
+tracks/14/type = "value"
+tracks/14/imported = false
+tracks/14/enabled = true
+tracks/14/path = NodePath("%WeaponBoneAttachment3D:position")
+tracks/14/interp = 1
+tracks/14/loop_wrap = true
+tracks/14/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0.8951796)]
+}
 
 [sub_resource type="Animation" id="Animation_fasbq"]
 resource_name = "walk_forward"
@@ -1000,6 +1048,30 @@ tracks/12/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector3(-0.098029315, 0.44889706, 0.03250447)]
+}
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("%WeaponBoneAttachment3D:rotation")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 1.5707964, 0)]
+}
+tracks/14/type = "value"
+tracks/14/imported = false
+tracks/14/enabled = true
+tracks/14/path = NodePath("%WeaponBoneAttachment3D:position")
+tracks/14/interp = 1
+tracks/14/loop_wrap = true
+tracks/14/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0.8951796)]
 }
 
 [sub_resource type="Animation" id="Animation_l7hbx"]
@@ -1319,6 +1391,30 @@ tracks/12/keys = {
 "update": 0,
 "values": [Vector3(-0.098029315, 0.44889706, 0.03250447)]
 }
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("%WeaponBoneAttachment3D:position")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0, 0.32, 0.69, 0.91),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0.14024407, 0.765161, 0.5736973), Vector3(0.18774241, 0.765161, -0.22354811), Vector3(0.21834755, 0.765161, -0.005256593), Vector3(-0.06541267, 0.765161, 0.39271954)]
+}
+tracks/14/type = "value"
+tracks/14/imported = false
+tracks/14/enabled = true
+tracks/14/path = NodePath("%WeaponBoneAttachment3D:rotation")
+tracks/14/interp = 1
+tracks/14/loop_wrap = true
+tracks/14/keys = {
+"times": PackedFloat32Array(0, 0.32, 0.69, 0.91),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 2.5611136, 0), Vector3(0.015523317, 1.7917428, -0.06899878), Vector3(0.015523317, 0.8350579, -0.068998784), Vector3(0.015523309, 0.6712937, -0.06899878)]
+}
 
 [sub_resource type="Animation" id="Animation_t3qn5"]
 resource_name = "take_damage"
@@ -1478,6 +1574,30 @@ tracks/12/keys = {
 "update": 0,
 "values": [Vector3(-0.098029315, 0.44889706, 0.03250447)]
 }
+tracks/13/type = "value"
+tracks/13/imported = false
+tracks/13/enabled = true
+tracks/13/path = NodePath("%WeaponBoneAttachment3D:rotation")
+tracks/13/interp = 1
+tracks/13/loop_wrap = true
+tracks/13/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 1.5707964, 0)]
+}
+tracks/14/type = "value"
+tracks/14/imported = false
+tracks/14/enabled = true
+tracks/14/path = NodePath("%WeaponBoneAttachment3D:position")
+tracks/14/interp = 1
+tracks/14/loop_wrap = true
+tracks/14/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0.8951796)]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_fasbq"]
 _data = {
@@ -1564,7 +1684,7 @@ PLAYER_COLLIDER = NodePath("Collision")
 
 [node name="WeaponBoneAttachment3D" type="Node3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0.765161, 0.061041594)
+transform = Transform3D(-0.8362, 0, 0.54842466, 0, 1.0000001, 0, -0.5484246, 0, -0.8362001, 0.14024407, 0.765161, 0.5736973)
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)

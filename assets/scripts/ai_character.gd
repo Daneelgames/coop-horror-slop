@@ -3,6 +3,7 @@ class_name AiCharacter
 
 @export var attack_strings : Array[String] = ['attack_vertical', 'attack_horizontal']
 @export var weapon_in_hands_scaler : float = 1
+@export var override_weapon_pos_to_zero : bool = true
 @export var visual_node_3d: Node3D
 @export var visible_enemies: Array[Unit] = []
 @export var input_dir: Vector2
@@ -219,8 +220,10 @@ func _spawn_weapon(weapon_resource: ResourceWeapon):
 	else:
 		print("[AI_WEAPON_SPAWN] %s: Duplicating existing weapon_resource..." % name)
 		item_in_hands.weapon_resource = item_in_hands.weapon_resource.duplicate()
-	
-	item_in_hands.position = item_in_hands.weapon_slot_position
+	if override_weapon_pos_to_zero:
+		item_in_hands.position = Vector3.ZERO
+	else:
+		item_in_hands.position = item_in_hands.weapon_slot_position
 	
 	item_in_hands.scale = Vector3.ONE * weapon_in_hands_scaler
 	print("[AI_WEAPON_SPAWN] %s: SUCCESS - Weapon spawned and attached! (position: %s, scale: %s)" % [name, item_in_hands.position, item_in_hands.scale])

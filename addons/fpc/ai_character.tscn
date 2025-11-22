@@ -403,6 +403,7 @@ platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_q1sc8")
 weapon_in_hands_scaler = 100.0
+override_weapon_pos_to_zero = false
 visual_node_3d = NodePath("VisualParent")
 random_weapons = Array[ExtResource("2_cf55f")]([ExtResource("3_lpatj"), ExtResource("4_ithmg"), ExtResource("5_0yo82")])
 debug_ai_combat = false
