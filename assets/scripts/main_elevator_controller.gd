@@ -18,11 +18,31 @@ var elevator_movement_bottom_position: Vector3
 	set(value):
 		if sync_position != value:
 			var old_value = sync_position
+			var position_delta = value.y - old_value.y
 			sync_position = value
 			# На клиентах синхронизировать позицию Y с сервером
 			if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
 				global_position.y = value.y
-				print("[ELEVATOR] sync_position setter (CLIENT): %s -> %s, set global_position.y = %s" % [old_value, value, value.y])
+
+				# Двигать всех игроков с authority на этом клиенте, которые находятся внутри лифта
+				# Используем более надежный подход - проверяем всех игроков в сцене
+				var players = get_tree().get_nodes_in_group("players")
+				for player in players:
+					if not is_instance_valid(player):
+						continue
+					if not (player is PlayerCharacter):
+						continue
+					if not player.is_multiplayer_authority():
+						continue
+
+					# Проверяем, находится ли игрок внутри лифта (в Area3D)
+					if is_instance_valid(elevator_area_3d):
+						var overlapping_bodies = elevator_area_3d.get_overlapping_bodies()
+						if overlapping_bodies.has(player):
+							player.global_position.y += position_delta
+							print("[ELEVATOR] sync_position setter (CLIENT): Moved player %s by %s (new pos: %s)" % [player.name, position_delta, player.global_position.y])
+
+				print("[ELEVATOR] sync_position setter (CLIENT): %s -> %s, set global_position.y = %s, delta: %s" % [old_value, value, value.y, position_delta])
 
 func _ready() -> void:
 	elevator_button.button_interacted.connect(on_elevator_button_interacted)
@@ -114,6 +134,7 @@ func on_elevator_button_interacted():
 		
 		bodies_to_move_inside = bodies_inside.duplicate()
 		bodies_inside = []
+		print("[ELEVATOR] Starting movement, bodies_to_move_inside: %s" % [bodies_to_move_inside.map(func(b): return b.name if is_instance_valid(b) else "invalid")])
 		
 		# Установить is_moving_by_elevator = true для всех игроков на сервере
 		# Для RigidBody3D (пикапов) заморозить физику чтобы они двигались вместе с лифтом
@@ -154,6 +175,7 @@ func _on_elevator_area_3d_body_entered(body: Node3D) -> void:
 	# Добавлять игроков и RigidBody3D объекты (пикапы) в bodies_inside
 	if body is PlayerCharacter or body is RigidBody3D:
 		bodies_inside.append(body)
+		print("[ELEVATOR] Body entered: %s (authority: %s), bodies_inside size: %d" % [body.name, body.get("is_multiplayer_authority") if body is PlayerCharacter else "N/A", bodies_inside.size()])
 		update_door_anim()
 
 

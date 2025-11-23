@@ -43,26 +43,26 @@ attack_points = [NodePath("AttackPointNode3D"), NodePath("AttackPointNode3D2"), 
 weapon_slot_position = Vector3(3.6044846, 10.317631, 3.410141)
 
 [node name="VisualParent" type="Node3D" parent="."]
-transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.742279e-08, 8.742278e-08, -1.1464115e-14, -1, -0.06670273, -0.010865499, -4.6368426e-10)
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422805e-08, 8.742278e-08, -1.1464117e-14, -1, -0.18500425, -0.010865501, -4.636843e-10)
 
 [node name="Light02" parent="VisualParent" instance=ExtResource("3_2im4t")]
 transform = Transform3D(1, -2.6645353e-15, 0, -1.0022247e-21, 0.98714185, -0.15984672, 7.1054274e-15, 0.15984672, 0.9871419, -1.1175871e-08, -0.08492733, 0)
 cast_shadow = 0
 
 [node name="AttackPointNode3D" type="Node3D" parent="."]
-transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.742279e-08, 8.742278e-08, -1.1464115e-14, -1, -0.14436166, -0.010865486, -4.6368312e-10)
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422805e-08, 8.742278e-08, -1.1464117e-14, -1, -0.2626632, -0.010865488, -4.6368318e-10)
 
 [node name="AttackPointNode3D2" type="Node3D" parent="."]
-transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.742279e-08, 8.742278e-08, -1.1464115e-14, -1, 0.015001835, -0.010865503, -4.6368456e-10)
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422805e-08, 8.742278e-08, -1.1464117e-14, -1, -0.10329969, -0.010865505, -4.6368462e-10)
 
 [node name="AttackPointNode3D3" type="Node3D" parent="."]
-transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.742279e-08, 8.742278e-08, -1.1464115e-14, -1, 0.2601159, -0.010865516, -4.6368573e-10)
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422805e-08, 8.742278e-08, -1.1464117e-14, -1, 0.14181437, -0.010865518, -4.6368578e-10)
 
 [node name="AttackPointNode3D4" type="Node3D" parent="."]
-transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.742279e-08, 8.742278e-08, -1.1464115e-14, -1, 0.5152436, -0.010865561, -4.6368961e-10)
+transform = Transform3D(1.3113417e-07, 1, 0, 1, -1.3113417e-07, 8.7422805e-08, 8.742278e-08, -1.1464117e-14, -1, 0.39694208, -0.010865563, -4.6368967e-10)
 
 [node name="FireGPUParticles3D" type="GPUParticles3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.44488016, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32657862, 0, 0)
 material_override = SubResource("StandardMaterial3D_ail72")
 lifetime = 0.5
 process_material = SubResource("ParticleProcessMaterial_hcskf")
