@@ -384,6 +384,7 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	# Установить authority на сервер в мультиплеере
 	if multiplayer.has_multiplayer_peer():
 		elevator.set_multiplayer_authority(1)
+		print("_spawn_elevator_at_position: Set multiplayer authority to server (peer_id=1) for elevator")
 	
 	# Вычислить позиции верхней и нижней точки движения лифта
 	var shaft_height: int = 100  # Количество тайлов вверх
@@ -395,7 +396,9 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	if elevator is MainElevatorController:
 		elevator.elevator_movement_bottom_position = elevator_movement_bottom_position
 		elevator.elevator_movement_top_position = elevator_movement_top_position + Vector3.UP * 2
-		print("_spawn_elevator_at_position: Set elevator positions - bottom: %s, top: %s" % [elevator_movement_bottom_position, elevator_movement_top_position])
+		# Инициализировать sync_position после установки позиции
+		elevator.sync_position = elevator_pos
+		print("_spawn_elevator_at_position: Set elevator positions - bottom: %s, top: %s, sync_position: %s" % [elevator_movement_bottom_position, elevator_movement_top_position, elevator_pos])
 	else:
 		push_warning("_spawn_elevator_at_position: Elevator is not MainElevatorController, cannot set movement positions")
 	

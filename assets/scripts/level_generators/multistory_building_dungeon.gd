@@ -2206,8 +2206,10 @@ func spawn_pickups():
 		push_warning("spawn_pickups: No valid items with positive weight in item_spawns")
 		return
 	
-	# Determine spawn point (starting point for players) - use origin (0,0,0) as reference
+	# Determine spawn point (elevator position for distance calculations)
 	var spawn_point: Vector3 = Vector3(0, 0, 0)
+	if spawned_elevator != null:
+		spawn_point = spawned_elevator.global_position
 	
 	# Collect all tiles with floors (exclude stairs)
 	var available_tiles: Array[DungeonTile] = []

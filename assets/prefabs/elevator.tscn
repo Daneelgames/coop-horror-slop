@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=4 uid="uid://d1fhekbr7wjf3"]
+[gd_scene load_steps=53 format=4 uid="uid://d1fhekbr7wjf3"]
 
 [ext_resource type="Texture2D" uid="uid://x5ctr86ri1dx" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_AlbedoTransparency.png" id="1_e4udu"]
 [ext_resource type="Script" uid="uid://cepasvg8pm00v" path="res://assets/scripts/main_elevator_controller.gd" id="1_hvhng"]
@@ -684,6 +684,11 @@ stream_0/stream = ExtResource("7_btkhg")
 radius = 0.34716797
 height = 0.84851074
 
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_iktdn"]
+properties/0/path = NodePath(".:position:y")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+
 [node name="Elevator" type="StaticBody3D" node_paths=PackedStringArray("elevator_button")]
 script = ExtResource("1_hvhng")
 elevator_button = NodePath("ButonStaticBody3D")
@@ -914,6 +919,11 @@ size = Vector3(0.07727051, 0.4345703, 0.061523438)
 [node name="CSGBox3D3" type="CSGBox3D" parent="ButonStaticBody3D/CollisionShape3D/Visual"]
 transform = Transform3D(0.86930525, 0.49427557, 0, -0.49427557, 0.86930525, 0, 0, 0, 1, -0.16228396, -0.058692932, 0)
 size = Vector3(0.0513916, 0.4345703, 0.061523438)
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_interval = 0.1
+delta_interval = 0.1
+replication_config = SubResource("SceneReplicationConfig_iktdn")
 
 [connection signal="body_entered" from="ElevatorArea3D" to="." method="_on_elevator_area_3d_body_entered"]
 [connection signal="body_exited" from="ElevatorArea3D" to="." method="_on_elevator_area_3d_body_exited"]

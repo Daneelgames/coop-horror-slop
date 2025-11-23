@@ -13,66 +13,77 @@ var is_elevator_moving_down = false
 var elevator_movement_top_position: Vector3
 var elevator_movement_bottom_position: Vector3
 
+# Синхронизируемая позиция лифта для корректной работы на клиентах
+@export var sync_position: Vector3:
+	set(value):
+		if sync_position != value:
+			var old_value = sync_position
+			sync_position = value
+			# На клиентах синхронизировать позицию Y с сервером
+			if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
+				global_position.y = value.y
+				print("[ELEVATOR] sync_position setter (CLIENT): %s -> %s, set global_position.y = %s" % [old_value, value, value.y])
+
 func _ready() -> void:
 	elevator_button.button_interacted.connect(on_elevator_button_interacted)
-	# Установить authority лифта на сервер для управления состоянием
-	if multiplayer.has_multiplayer_peer():
-		set_multiplayer_authority(1)
+
+	# Инициализировать sync_position текущей позицией
+	# Это важно для правильной синхронизации при спавне
+	sync_position = global_position
+	print("[ELEVATOR] _ready: Initialized sync_position to %s, authority=%s, is_server=%s" % [
+		sync_position, get_multiplayer_authority(), multiplayer.is_server()])
 
 func _physics_process(delta: float) -> void:
-	if is_elevator_moving:
+	var is_server = multiplayer.has_multiplayer_peer() and multiplayer.is_server()
+	var is_single_player = not multiplayer.has_multiplayer_peer()
+
+	if is_elevator_moving and (is_server or is_single_player):
+		# Только сервер или одиночная игра управляет движением
 		# Проверить, что позиции инициализированы
 		if elevator_movement_top_position == Vector3.ZERO and elevator_movement_bottom_position == Vector3.ZERO:
 			push_warning("[ELEVATOR] Movement positions not initialized, cannot move")
 			is_elevator_moving = false
 			return
-		
+
 		# Определить направление движения и скорость
 		var movement_direction: float = -1.0 if is_elevator_moving_down else 1.0
 		var movement_distance = elevator_movement_speed * delta * movement_direction
-		
+
 		# Проверить, достиг ли лифт целевой позиции
 		var target_position: Vector3
 		if is_elevator_moving_down:
 			target_position = elevator_movement_bottom_position
 		else:
 			target_position = elevator_movement_top_position
-		
+
 		# Проверить, достигли ли мы целевой позиции (с небольшой погрешностью)
 		var distance_to_target = abs(global_position.y - target_position.y)
 		if distance_to_target <= abs(movement_distance) + 0.1:  # Небольшая погрешность для остановки
 			# Достигли целевой позиции - остановить лифт
 			global_position.y = target_position.y
-			
-			# Остановить движение (только на сервере)
-			var is_server = multiplayer.has_multiplayer_peer() and multiplayer.is_server()
-			if is_server or not multiplayer.has_multiplayer_peer():
-				_stop_elevator_at_target()
+			sync_position = global_position
+
+			# Остановить движение
+			_stop_elevator_at_target()
 		else:
 			# Продолжить движение
 			global_position.y += movement_distance
-			
+			sync_position = global_position
+
 			# Двигать тела внутри лифта
-			var is_server = multiplayer.has_multiplayer_peer() and multiplayer.is_server()
 			for body in bodies_to_move_inside:
 				if not is_instance_valid(body):
 					continue
-				
-				if is_server:
-					# На хосте двигаем все тела внутри лифта (игроки и RigidBody3D объекты)
-					if body is RigidBody3D:
-						# Для RigidBody3D (пикапы) двигаем напрямую
-						body.global_position.y += movement_distance
-						# Также сбрасываем вертикальную скорость чтобы предотвратить падение
-						if body.linear_velocity.y < 0:
-							body.linear_velocity.y = 0
-					else:
-						body.global_position.y += movement_distance
+
+				# На сервере двигаем все тела внутри лифта (игроки и RigidBody3D объекты)
+				if body is RigidBody3D:
+					# Для RigidBody3D (пикапы) двигаем напрямую
+					body.global_position.y += movement_distance
+					# Также сбрасываем вертикальную скорость чтобы предотвратить падение
+					if body.linear_velocity.y < 0:
+						body.linear_velocity.y = 0
 				else:
-					# На клиентах двигаем только своего игрока (у которого есть authority)
-					# RigidBody3D объекты двигаются только на сервере
-					if body is PlayerCharacter and body.is_multiplayer_authority():
-						body.global_position.y += movement_distance
+					body.global_position.y += movement_distance
 
 func on_elevator_button_interacted():
 	# Только сервер обрабатывает нажатие кнопки и синхронизирует состояние
