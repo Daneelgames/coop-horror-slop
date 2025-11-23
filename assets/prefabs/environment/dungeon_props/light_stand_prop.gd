@@ -24,8 +24,8 @@ func _ready() -> void:
 
 func _initialize_lights() -> void:
 	if multiplayer.is_server():
-		lights_active = randf() < 0.5
-		#lights_active = true
+		#lights_active = randf() < 0.5
+		lights_active = false
 		_update_lights_state()
 
 func _update_lights_state():
