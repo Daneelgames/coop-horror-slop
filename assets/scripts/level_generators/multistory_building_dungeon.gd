@@ -2277,9 +2277,9 @@ func spawn_pickups():
 			continue
 		
 		# Randomize pickup position within tile bounds
-		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
-		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
-		var pickup_position = tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.5, TILE_SIZE.x / 2.5)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.5, TILE_SIZE.z / 2.5)
+		var pickup_position = tile.position + Vector3(random_offset_x, 1, random_offset_z)
 		
 		# Spawn pickup through MultiplayerSpawner for synchronization
 		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
@@ -2660,8 +2660,8 @@ func spawn_props():
 		# TILE_SIZE is Vector3i(4, 2, 4) and tile's origin is at its bottom center
 		# So we randomize X and Z in range [-TILE_SIZE.x/2, TILE_SIZE.x/2] = [-2, 2]
 		# And Y is slightly above floor (0.1 to account for floor height)
-		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
-		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.5, TILE_SIZE.x / 2.5)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.5, TILE_SIZE.z / 2.5)
 		var prop_position = random_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
 		
 		# Spawn prop through MultiplayerSpawner for synchronization
