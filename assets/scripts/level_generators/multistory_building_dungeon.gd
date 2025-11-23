@@ -2279,7 +2279,7 @@ func spawn_pickups():
 		# Randomize pickup position within tile bounds
 		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.5, TILE_SIZE.x / 2.5)
 		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.5, TILE_SIZE.z / 2.5)
-		var pickup_position = tile.position + Vector3(random_offset_x, 1, random_offset_z)
+		var pickup_position = tile.position + Vector3(random_offset_x, 0.5, random_offset_z)
 		
 		# Spawn pickup through MultiplayerSpawner for synchronization
 		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
@@ -2364,7 +2364,7 @@ func spawn_pickups():
 		# Randomize pickup position within tile bounds
 		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
-		var pickup_position = farthest_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+		var pickup_position = farthest_tile.position + Vector3(random_offset_x, 0.5, random_offset_z)
 		
 		# Spawn pickup through MultiplayerSpawner for synchronization
 		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
@@ -2546,7 +2546,7 @@ func spawn_mobs():
 			# Randomize mob position within tile bounds using seeded RNG
 			var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 			var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
-			var mob_position = random_tile.position + Vector3(random_offset_x, 1.0, random_offset_z) # 1 unit above floor
+			var mob_position = random_tile.position + Vector3(random_offset_x, 0.5, random_offset_z) # 0.5 units above floor
 
 			# Give mob a unique, consistent name based on spawn config index, tile coordinate and spawn order
 			# This ensures RPCs can find the correct mob on all peers
