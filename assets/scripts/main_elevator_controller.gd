@@ -297,16 +297,30 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 					# Заморозить RigidBody3D объекты на сервере
 					body.freeze = true
 		else:
-			# На клиентах: сохраняем текущие тела внутри перед очисткой
-			# (они могут отличаться от сервера, но мы будем двигать только своих игроков)
-			bodies_to_move_inside = bodies_inside.duplicate()
+			# На клиентах: определяем тела для движения на основе overlapping_bodies
+			# Это более надежно, чем полагаться на bodies_inside
+			bodies_to_move_inside = []
+			if is_instance_valid(elevator_area_3d):
+				var overlapping_bodies = elevator_area_3d.get_overlapping_bodies()
+				for body in overlapping_bodies:
+					if not is_instance_valid(body):
+						continue
+					if body is AiCharacter:
+						continue
+					if body is PlayerCharacter or body is RigidBody3D:
+						bodies_to_move_inside.append(body)
+
+			print("[ELEVATOR] Client starting movement, bodies_to_move_inside: %s" % [
+				bodies_to_move_inside.map(func(b): return b.name if is_instance_valid(b) else "invalid")
+			])
+
 			for body in bodies_to_move_inside:
 				if not is_instance_valid(body):
 					continue
 				if body is PlayerCharacter:
 					body.is_moving_by_elevator = true
-				# RigidBody3D объекты обрабатываются только на сервере
-		
-		bodies_inside = []
-		update_door_anim()
-		elevator_area_3d.monitoring = false
+				# RigidBody3D объекты не замораживаем на клиентах
+
+			bodies_inside = []
+			update_door_anim()
+			elevator_area_3d.monitoring = false
