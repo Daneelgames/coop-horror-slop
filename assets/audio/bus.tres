@@ -37,7 +37,7 @@ wet = 0.33
 [sub_resource type="AudioEffectCompressor" id="AudioEffectCompressor_ryeki"]
 resource_name = "Compressor"
 threshold = -4.0
-gain = 6.0
+gain = 10.0
 
 [resource]
 bus/0/effect/0/effect = SubResource("AudioEffectCompressor_i8chi")
