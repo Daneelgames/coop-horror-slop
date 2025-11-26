@@ -87,15 +87,14 @@ process_material = SubResource("ParticleProcessMaterial_ekdu6")
 draw_pass_1 = SubResource("QuadMesh_cw57d")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="FireGPUParticles3D"]
-light_color = Color(1, 0.74333334, 0.56, 1)
-light_energy = 1.5
+light_color = Color(0.95686275, 0.58431375, 0.25490198, 1)
 light_size = 0.01
 shadow_enabled = true
 distance_fade_enabled = true
 distance_fade_begin = 20.0
 distance_fade_shadow = 30.0
-omni_range = 7.0
-omni_attenuation = 1.5
+omni_range = 8.0
+omni_attenuation = 0.1
 
 [node name="FireAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="FireGPUParticles3D"]
 stream = ExtResource("5_1pilk")
