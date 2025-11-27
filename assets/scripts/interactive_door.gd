@@ -1,6 +1,7 @@
 extends StaticBody3D
 class_name InteractiveDoor
 
+
 @export var outside_point : Node3D
 @export var inside_point : Node3D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
@@ -73,12 +74,10 @@ func toggle_door(player_position: Vector3):
 func set_door_state(new_state: STATE):
 	if state == new_state:
 		return
-	
 	state = new_state
 	
 	# Play animation locally on server
 	_play_door_animation(state)
-	
 	# Sync to all clients via RPC (only server calls this)
 	if multiplayer.is_server():
 		rpc_set_door_state.rpc(new_state)
