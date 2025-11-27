@@ -340,7 +340,7 @@ bind/64/bone = -1
 bind/64/pose = Transform3D(-99.92396, -0.0001585168, 3.8993707, 3.899273, -0.7102333, 99.92143, 0.027536277, 99.9975, 0.7097078, 10.220509, -18.325436, -0.15309562)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_uy03j"]
-radius = 0.4
+radius = 0.3
 height = 1.6
 
 [sub_resource type="Animation" id="Animation_gh776"]
@@ -655,6 +655,7 @@ stream_0/stream = ExtResource("29_1ltnj")
 collision_layer = 2
 collision_mask = 23
 floor_max_angle = 1.0471976
+floor_snap_length = 0.5
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_0t4e8")

@@ -210,9 +210,6 @@ func _ready():
 	# This ensures all clients have all players registered, not just the server
 	_register_self_in_game_manager()
 
-	# Add to players group for easy access
-	add_to_group("players")
-
 	for key in carrying_items.keys():
 		carrying_items[key] = carrying_items[key].duplicate()
 
@@ -314,6 +311,10 @@ func _physics_process(delta): # Most things happen here.
 	if GameManager._game_level.is_game_level_ready == false:
 		return
 	super._physics_process(delta)
+	
+	if velocity.y < 0:
+		apply_floor_snap()
+		
 	_ensure_authority_state()
 	#if mesh_animation_player and _has_input_authority:
 	if mesh_animation_player:
@@ -324,7 +325,7 @@ func _physics_process(delta): # Most things happen here.
 	# Gravity
 	if dynamic_gravity:
 		gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
-	if not is_on_floor() and gravity and gravity_enabled:
+	if not is_grounded and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
 	if is_moving_by_elevator == false and is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
 	#if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
@@ -405,7 +406,7 @@ func _physics_process(delta): # Most things happen here.
 			if inventory_slots_panel_container:
 				inventory_slots_panel_container.update_durability_display(carrying_items)
 
-	was_on_floor = is_on_floor() # This must always be at the end of physics_process
+	was_on_floor = is_grounded # This must always be at the end of physics_process
 
 #endregion
 
@@ -865,14 +866,14 @@ func handle_jumping():
 		return
 	if jumping_enabled:
 		if continuous_jumping: # Hold down the jump button
-			#if Input.is_action_pressed(controls.JUMP) and is_on_floor() and !low_ceiling:
-			if Input.is_action_pressed(controls.JUMP) and is_on_floor():
+			#if Input.is_action_pressed(controls.JUMP) and is_grounded and !low_ceiling:
+			if Input.is_action_pressed(controls.JUMP) and is_grounded:
 				if jump_animation:
 					JUMP_ANIMATION.play("jump", 0.25)
 				mesh_animation_player.play("jump", 0.1)
 				velocity.y += jump_velocity # Adding instead of setting so jumping on slopes works properly
 		else:
-			if Input.is_action_just_pressed(controls.JUMP) and is_on_floor():
+			if Input.is_action_just_pressed(controls.JUMP) and is_grounded:
 				if jump_animation:
 					JUMP_ANIMATION.play("jump", 0.25)
 				mesh_animation_player.play("jump", 0.1)
@@ -910,7 +911,7 @@ func handle_movement(delta, input_dir):
 	#move_and_slide()
 
 	if in_air_momentum:
-		if is_on_floor():
+		if is_grounded:
 			if motion_smoothing:
 				velocity.x = lerp(velocity.x, direction.x * speed, acceleration * delta)
 				velocity.z = lerp(velocity.z, direction.z * speed, acceleration * delta)
@@ -1075,7 +1076,7 @@ func initialize_animations():
 func play_headbob_animation(moving):
 	if !_has_input_authority:
 		return
-	if moving and is_on_floor():
+	if moving and is_grounded:
 		var use_headbob_animation: String
 		match state:
 			"normal", "crouching":
@@ -1102,7 +1103,7 @@ func play_headbob_animation(moving):
 			HEADBOB_ANIMATION.play("RESET", 1)
 
 func play_jump_animation():
-	if !was_on_floor and is_on_floor(): # The player just landed
+	if !was_on_floor and is_grounded: # The player just landed
 		var facing_direction: Vector3 = CAMERA.get_global_transform().basis.x
 		var facing_direction_2D: Vector2 = Vector2(facing_direction.x, facing_direction.z).normalized()
 		var velocity_2D: Vector2 = Vector2(velocity.x, velocity.z).normalized()
@@ -1263,7 +1264,7 @@ func finish_vault_climb():
 func update_debug_menu_per_frame():
 	$UserInterface/DebugPanel.add_property("FPS", Performance.get_monitor(Performance.TIME_FPS), 0)
 	var status: String = state
-	if !is_on_floor():
+	if !is_grounded:
 		status += " in the air"
 	$UserInterface/DebugPanel.add_property("State", status, 4)
 

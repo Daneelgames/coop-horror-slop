@@ -74,6 +74,8 @@ func _physics_process(_delta): # Most things happen here.
 	if GameManager._game_level.is_game_level_ready == false:
 		return
 	super._physics_process(_delta)
+	if velocity.y < 0:
+		apply_floor_snap()
 	visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
 	# Convert Euler angles to Basis (quaternion) for proper rotation interpolation
 	var current_basis = Basis.from_euler(visual_node_3d.global_rotation)
@@ -366,7 +368,7 @@ func _handle_movement(delta: float):
 func _handle_physics(delta: float):
 	# Apply gravity
 	var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
-	if not is_on_floor():
+	if not is_grounded:
 		velocity.y -= gravity * delta
 	else:
 		velocity.y = 0

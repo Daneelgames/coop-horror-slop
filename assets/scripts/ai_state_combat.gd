@@ -206,7 +206,8 @@ func handle_rotation_towards_enemy(delta: float) -> void:
 	
 	# Don't rotate if dead, attacking, or taking damage
 	#if ai_character.is_dead() or ai_character.is_attacking or ai_character.is_taking_damage:
-	if ai_character.is_dead() or ai_character.is_taking_damage:
+	#if ai_character.is_dead() or ai_character.is_taking_damage:
+	if ai_character.is_dead():
 		return
 	
 	# Find closest visible enemy
