@@ -227,7 +227,7 @@ func handle_rotation_towards_enemy(delta: float) -> void:
 	direction = direction.normalized()
 	
 	# Calculate target rotation angle
-	var target_angle = atan2(direction.x, direction.z)
+	var target_angle = atan2(direction.x, direction.z) + PI  # Add 180 degrees since mesh was flipped
 	
 	# Smoothly rotate towards target angle
 	var current_angle = ai_character.rotation.y

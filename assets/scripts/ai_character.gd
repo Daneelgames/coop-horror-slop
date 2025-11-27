@@ -57,12 +57,25 @@ func interaction_raycast_coroutine():
 	if interaction_ray_cast_3d == null:
 		return
 	if is_dead() == false and is_attacking == false and is_taking_damage == false and is_blocking == false:
+		# Update raycast position and rotation to match character's facing direction
+		interaction_ray_cast_3d.global_transform = global_transform * Transform3D(Basis(), Vector3(0.0, 1.0, 0.0))
 		interaction_ray_cast_3d.force_raycast_update()
+
 		if interaction_ray_cast_3d.is_colliding():
 			var col = interaction_ray_cast_3d.get_collider()
+			var collision_point = interaction_ray_cast_3d.get_collision_point()
 			if col is InteractiveDoor:
 				if col.state == InteractiveDoor.STATE.CLOSED:
+					print("[AI_DOOR] %s: Attempting to open door at %s (collision at %s)" % [name, col.global_position, collision_point])
 					col.rpc_request_toggle.rpc(global_position)
+				else:
+					print("[AI_DOOR] %s: Door is already open (state: %s)" % [name, col.state])
+			else:
+				print("[AI_DOOR] %s: Raycast hit non-door object: %s at %s" % [name, col, collision_point])
+		else:
+			# Only print occasionally to avoid spam
+			if randf() < 0.01:  # 1% chance per check
+				print("[AI_DOOR] %s: No collision detected (facing: %.2f)" % [name, rotation.y])
 	await get_tree().create_timer(1).timeout
 	interaction_raycast_coroutine()
 	pass
@@ -346,7 +359,6 @@ func _handle_movement(delta: float):
 		# Set velocity for movement
 		velocity.x = direction.x * base_speed
 		velocity.z = direction.z * base_speed
-		input_dir = Vector2(direction.x, direction.z)
 	
 	# Apply physics (gravity and move_and_slide)
 	_handle_physics(delta)
@@ -363,6 +375,16 @@ func _handle_movement(delta: float):
 	if not has_visible_enemies and direction.length_squared() > 0.0001:
 		var target_angle = atan2(direction.x, direction.z)
 		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+
+		# Debug: print movement info occasionally
+		if randf() < 0.01:  # 1% chance
+			print("[AI_MOVEMENT] %s: direction=%s, target_angle=%.2f, rotation.y=%.2f" % [name, direction, target_angle, rotation.y])
+
+	# Calculate input_dir relative to character rotation for proper animation
+	# Convert world direction to local direction (always, for both patrol and combat)
+	if direction.length_squared() > 0.0001:
+		var local_direction = direction.rotated(Vector3.UP, -rotation.y)
+		input_dir = Vector2(local_direction.x, local_direction.z)
 
 ## Handle physics (gravity and movement) - called separately to preserve push velocity during attacks
 func _handle_physics(delta: float):

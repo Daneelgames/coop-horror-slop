@@ -106,7 +106,7 @@ func rpc_set_door_state(new_state: STATE):
 	_play_door_animation(state)
 
 # RPC function called by players to request door toggle
-@rpc("any_peer", "reliable")
+@rpc("any_peer", "call_local", "reliable")
 func rpc_request_toggle(player_position: Vector3):
 	# Only server processes this
 	if !multiplayer.is_server():
