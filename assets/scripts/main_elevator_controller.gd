@@ -20,12 +20,14 @@ var elevator_movement_bottom_position: Vector3
 		if sync_position != value:
 			var old_value = sync_position
 			sync_position = value
-			# На клиентах корректировать позицию если разница слишком большая
+			# На клиентах плавно корректировать позицию если разница большая
 			if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
 				var position_diff = global_position.y - value.y
-				if abs(position_diff) > 1.0:  # Если разница больше 1 метра
-					global_position.y = value.y
-					print("[ELEVATOR] sync_position setter (CLIENT): Corrected position from %s to %s (diff: %s)" % [old_value.y, value.y, position_diff])
+				if abs(position_diff) > 0.5:  # Если разница больше 0.5 метра
+					# Плавная коррекция вместо скачка
+					global_position.y = lerp(global_position.y, value.y, 0.1)
+					print("[ELEVATOR] sync_position setter (CLIENT): Smooth correction from %s to %s (diff: %s)" % [old_value.y, value.y, position_diff])
+				# Для небольших расхождений не корректируем - пусть работает локально
 
 func _ready() -> void:
 	elevator_button.button_interacted.connect(on_elevator_button_interacted)
@@ -191,6 +193,13 @@ func _stop_elevator_at_target():
 			body.linear_velocity.y = 0
 			print("[ELEVATOR] Unfrozen RigidBody3D after stop: ", body.name)
 
+	# Также сбросить is_moving_by_elevator для всех игроков в группе на сервере
+	if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
+		var players = get_tree().get_nodes_in_group("players")
+		for player in players:
+			if player is PlayerCharacter and is_instance_valid(player):
+				player.is_moving_by_elevator = false
+
 	# Вернуть тела обратно в bodies_inside
 	bodies_inside = bodies_to_move_inside.duplicate()
 	bodies_to_move_inside = []
@@ -200,6 +209,9 @@ func _stop_elevator_at_target():
 	# Проверить какие тела находятся в Area3D и добавить их в bodies_inside
 	# Это исправляет проблему когда двери открываются но лифт не видит игроков
 	if is_instance_valid(elevator_area_3d):
+		# Временно включить monitoring чтобы получить overlapping bodies
+		elevator_area_3d.monitoring = true
+		await get_tree().process_frame  # Подождать чтобы physics обновил overlapping
 		var overlapping_bodies = elevator_area_3d.get_overlapping_bodies()
 		print("[ELEVATOR] _stop_elevator_at_target: overlapping_bodies: ", overlapping_bodies.map(func(b): return b.name if is_instance_valid(b) else "invalid"))
 		for body in overlapping_bodies:
@@ -275,13 +287,17 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 	var is_server = multiplayer.has_multiplayer_peer() and multiplayer.is_server()
 
 	if not moving:
-		# Остановка движения - очистить список тел для движения
+		# Остановка движения - сбросить is_moving_by_elevator для всех игроков
+		var players = get_tree().get_nodes_in_group("players")
+		for player in players:
+			if player is PlayerCharacter and is_instance_valid(player):
+				player.is_moving_by_elevator = false
+
+		# Разморозить RigidBody3D объекты
 		for body in bodies_to_move_inside:
 			if not is_instance_valid(body):
 				continue
-			if body is PlayerCharacter:
-				body.is_moving_by_elevator = false
-			elif body is RigidBody3D and is_server:
+			if body is RigidBody3D and is_server:
 				# Разморозить RigidBody3D объекты только на сервере
 				body.freeze = false
 				body.linear_velocity.y = 0

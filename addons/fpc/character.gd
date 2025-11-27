@@ -210,6 +210,9 @@ func _ready():
 	# This ensures all clients have all players registered, not just the server
 	_register_self_in_game_manager()
 
+	# Add to players group for easy access
+	add_to_group("players")
+
 	for key in carrying_items.keys():
 		carrying_items[key] = carrying_items[key].duplicate()
 
