@@ -26,16 +26,16 @@ var should_move: bool = false
 
 @onready var weapon_bone_attachment_3d: Node3D = %WeaponBoneAttachment3D
 @onready var ai_state_machine: AiStateMachine = %AiStateMachine
-@onready var interaction_ray_cast_3d: RayCast3D = %InteractionRayCast3D
+var interaction_ray_cast_3d: RayCast3D
 
 func _enter_tree():
 	# Set multiplayer authority to server (peer ID 1) for AI characters
 	if multiplayer.has_multiplayer_peer():
 		set_multiplayer_authority(1, true)
-
 func _ready():
 	# Wait a frame to ensure node is fully ready and synced across all clients
 	await get_tree().process_frame
+	interaction_ray_cast_3d = get_node_or_null("InteractionRayCast3D")
 	print("[AI_WEAPON_SPAWN] %s: Starting weapon spawn process (is_server: %s, has_multiplayer: %s)" % [name, multiplayer.is_server(), multiplayer.has_multiplayer_peer()])
 	spawn_random_weapon_to_hands()
 	

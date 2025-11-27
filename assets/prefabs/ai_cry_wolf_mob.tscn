@@ -1,10 +1,11 @@
-[gd_scene load_steps=63 format=4 uid="uid://17o2n8fjmf7y"]
+[gd_scene load_steps=64 format=4 uid="uid://17o2n8fjmf7y"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_dlup7"]
 [ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="2_06rqj"]
 [ext_resource type="Resource" uid="uid://dnebdghxk0fne" path="res://assets/resources/rw_demon_fang.tres" id="3_ac633"]
 [ext_resource type="Texture2D" uid="uid://b7yokovtxcvy5" path="res://assets/sprites/white_blob.png" id="3_eduwc"]
 [ext_resource type="Script" uid="uid://b0eohos8rbidu" path="res://assets/scripts/ai_state_machine.gd" id="4_06rqj"]
+[ext_resource type="PackedScene" uid="uid://oxjxky0w2v4a" path="res://assets/prefabs/weapons/weapon_demon_fang_w.tscn" id="4_a8fy8"]
 [ext_resource type="Texture2D" uid="uid://ccldggwb6e8va" path="res://assets/meshes/cry_wolf/BODY PAINT_Cry_Wolf_Main_BaseColor.tga" id="4_n8adn"]
 [ext_resource type="Texture2D" uid="uid://fqlm3wil21fr" path="res://assets/meshes/cry_wolf/BODY PAINT_Cry_Wolf_Main_Normal.tga" id="5_2mbhy"]
 [ext_resource type="AudioStream" uid="uid://b7ys0ad0k7jx5" path="res://assets/audio/FootStepRun_1.wav" id="5_ac633"]
@@ -41238,6 +41239,8 @@ PLAYER_COLLIDER = NodePath("Collision")
 [node name="WeaponBoneAttachment3D" type="Node3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(-4.3711385e-08, 0, 1.0000001, 0, 0.9999998, 0, -0.99999994, 0, -4.3711392e-08, 0, 0.765161, 0.061041594)
+
+[node name="WeaponDemonFang" parent="WeaponBoneAttachment3D" instance=ExtResource("4_a8fy8")]
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, -1.8249088e-08, 0, -0.20874524)

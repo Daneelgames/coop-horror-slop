@@ -182,7 +182,7 @@ var _cached_local_peer_id: int = -1
 
 #endregion
 @onready var dust_gpu_particles_3d: GPUParticles3D = %DustGPUParticles3D
-var is_moving_by_elevator = false
+@export var is_moving_by_elevator = false
 
 #region Main Control Flow
 

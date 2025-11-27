@@ -604,6 +604,9 @@ properties/7/replication_mode = 2
 properties/8/path = NodePath(".:is_crouching")
 properties/8/spawn = true
 properties/8/replication_mode = 2
+properties/9/path = NodePath(".:is_moving_by_elevator")
+properties/9/spawn = true
+properties/9/replication_mode = 2
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_ra850"]
 random_pitch = 1.1

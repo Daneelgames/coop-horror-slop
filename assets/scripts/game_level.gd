@@ -39,7 +39,8 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_M):
+	# if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_M):
+	if Input.is_key_label_pressed(KEY_M):
 		toggle_cheat_environment()
 
 var is_dark_env = true
@@ -396,9 +397,7 @@ func _spawn_elevator_at_position(elevator_pos: Vector3):
 	if elevator is MainElevatorController:
 		elevator.elevator_movement_bottom_position = elevator_movement_bottom_position
 		elevator.elevator_movement_top_position = elevator_movement_top_position + Vector3.UP * 2
-		# Инициализировать sync_position после установки позиции
-		elevator.sync_position = elevator_pos
-		print("_spawn_elevator_at_position: Set elevator positions - bottom: %s, top: %s, sync_position: %s" % [elevator_movement_bottom_position, elevator_movement_top_position, elevator_pos])
+		print("_spawn_elevator_at_position: Set elevator positions - bottom: %s, top: %s" % [elevator_movement_bottom_position, elevator_movement_top_position])
 	else:
 		push_warning("_spawn_elevator_at_position: Elevator is not MainElevatorController, cannot set movement positions")
 	
