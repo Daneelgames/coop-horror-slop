@@ -5,7 +5,7 @@
 [ext_resource type="Material" uid="uid://bjqqdorre4j0n" path="res://assets/meshes/metal_material.tres" id="3_mpmee"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_0xame"]
-size = Vector3(0.34960938, 0.36914063, 1.6451721)
+size = Vector3(0.34960938, 0.2623291, 2.0197296)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_0xame"]
 top_radius = 0.0
@@ -30,24 +30,18 @@ script = ExtResource("1_0xame")
 weapon_resource = ExtResource("2_0xame")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6302646)
+transform = Transform3D(1, 0, 0, 0, 0.9240868, -0.38218367, 0, 0.38218364, 0.92408675, 0, 0.013333377, -0.08142755)
 shape = SubResource("BoxShape3D_0xame")
 
 [node name="VisualParent" type="Node3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1.0000002, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
+transform = Transform3D(1.0000002, 0, 0, 0, 0.92408633, -0.3821835, 0, 0.38218346, 0.9240864, 0, 0.3331738, -0.8338529)
 top_level = true
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -3.7758113e-08, 0.86380494)
 material_override = ExtResource("3_mpmee")
 mesh = SubResource("CylinderMesh_0xame")
-
-[node name="AttackPointNode3D" type="Node3D" parent="."]
-transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, -0.024032835, 0.005398661, -2.7171476e-10)
-
-[node name="AttackPointNode3D2" type="Node3D" parent="."]
-transform = Transform3D(-4.371139e-08, 1, 0, 1, 4.37114e-08, 8.7422784e-08, 8.742278e-08, 3.8213718e-15, -1, 0.21114565, 0.0053986907, -2.7171218e-10)
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 unique_name_in_owner = true
