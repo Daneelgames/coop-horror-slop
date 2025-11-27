@@ -1674,6 +1674,7 @@ script = ExtResource("1_5bmql")
 attack_strings = Array[String](["attack"])
 visual_node_3d = NodePath("VisualParent")
 random_weapons = Array[ExtResource("2_fasbq")]([ExtResource("3_tca32")])
+debug_ai_combat = false
 navigation_agent_3d = NodePath("NavigationAgent3D")
 team = 1
 mesh_animation_player = NodePath("VisualParent/AnimationPlayer")
@@ -2348,7 +2349,7 @@ libraries = {
 }
 
 [node name="arm_monster3" type="Node3D" parent="VisualParent"]
-transform = Transform3D(0.9266988, -0.06910368, -0.3693954, -0.22559805, 0.6838359, -0.69388306, -0.30055562, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
+transform = Transform3D(0.92669874, -0.06910368, -0.3693954, -0.22559804, 0.6838359, -0.69388306, -0.3005556, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/arm_monster3"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
@@ -2776,7 +2777,7 @@ libraries = {
 }
 
 [node name="arm_monster6" type="Node3D" parent="VisualParent"]
-transform = Transform3D(0.9266988, -0.06910368, -0.3693954, -0.22559805, 0.6838359, -0.69388306, -0.30055562, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
+transform = Transform3D(0.92669874, -0.06910368, -0.3693954, -0.22559804, 0.6838359, -0.69388306, -0.3005556, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/arm_monster6"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
@@ -3068,3 +3069,10 @@ bus = &"SFX"
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 unique_name_in_owner = true
 path_postprocessing = 1
+
+[node name="InteractionRayCast3D" type="RayCast3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6643362, 0)
+enabled = false
+target_position = Vector3(0, 0, -1.5)
+collision_mask = 5
