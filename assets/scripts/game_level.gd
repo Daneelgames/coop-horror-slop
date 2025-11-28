@@ -538,6 +538,28 @@ func try_respawning_on_all_players_are_dead():
 	# Wait a frame to ensure cleanup is complete
 	await get_tree().process_frame
 
+	# Generate new dungeon seed for regeneration
+	if multiplayer.is_server():
+		# Generate new seed on server
+		var new_seed = int(Time.get_unix_time_from_system())
+		GameManager.dungeon_seed = new_seed
+		GameManager.dungeon_seed_received = true
+		print("GameLevel: Server generated new dungeon seed for regeneration: ", new_seed)
+		# Sync seed to all clients
+		GameManager._sync_dungeon_seed.rpc(new_seed)
+	elif multiplayer.has_multiplayer_peer():
+		# Client waits for new seed
+		GameManager.dungeon_seed_received = false
+		if not GameManager.dungeon_seed_received:
+			await GameManager.dungeon_seed_synced
+		print("GameLevel: Client received new dungeon seed for regeneration: ", GameManager.dungeon_seed)
+	else:
+		# Single player - generate new seed locally
+		var new_seed = int(Time.get_unix_time_from_system())
+		GameManager.dungeon_seed = new_seed
+		GameManager.dungeon_seed_received = true
+		print("GameLevel: Single player generated new dungeon seed for regeneration: ", new_seed)
+
 	# Regenerate the dungeon
 	print("GameLevel: Regenerating dungeon...")
 	is_game_level_ready = false
