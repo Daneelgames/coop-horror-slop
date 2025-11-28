@@ -38,7 +38,7 @@
 [ext_resource type="PackedScene" uid="uid://dm6w6626ynucp" path="res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_01.tscn" id="36_4r4au"]
 [ext_resource type="PackedScene" uid="uid://b7csk7ovfyhlg" path="res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_02.tscn" id="37_6j3gp"]
 [ext_resource type="PackedScene" uid="uid://dxukovqia0yj" path="res://assets/prefabs/environment/dungeon_props/light_rod_b_03.tscn" id="38_o5qb0"]
-[ext_resource type="PackedScene" uid="uid://bcc2ki5gwxykl" path="res://assets/prefabs/environment/dungeon_props/light_lantern_b_04.tscn" id="39_jq5iq"]
+[ext_resource type="PackedScene" uid="uid://bcc2ki5gwxykl" path="res://assets/prefabs/environment/dungeon_props/light_lantern_ceiling.tscn" id="39_jq5iq"]
 [ext_resource type="PackedScene" uid="uid://ci0nmmkjhddr6" path="res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_05.tscn" id="40_r26se"]
 [ext_resource type="PackedScene" uid="uid://c0e0pykw1bvnt" path="res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_06.tscn" id="41_mlwg1"]
 [ext_resource type="PackedScene" uid="uid://b3p7te5w10mh8" path="res://assets/prefabs/environment/dungeon_props/light_candle_holder_b_07.tscn" id="42_0i8p7"]

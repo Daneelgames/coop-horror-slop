@@ -14,6 +14,8 @@ const TILE_SIZE: Vector3i = Vector3i(4, 2, 4) # tile's origin is at its bottom c
 @export var item_spawns: Array[ResourceItemSpawn]
 @export var props_amount_to_spawn: int = 400 # Общее количество пропов для спавна
 @export var props_by_weight: Dictionary[StringName, float] # prop path, drop weight - единый словарь для всего данжа
+@export var ceiling_props_amount_to_spawn: int = 20 # Общее количество пропов для спавна
+@export var ceiling_props_by_weight: Dictionary[StringName, float] # prop path, drop weight - единый словарь для всего данжа
 @export var floors_heights: Array[int] = [2, 3, 4, 5, 6]
 @export var rooms_per_floor_min_max: Vector2i = Vector2i(3, 8) # Минимальное и максимальное количество комнат на этаж
 @export var apartment_side_size_min_max: Vector2i = Vector2i(2, 5)
@@ -2742,6 +2744,121 @@ func spawn_props():
 			await _await_frame()
 	
 	print("spawn_props: Total props spawned: ", props_to_spawn)
+
+	# Spawn ceiling props to random tiles with ceiling using ceiling_props_by_weight dictionary
+	# Check if we have ceiling props to spawn
+	if ceiling_props_by_weight.is_empty() or ceiling_props_amount_to_spawn <= 0:
+		return
+
+	# Get all tiles with ceilings but no floors and no walls (excluding tiles with stairs)
+	var tiles_with_ceilings: Array[DungeonTile] = []
+	for tile in all_spawned_tiles.keys():
+		if not is_instance_valid(tile) or not is_instance_valid(tile.ceiling):
+			continue
+		# Skip tiles that have floors
+		if is_instance_valid(tile.floor):
+			continue
+		# Skip tiles that have any walls
+		if (is_instance_valid(tile.wall_f) and not tile.wall_f.is_queued_for_deletion()) or \
+		   (is_instance_valid(tile.wall_r) and not tile.wall_r.is_queued_for_deletion()) or \
+		   (is_instance_valid(tile.wall_b) and not tile.wall_b.is_queued_for_deletion()) or \
+		   (is_instance_valid(tile.wall_l) and not tile.wall_l.is_queued_for_deletion()):
+			continue
+		# Skip tiles that have stairs
+		if spawned_stairs_coords.has(tile.coord):
+			continue
+		tiles_with_ceilings.append(tile)
+
+	# Sort tiles to ensure deterministic order before random selection
+	tiles_with_ceilings.sort_custom(_sort_tiles_by_coord)
+
+	if tiles_with_ceilings.is_empty():
+		print("spawn_props: No tiles with ceilings found for ceiling props")
+		return
+
+	print("spawn_props: Found ", tiles_with_ceilings.size(), " tiles with ceilings, spawning ", ceiling_props_amount_to_spawn, " ceiling props")
+
+	# Spawn ceiling props using ceiling_props_amount_to_spawn with farthest point sampling
+	var ceiling_props_to_spawn: int = min(ceiling_props_amount_to_spawn, tiles_with_ceilings.size())
+
+	# Track spawned ceiling prop positions for Farthest Point Sampling
+	var spawned_ceiling_positions: Array[Vector3] = []
+	var ceiling_props_remaining: int = ceiling_props_to_spawn
+
+	# Create a copy of available tiles that we can modify (remove used tiles)
+	var available_ceiling_tiles: Array[DungeonTile] = tiles_with_ceilings.duplicate()
+
+	while ceiling_props_remaining > 0 and not available_ceiling_tiles.is_empty():
+		var farthest_tile: DungeonTile = null
+		var max_min_distance: float = 0.0
+
+		# Choose ceiling prop using weighted random selection first
+		var ceiling_prop_path: StringName = _choose_weighted_prop(ceiling_props_by_weight)
+		if ceiling_prop_path.is_empty():
+			ceiling_props_remaining -= 1
+			continue
+
+		# Find the tile with the maximum minimum distance to all spawned ceiling positions
+		for tile in available_ceiling_tiles:
+			if not is_instance_valid(tile):
+				continue
+
+			var tile_center = tile.position + Vector3(0, TILE_SIZE.y - 0.1, 0) # Ceiling level position
+			var min_distance: float = INF
+
+			# Calculate minimum distance to any spawned ceiling prop
+			if spawned_ceiling_positions.is_empty():
+				# First prop - just pick this tile
+				farthest_tile = tile
+				break
+			else:
+				for spawned_pos in spawned_ceiling_positions:
+					var distance = tile_center.distance_to(spawned_pos)
+					if distance < min_distance:
+						min_distance = distance
+
+			# Update farthest tile if this is farther from all spawned ceiling props
+			if min_distance > max_min_distance:
+				max_min_distance = min_distance
+				farthest_tile = tile
+
+		if farthest_tile == null:
+			# No suitable tile found - skip this prop
+			ceiling_props_remaining -= 1
+			continue
+
+		# Remove the selected tile from available tiles to avoid reusing it
+		available_ceiling_tiles.erase(farthest_tile)
+
+		# Randomize prop position within tile bounds on ceiling level
+		# TILE_SIZE is Vector3i(4, 2, 4) and tile's origin is at its bottom center
+		# So we randomize X and Z in range [-TILE_SIZE.x/2, TILE_SIZE.x/2] = [-2, 2]
+		# And Y is at ceiling level (TILE_SIZE.y - small offset to hang from ceiling)
+		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.5, TILE_SIZE.x / 2.5)
+		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.5, TILE_SIZE.z / 2.5)
+		var ceiling_prop_position = farthest_tile.position + Vector3(random_offset_x, TILE_SIZE.y - 0.1, random_offset_z)
+
+		# Spawn ceiling prop through MultiplayerSpawner for synchronization
+		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+			var spawn_data = {"type": "prop", "path": str(ceiling_prop_path)}
+			var ceiling_prop = GameManager._game_spawner.spawn(spawn_data)
+			if ceiling_prop != null:
+				# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+				ceiling_prop.position = ceiling_prop_position
+				ceiling_prop.rotation_degrees.y = randf() * 360
+				ceiling_prop.owner = _get_edited_scene_root()
+				# Set multiplayer authority to server
+				ceiling_prop.set_multiplayer_authority(1)
+
+				# Add position to spawned list for distance calculations
+				spawned_ceiling_positions.append(ceiling_prop_position)
+				ceiling_props_remaining -= 1
+
+		# Yield every 10 ceiling props to avoid frame drops
+		if ceiling_props_to_spawn - ceiling_props_remaining >= 10:
+			await _await_frame()
+
+	print("spawn_props: Total ceiling props spawned: ", ceiling_props_to_spawn)
 
 func _choose_weighted_prop(props_dict: Dictionary[StringName, float]) -> StringName:
 	# Weighted random selection from props dictionary

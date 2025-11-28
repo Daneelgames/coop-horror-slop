@@ -8,7 +8,7 @@
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fyso2"]
 radius = 0.13378906
-height = 1.6281738
+height = 1.357544
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_j57su"]
 _surfaces = [{
@@ -96,17 +96,18 @@ collision_mask = 0
 script = ExtResource("1_8tswf")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7696533, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6343384, 0)
 shape = SubResource("CapsuleShape3D_fyso2")
 
 [node name="LightCandleHolderB01" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.79717803, 0, 0, 0, 1, 0, 0, 0)
 cast_shadow = 0
 mesh = SubResource("ArrayMesh_s01r3")
 skeleton = NodePath("")
 
 [node name="FireGPUParticles3D" type="GPUParticles3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 1.6294442, 0)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 1.2408874, 1.6984359e-08)
 material_override = SubResource("StandardMaterial3D_tjmfj")
 amount = 16
 lifetime = 0.5

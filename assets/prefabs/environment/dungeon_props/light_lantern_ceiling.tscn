@@ -1,0 +1,172 @@
+[gd_scene load_steps=12 format=3 uid="uid://bcc2ki5gwxykl"]
+
+[ext_resource type="Texture2D" uid="uid://dixv7of6phw28" path="res://addons/kenney_particle_pack/fire_02.png" id="2_f2nal"]
+[ext_resource type="Material" uid="uid://bjqqdorre4j0n" path="res://assets/meshes/metal_material.tres" id="3_7gexm"]
+[ext_resource type="AudioStream" uid="uid://cdqlejb6d7sfg" path="res://assets/audio/fire.wav" id="3_y6vcd"]
+
+[sub_resource type="Animation" id="Animation_7gexm"]
+resource_name = "3"
+length = 5.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VisualParent:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 2.5000002),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0.08726646, 0, 0), Vector3(-0.08726646, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_f2nal"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VisualParent:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_y6vcd"]
+_data = {
+&"3": SubResource("Animation_7gexm"),
+&"RESET": SubResource("Animation_f2nal")
+}
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_higrt"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.67058825, 0, 1)
+albedo_texture = ExtResource("2_f2nal")
+texture_filter = 2
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_1c5nu"]
+_data = [Vector2(0, 0.04147482), 0.0, 0.0, 0, 0, Vector2(0.06071428, 0.97432524), 0.0, 0.0, 0, 0, Vector2(1, 0.05431211), -2.1861095, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_2im4t"]
+curve = SubResource("Curve_1c5nu")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_kpk8h"]
+emission_shape_scale = Vector3(0.2, 0.2, 0.2)
+emission_shape = 3
+emission_box_extents = Vector3(1, 1, 1)
+angle_min = -720.0
+angle_max = 720.0
+gravity = Vector3(0, 2, 0)
+scale_min = 0.19999999
+scale_max = 0.5
+scale_curve = SubResource("CurveTexture_2im4t")
+
+[sub_resource type="QuadMesh" id="QuadMesh_bplce"]
+
+[node name="LightLanternCeiling" type="Node3D"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_y6vcd")
+}
+autoplay = "3"
+
+[node name="VisualParent" type="Node3D" parent="."]
+
+[node name="FireGPUParticles3D" type="GPUParticles3D" parent="VisualParent"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, -0.7098303, 1.0225294e-07)
+material_override = SubResource("StandardMaterial3D_higrt")
+amount = 16
+lifetime = 0.5
+process_material = SubResource("ParticleProcessMaterial_kpk8h")
+draw_pass_1 = SubResource("QuadMesh_bplce")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="VisualParent/FireGPUParticles3D"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23035324)
+light_color = Color(0.95686275, 0.58431375, 0.25490198, 1)
+light_size = 0.01
+shadow_enabled = true
+distance_fade_enabled = true
+distance_fade_begin = 20.0
+distance_fade_shadow = 30.0
+omni_attenuation = 0.1
+
+[node name="FireAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="VisualParent/FireGPUParticles3D"]
+unique_name_in_owner = true
+stream = ExtResource("3_y6vcd")
+unit_size = 1.0
+max_db = -5.0
+autoplay = true
+max_distance = 20.0
+bus = &"SFX"
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="VisualParent"]
+material_override = ExtResource("3_7gexm")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1.0000088, 1.8626451e-08, 0, -1.8626451e-08, 1.0000088, 0, -0.66166, 0.0031304117)
+size = Vector3(0.4248047, 0.65478516, 0.4091797)
+
+[node name="CSGBox3D13" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1.0000088, 1.8626451e-08, 0, -1.8626451e-08, 1.0000088, 0, -0.19830754, 0.003130403)
+size = Vector3(0.11035156, 0.38787842, 0.13964844)
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 0.866033, -0.5000044, 0, 0.5000044, 0.866033, -0.23982656, -0.66166, 0.0031304117)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 0.866033, 0.5000044, 0, -0.5000044, 0.866033, -0.23982656, -0.66166, 0.0031304117)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 0.866033, -0.5000044, 0, 0.5000044, 0.866033, 0.23526847, -0.66166, 0.0031304117)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 0.866033, 0.5000044, 0, -0.5000044, 0.866033, 0.23526847, -0.66166, 0.0031304117)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(-4.371139e-08, 0.5000044, 0.866033, 0, 0.866033, -0.5000044, -1, -2.1855888e-08, -3.7855507e-08, -0.0022790327, -0.66166, 0.24067792)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(-4.371139e-08, -0.5000044, 0.866033, 0, 0.866033, 0.5000044, -1, 2.1855888e-08, -3.7855507e-08, -0.0022790327, -0.66166, 0.24067792)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D11" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(-4.371139e-08, 0.5000044, 0.866033, 0, 0.866033, -0.5000044, -1, -2.1855888e-08, -3.7855507e-08, -0.0022790537, -0.66166, -0.23441711)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D12" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(-4.371139e-08, -0.5000044, 0.866033, 0, 0.866033, 0.5000044, -1, 2.1855888e-08, -3.7855507e-08, -0.0022790537, -0.66166, -0.23441711)
+size = Vector3(0.04638672, 0.6621094, 0.038085938)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1.0000117, 0, 0, 0, 1.0000117, 0, -0.6570188, 0.0036115944)
+operation = 2
+size = Vector3(0.47436523, 0.55493164, 0.32128906)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(-4.371139e-08, 0, 1.0000117, 0, 1.0000117, 0, -1, 0, -4.37119e-08, 0, -0.6570188, 0.0036115944)
+operation = 2
+size = Vector3(0.47436523, 0.55493164, 0.32128906)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="VisualParent/CSGCombiner3D"]
+transform = Transform3D(-4.371139e-08, 0, 1.0000117, 0, 1.0000117, 0, -1, 0, -4.37119e-08, 0, -0.7720119, 0.0036115944)
+operation = 2
+size = Vector3(0.34765625, 0.55493164, 0.32128906)

@@ -142,12 +142,15 @@ props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
 &"res://assets/prefabs/environment/dungeon_props/light_stand.tscn": 0.5
 })
+ceiling_props_by_weight = Dictionary[StringName, float]({
+&"res://assets/prefabs/environment/dungeon_props/light_lantern_ceiling.tscn": 1.0
+})
 floors_heights = Array[int]([3, 3, 3, 3])
 rooms_per_floor_min_max = Vector2i(5, 8)
 apartment_side_size_min_max = Vector2i(2, 3)
 min_stairs_per_floor = 2
 max_stairs_per_floor = 2
-dungeon_seed = 1763925925
+dungeon_seed = 1764350751
 mobs_ignore_each_other_collisions = null
 
 [node name="DungeonTiles" type="Node3D" parent="MultistoryBuildingDungeon"]
