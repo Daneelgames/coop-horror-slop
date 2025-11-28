@@ -58,12 +58,24 @@ func toggle_cheat_environment():
 	cheat_env_cooldown = false
 
 func set_light_environment():
-	world_environment.environment = load('res://game_light_environment.tres')
-	pass
-	
+	set_light_environment_rpc()
+	if multiplayer.has_multiplayer_peer():
+		set_light_environment_rpc.rpc()
+
 func set_dark_environment():
-	world_environment.environment = load('res://game_darkness_environment.tres')
-	pass
+	set_dark_environment_rpc()
+	if multiplayer.has_multiplayer_peer():
+		set_dark_environment_rpc.rpc()
+
+@rpc("authority", "call_local", "reliable")
+func set_light_environment_rpc():
+	if is_instance_valid(world_environment):
+		world_environment.environment = load('res://game_light_environment.tres')
+
+@rpc("authority", "call_local", "reliable")
+func set_dark_environment_rpc():
+	if is_instance_valid(world_environment):
+		world_environment.environment = load('res://game_darkness_environment.tres')
 
 func _find_elevator_location_multistory_building() -> Vector3i:
 	# Найти позицию для лифта в multistory building dungeon

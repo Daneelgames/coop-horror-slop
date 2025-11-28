@@ -66,16 +66,7 @@ func interaction_raycast_coroutine():
 			var collision_point = interaction_ray_cast_3d.get_collision_point()
 			if col is InteractiveDoor:
 				if col.state == InteractiveDoor.STATE.CLOSED:
-					print("[AI_DOOR] %s: Attempting to open door at %s (collision at %s)" % [name, col.global_position, collision_point])
 					col.rpc_request_toggle.rpc(global_position)
-				else:
-					print("[AI_DOOR] %s: Door is already open (state: %s)" % [name, col.state])
-			else:
-				print("[AI_DOOR] %s: Raycast hit non-door object: %s at %s" % [name, col, collision_point])
-		else:
-			# Only print occasionally to avoid spam
-			if randf() < 0.01:  # 1% chance per check
-				print("[AI_DOOR] %s: No collision detected (facing: %.2f)" % [name, rotation.y])
 	await get_tree().create_timer(1).timeout
 	interaction_raycast_coroutine()
 	pass

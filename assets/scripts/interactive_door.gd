@@ -27,12 +27,20 @@ func _process(delta: float) -> void:
 		
 		# Auto-close door when timer reaches zero
 		if current_auto_close_timer <= 0.0:
+			if Engine.is_editor_hint() == false and multiplayer.has_multiplayer_peer():
+				print("InteractiveDoor: [SERVER] Auto-closing door (timer expired)")
 			set_door_state(STATE.CLOSED)
 			current_auto_close_timer = 0.0
 
 # Reset auto-close timer to random value between min and max
 func _reset_auto_close_timer():
+	var old_timer = current_auto_close_timer
 	current_auto_close_timer = randf_range(auto_close_timer_min_max.x, auto_close_timer_min_max.y)
+
+	# Debug log for timer reset
+	if Engine.is_editor_hint() == false and multiplayer.has_multiplayer_peer():
+		var peer_type = "SERVER" if multiplayer.is_server() else "CLIENT"
+		print("InteractiveDoor: [%s] Timer reset - %.2f -> %.2f" % [peer_type, old_timer, current_auto_close_timer])
 
 # Determine which side of the door the player is on
 func get_player_side(player_position: Vector3) -> STATE:
@@ -75,12 +83,12 @@ func set_door_state(new_state: STATE):
 	if state == new_state:
 		return
 	state = new_state
-	
+
 	# Play animation locally on server
 	_play_door_animation(state)
 	# Sync to all clients via RPC (only server calls this)
 	if multiplayer.is_server():
-		rpc_set_door_state.rpc(new_state)
+		rpc_set_door_state.rpc(new_state, current_auto_close_timer)
 
 # Internal function to play door animation
 func _play_door_animation(door_state: STATE):
@@ -98,12 +106,23 @@ func _play_door_animation(door_state: STATE):
 
 # RPC to sync door state to all clients
 @rpc("any_peer", "call_local", "reliable")
-func rpc_set_door_state(new_state: STATE):
-	# Update state on all clients
+func rpc_set_door_state(new_state: STATE, auto_close_timer: float = 0.0):
+	# Update state and timer on all clients
+	var old_state = state
+	var old_timer = current_auto_close_timer
 	state = new_state
-	
+	current_auto_close_timer = auto_close_timer
+
 	# Play animation on all clients
 	_play_door_animation(state)
+
+	# Debug log for synchronization
+	if Engine.is_editor_hint() == false and multiplayer.has_multiplayer_peer():
+		var peer_type = "SERVER" if multiplayer.is_server() else "CLIENT"
+		if old_state != new_state or abs(old_timer - auto_close_timer) > 0.01:
+			print("InteractiveDoor: [%s] State sync - %s -> %s, timer: %.2f -> %.2f" % [
+				peer_type, old_state, new_state, old_timer, auto_close_timer
+			])
 
 # RPC function called by players to request door toggle
 @rpc("any_peer", "call_local", "reliable")

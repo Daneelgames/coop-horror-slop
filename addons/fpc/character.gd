@@ -302,7 +302,7 @@ func _process(_delta):
 	_debug_clear_block_reason("_process")
 	if pausing_enabled:
 		handle_pausing()
-	if is_moving_by_elevator and GameManager._game_level.level_generator.spawned_elevator and GameManager._game_level.level_generator.spawned_elevator.is_moving == false:
+	if is_moving_by_elevator and GameManager._game_level.level_generator.spawned_elevator and GameManager._game_level.level_generator.spawned_elevator.is_elevator_moving == false and GameManager._game_level.level_generator.spawned_elevator.is_elevator_moving_down == false:
 		is_moving_by_elevator = false
 	update_debug_menu_per_frame()
 

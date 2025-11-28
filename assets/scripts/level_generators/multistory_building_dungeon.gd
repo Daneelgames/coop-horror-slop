@@ -2270,18 +2270,28 @@ func spawn_pickups():
 		var tile_distance = _get_tile_distance_from_spawn_point(tile, spawn_point)
 		if tile_distance < selected_item_spawn.spawn_distance_from_elevator_min or tile_distance > selected_item_spawn.spawn_distance_from_elevator_max:
 			continue # Skip this tile - doesn't meet distance requirements
-		
+
 		var weapon_resource = selected_item_spawn.item_resource
-		
+
 		# Check if weapon_resource has pickup_prefab_path
 		if weapon_resource.pickup_prefab_path == null or weapon_resource.pickup_prefab_path == "":
 			push_warning("spawn_pickups: Weapon resource '%s' has no pickup_prefab_path" % weapon_resource.weapon_name)
 			continue
-		
+
 		# Randomize pickup position within tile bounds
 		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.5, TILE_SIZE.x / 2.5)
 		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.5, TILE_SIZE.z / 2.5)
 		var pickup_position = tile.position + Vector3(random_offset_x, 0.5, random_offset_z)
+
+		# Debug log for dead-end pickup spawn
+		print("spawn_pickups: [DEAD-END] Spawning item '%s' at position: %s, tile_coord: %s, distance_from_elevator: %.2f units (range: [%d, %d])" % [
+			weapon_resource.weapon_name,
+			pickup_position,
+			tile.coord,
+			tile_distance,
+			selected_item_spawn.spawn_distance_from_elevator_min,
+			selected_item_spawn.spawn_distance_from_elevator_max
+		])
 		
 		# Spawn pickup through MultiplayerSpawner for synchronization
 		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
@@ -2313,27 +2323,28 @@ func spawn_pickups():
 	while items_remaining > 0:
 		var farthest_tile: DungeonTile = null
 		var max_min_distance: float = 0.0
-		
+		var fallback_tile: DungeonTile = null # Track if we used fallback
+
 		# Choose random weighted item first to check distance requirements
 		var selected_item_spawn: ResourceItemSpawn = _choose_weighted_item_spawn(item_spawns, total_weight)
 		if selected_item_spawn == null or selected_item_spawn.item_resource == null:
 			items_remaining -= 1
 			continue
-		
+
 		# Find the tile with the maximum minimum distance to all spawned positions
 		# that also meets distance requirements from spawn point
 		for tile in available_tiles:
 			if not is_instance_valid(tile):
 				continue
-			
+
 			# Check distance from spawn point (elevator/start area)
 			var tile_distance = _get_tile_distance_from_spawn_point(tile, spawn_point)
 			if tile_distance < selected_item_spawn.spawn_distance_from_elevator_min or tile_distance > selected_item_spawn.spawn_distance_from_elevator_max:
 				continue # Skip this tile - doesn't meet distance requirements
-			
+
 			var tile_center = tile.position
 			var min_distance: float = INF
-			
+
 			# Calculate minimum distance to any spawned pickup
 			if spawned_positions.is_empty():
 				# First item - just pick this tile if it meets requirements
@@ -2344,16 +2355,37 @@ func spawn_pickups():
 					var distance = tile_center.distance_to(spawned_pos)
 					if distance < min_distance:
 						min_distance = distance
-			
+
 			# Update farthest tile if this is farther from all spawned pickups
 			if min_distance > max_min_distance:
 				max_min_distance = min_distance
 				farthest_tile = tile
-		
+
 		if farthest_tile == null:
-			# No suitable tile found for this item - skip it
-			items_remaining -= 1
-			continue
+			# No suitable tile found for this item within distance range - try to find any tile as fallback
+			push_warning("spawn_pickups: No tiles found in distance range [%d, %d] for item '%s'. Trying to spawn closer to elevator." % [
+				selected_item_spawn.spawn_distance_from_elevator_min,
+				selected_item_spawn.spawn_distance_from_elevator_max,
+				selected_item_spawn.item_resource.weapon_name if selected_item_spawn.item_resource else "unknown"
+			])
+
+			# Fallback: find any available tile that's not too close to elevator (at least 5 units)
+			var min_fallback_distance = 5.0 # Minimum distance from elevator for fallback
+			for tile in available_tiles:
+				if not is_instance_valid(tile):
+					continue
+				var tile_distance = _get_tile_distance_from_spawn_point(tile, spawn_point)
+				if tile_distance >= min_fallback_distance:
+					fallback_tile = tile
+					farthest_tile = tile
+					break
+
+			if fallback_tile == null:
+				push_warning("spawn_pickups: No suitable fallback tiles found for item '%s'. Skipping this item." % (
+					selected_item_spawn.item_resource.weapon_name if selected_item_spawn.item_resource else "unknown"
+				))
+				items_remaining -= 1
+				continue
 		
 		var weapon_resource = selected_item_spawn.item_resource
 		
@@ -2367,6 +2399,21 @@ func spawn_pickups():
 		var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.0, TILE_SIZE.x / 2.0)
 		var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.0, TILE_SIZE.z / 2.0)
 		var pickup_position = farthest_tile.position + Vector3(random_offset_x, 0.5, random_offset_z)
+
+		# Debug log for farthest point pickup spawn
+		var spawn_distance = _get_tile_distance_from_spawn_point(farthest_tile, spawn_point)
+		var spawn_type = "FARTHER"
+		if farthest_tile == fallback_tile:
+			spawn_type = "FALLBACK"
+		print("spawn_pickups: [%s] Spawning item '%s' at position: %s, tile_coord: %s, distance_from_elevator: %.2f units (range: [%d, %d])" % [
+			spawn_type,
+			selected_item_spawn.item_resource.weapon_name,
+			pickup_position,
+			farthest_tile.coord,
+			spawn_distance,
+			selected_item_spawn.spawn_distance_from_elevator_min,
+			selected_item_spawn.spawn_distance_from_elevator_max
+		])
 		
 		# Spawn pickup through MultiplayerSpawner for synchronization
 		if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
@@ -2394,7 +2441,11 @@ func spawn_pickups():
 		if total_pickups_spawned % 10 == 0:
 			await _await_frame()
 	
-	print("spawn_pickups: Total pickups spawned: ", total_pickups_spawned)
+	print("spawn_pickups: === PICKUP SPAWN SUMMARY ===")
+	print("spawn_pickups: Total pickups spawned: %d (requested: %d)" % [total_pickups_spawned, items_to_spawn_amount])
+	print("spawn_pickups: Spawn point (elevator): %s" % spawn_point)
+	print("spawn_pickups: Available tiles: %d, Dead-end tiles: %d" % [available_tiles.size(), dead_end_tiles.size()])
+	print("spawn_pickups: ===================================")
 
 func _choose_weighted_item_spawn(items: Array[ResourceItemSpawn], total_weight: float) -> ResourceItemSpawn:
 	# Weighted random selection for item spawns
@@ -2519,15 +2570,15 @@ func spawn_mobs():
 
 		print("spawn_mobs: After filtering, found ", available_tiles.size(), " tiles for mob type: ", mob_spawn.mob_prefab_path)
 
-		var final_tiles: Array[DungeonTile]
-		var spawn_anyway = false
-
 		if available_tiles.is_empty():
-			print("spawn_mobs: No tiles found in distance range, spawning anyway using all available tiles")
-			final_tiles = base_available_tiles
-			spawn_anyway = true
-		else:
-			final_tiles = available_tiles
+			push_warning("spawn_mobs: No tiles found in distance range [%f, %f] for mob type: %s. Skipping spawn of this mob type." % [
+				mob_spawn.spawn_distance_from_elevator_min,
+				mob_spawn.spawn_distance_from_elevator_max,
+				mob_spawn.mob_prefab_path
+			])
+			continue
+
+		var final_tiles: Array[DungeonTile] = available_tiles
 
 		if final_tiles.is_empty():
 			push_warning("spawn_mobs: No tiles found for spawning mobs of type: %s" % mob_spawn.mob_prefab_path)
@@ -2537,8 +2588,6 @@ func spawn_mobs():
 		var actual_mobs_to_spawn = min(mob_spawn.mobs_to_spawn_amount, final_tiles.size())
 		if actual_mobs_to_spawn < mob_spawn.mobs_to_spawn_amount:
 			print("spawn_mobs: Warning - only ", final_tiles.size(), " tiles available, but requested ", mob_spawn.mobs_to_spawn_amount, " mobs. Spawning ", actual_mobs_to_spawn, " mobs instead.")
-		elif spawn_anyway:
-			print("spawn_mobs: Spawning ", actual_mobs_to_spawn, " mobs despite distance range (no tiles in range)")
 
 		print("spawn_mobs: Spawning ", actual_mobs_to_spawn, " mobs of type ", mob_spawn.mob_prefab_path)
 		for i in range(actual_mobs_to_spawn):
@@ -2560,9 +2609,16 @@ func spawn_mobs():
 				i
 			]
 
-			# Spawn mob through MultiplayerSpawner for proper synchronization
-			# Only spawn on server - MultiplayerSpawner will replicate to all clients
-			print("spawn_mobs: Spawning mob at position: ", mob_position, ", name: ", mob_name, ", prefab: ", mob_spawn.mob_prefab_path)
+			# Calculate and log spawn distance for debugging
+			var spawn_distance = _get_tile_distance_from_spawn_point(random_tile, spawn_point)
+			print("spawn_mobs: Spawning mob '%s' at position: %s, tile_coord: %s, distance_from_elevator: %.2f units (range: [%.1f, %.1f])" % [
+				mob_name,
+				mob_position,
+				random_tile.coord,
+				spawn_distance,
+				mob_spawn.spawn_distance_from_elevator_min,
+				mob_spawn.spawn_distance_from_elevator_max
+			])
 			if multiplayer.has_multiplayer_peer() and multiplayer.is_server():
 				if is_instance_valid(GameManager):
 					GameManager.spawn_mob(mob_name, mob_position, mob_position, mob_spawn.mob_prefab_path)
@@ -2599,7 +2655,11 @@ func spawn_mobs():
 					continue
 				PhysicsServer3D.body_add_collision_exception(mob_b.get_rid(), mob_b.get_rid())
 			
-	print("spawn_mobs: Total mobs spawned: ", total_mobs_spawned)
+	print("spawn_mobs: === MOB SPAWN SUMMARY ===")
+	print("spawn_mobs: Total mobs spawned: %d" % total_mobs_spawned)
+	print("spawn_mobs: Spawn point (elevator): %s" % spawn_point)
+	print("spawn_mobs: Available tiles for spawning: %d" % base_available_tiles.size())
+	print("spawn_mobs: ====================================")
 @export var mobs_ignore_each_other_collisions = false
 func _get_tile_distance_from_spawn_point(tile: DungeonTile, spawn_point: Vector3) -> float:
 	# Calculate horizontal distance (ignoring Y) from tile to spawn point in world units

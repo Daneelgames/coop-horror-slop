@@ -3,6 +3,7 @@ class_name LightStandProp
 @onready var fire_gpu_particles_3d: GPUParticles3D = %FireGPUParticles3D
 @onready var omni_light_3d: OmniLight3D = %OmniLight3D
 @onready var fire_audio_stream_player_3d: AudioStreamPlayer3D = %FireAudioStreamPlayer3D
+@onready var floor_ray_cast_3d: RayCast3D = %FloorRayCast3D
 
 # Synchronized properties for multiplayer
 @export var lights_active: bool = false:
@@ -21,7 +22,11 @@ func _ready() -> void:
 		# This prevents "Failed to get path from RPC" errors when clients receive RPC
 		# before the prop node is fully added to the scene tree
 		call_deferred("_initialize_lights")
-
+	await get_tree().process_frame
+	floor_ray_cast_3d.force_raycast_update()
+	if floor_ray_cast_3d.is_colliding():
+		global_position = floor_ray_cast_3d.get_collision_point()
+		
 func _initialize_lights() -> void:
 	if multiplayer.is_server():
 		lights_active = randf() < 0.2
