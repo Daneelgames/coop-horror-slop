@@ -1746,6 +1746,9 @@ func death():
 		#rpc_full_heal_and_resurrect.rpc()
 		#enter_normal_state()
 
+func resurrect():
+	rpc_full_heal_and_resurrect.rpc()
+	enter_normal_state()
 
 func cheat_codes():
 	#if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):

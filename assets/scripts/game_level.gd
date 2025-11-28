@@ -36,7 +36,7 @@ func _ready() -> void:
 	# На сервере обработать спавн лифта и телепортацию игроков
 	if not multiplayer.has_multiplayer_peer() or multiplayer.is_server():
 		await _handle_elevator_spawn_and_player_teleport()
-
+	GameManager.all_players_are_dead.connect(try_respawning_on_all_players_are_dead)
 
 func _process(_delta: float) -> void:
 	# if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_M):
@@ -58,24 +58,12 @@ func toggle_cheat_environment():
 	cheat_env_cooldown = false
 
 func set_light_environment():
-	set_light_environment_rpc()
-	if multiplayer.has_multiplayer_peer():
-		set_light_environment_rpc.rpc()
-
+	world_environment.environment = load('res://game_light_environment.tres')
+	pass
+	
 func set_dark_environment():
-	set_dark_environment_rpc()
-	if multiplayer.has_multiplayer_peer():
-		set_dark_environment_rpc.rpc()
-
-@rpc("authority", "call_local", "reliable")
-func set_light_environment_rpc():
-	if is_instance_valid(world_environment):
-		world_environment.environment = load('res://game_light_environment.tres')
-
-@rpc("authority", "call_local", "reliable")
-func set_dark_environment_rpc():
-	if is_instance_valid(world_environment):
-		world_environment.environment = load('res://game_darkness_environment.tres')
+	world_environment.environment = load('res://game_darkness_environment.tres')
+	pass
 
 func _find_elevator_location_multistory_building() -> Vector3i:
 	# Найти позицию для лифта в multistory building dungeon
@@ -510,3 +498,68 @@ func _spawn_elevator_shaft(elevator_coord: Vector3i, shaft_height: int):
 		tiles_created += 1
 	
 	print("_spawn_elevator_shaft: Created %d shaft tiles above elevator at %s" % [tiles_created, elevator_coord])
+
+var is_respawning_players = false
+func try_respawning_on_all_players_are_dead():
+	if is_respawning_players:
+		return
+	is_respawning_players = true
+	# run dungeon generation again
+	#all mobs and pickups should be cleared
+	print("GameLevel: Starting dungeon regeneration after all players died")
+
+	# Clear all mobs via mob spawner
+	if is_instance_valid(GameManager._mob_spawner):
+		print("GameLevel: Clearing all mobs...")
+		for mob in ai_characters:
+			if is_instance_valid(mob):
+				mob.queue_free()
+	
+	ai_characters = []
+
+	# Clear all pickups/props via game spawner
+	if is_instance_valid(GameManager._game_spawner):
+		print("GameLevel: Clearing all pickups and props...")
+		var items_to_remove = []
+		for child in GameManager._game_spawner.get_children():
+			if child != level_generator and child.name != "GameLevel":  # Don't remove level generator or game level
+				items_to_remove.append(child)
+		for item in items_to_remove:
+			if is_instance_valid(item):
+				item.queue_free()
+		print("GameLevel: Cleared %d pickups/props" % items_to_remove.size())
+
+	# Clear the level generator (tiles, stairs, doors, etc.)
+	if is_instance_valid(level_generator):
+		print("GameLevel: Clearing level generator...")
+		level_generator.clear()
+		print("GameLevel: Level generator cleared")
+
+	# Wait a frame to ensure cleanup is complete
+	await get_tree().process_frame
+
+	# Regenerate the dungeon
+	print("GameLevel: Regenerating dungeon...")
+	is_game_level_ready = false
+	level_generator.generate_dungeon()
+	await level_generator.level_generated
+
+	# Rebake navigation mesh
+	print("GameLevel: Rebaking navigation mesh...")
+	bake_navigation_mesh()
+	await bake_finished
+	is_game_level_ready = true
+
+	# Respawn elevator and teleport players
+	if not multiplayer.has_multiplayer_peer() or multiplayer.is_server():
+		print("GameLevel: Respawning elevator and teleporting players...")
+		await _handle_elevator_spawn_and_player_teleport()
+	for player : PlayerCharacter in GameManager._player_nodes.values():
+		player.resurrect()
+	is_respawning_players = false
+	print("GameLevel: Dungeon regeneration complete!")
+
+var ai_characters: Array[AiCharacter] = []
+
+func register_ai_character(mob : AiCharacter):
+	ai_characters.append(mob)

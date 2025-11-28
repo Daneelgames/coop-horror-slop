@@ -28,9 +28,23 @@ var ai_hearing_manager : AiHearingManager
 var dungeon_seed: int = 0
 var dungeon_seed_received: bool = false
 signal dungeon_seed_synced(seed_value: int)
+signal all_players_are_dead
 
 func _ready() -> void:
 	_check_launch_args()
+	check_all_players_dead_coroutine()
+func check_all_players_dead_coroutine():
+	var all_dead = _player_nodes.values().size() > 0
+	for player : PlayerCharacter in _player_nodes.values():
+		if player.is_dead() == false:
+			all_dead = false
+			break
+	
+	if all_dead:
+		all_players_are_dead.emit()
+			
+	await get_tree().create_timer(1).timeout
+	check_all_players_dead_coroutine()
 
 func create_main_menu() -> CanvasLayer:
 	if is_instance_valid(main_menu):

@@ -32,6 +32,7 @@ func _enter_tree():
 	# Set multiplayer authority to server (peer ID 1) for AI characters
 	if multiplayer.has_multiplayer_peer():
 		set_multiplayer_authority(1, true)
+
 func _ready():
 	# Wait a frame to ensure node is fully ready and synced across all clients
 	await get_tree().process_frame
@@ -52,6 +53,7 @@ func _ready():
 	super._ready()
 	combat_strafe_distance_max = randf_range(2.0,3.0)
 	interaction_raycast_coroutine()
+	GameManager._game_level.register_ai_character(self)
 	
 func interaction_raycast_coroutine():
 	if interaction_ray_cast_3d == null:
@@ -368,8 +370,8 @@ func _handle_movement(delta: float):
 		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 
 		# Debug: print movement info occasionally
-		if randf() < 0.01:  # 1% chance
-			print("[AI_MOVEMENT] %s: direction=%s, target_angle=%.2f, rotation.y=%.2f" % [name, direction, target_angle, rotation.y])
+		#if randf() < 0.01:  # 1% chance
+			#print("[AI_MOVEMENT] %s: direction=%s, target_angle=%.2f, rotation.y=%.2f" % [name, direction, target_angle, rotation.y])
 
 	# Calculate input_dir relative to character rotation for proper animation
 	# Convert world direction to local direction (always, for both patrol and combat)
