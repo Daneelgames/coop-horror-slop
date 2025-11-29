@@ -1,17 +1,12 @@
-[gd_resource type="Environment" load_steps=3 format=3 uid="uid://1xm8rh8nqryy"]
+[gd_resource type="Environment" load_steps=2 format=3 uid="uid://1xm8rh8nqryy"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_8kkgg"]
-sky_top_color = Color(0.4800331, 0.43395272, 0.4580469, 1)
-sky_horizon_color = Color(0.66414195, 0.6531225, 0.6363059, 1)
-
-[sub_resource type="Sky" id="Sky_vcb5n"]
-sky_material = SubResource("ProceduralSkyMaterial_8kkgg")
+[ext_resource type="Sky" uid="uid://djx338cmyvob8" path="res://addons/flowing-sky/templates/sky.tres" id="1_37g88"]
 
 [resource]
-background_mode = 1
-sky = SubResource("Sky_vcb5n")
+background_mode = 2
+sky = ExtResource("1_37g88")
 ambient_light_source = 2
-ambient_light_color = Color(0.86688244, 0.70027846, 0.63701445, 1)
+ambient_light_color = Color(0.30637616, 0.19068566, 0.14292791, 1)
 tonemap_mode = 2
 tonemap_exposure = 2.0
 tonemap_white = 2.0
@@ -21,13 +16,20 @@ glow_intensity = 1.0
 glow_mix = 0.2
 glow_bloom = 0.5
 glow_blend_mode = 4
+fog_enabled = true
 fog_light_color = Color(0, 0, 0, 1)
-fog_density = 0.02
+fog_light_energy = 16.0
+fog_sun_scatter = 1.0
+fog_density = 0.1
+fog_aerial_perspective = 0.247
+fog_sky_affect = 0.452
+fog_height = 42.08
+fog_height_density = 1.0
 volumetric_fog_enabled = true
 volumetric_fog_density = 0.0975
-volumetric_fog_albedo = Color(0.7495621, 0.5105534, 0.26717338, 1)
-volumetric_fog_emission = Color(0.7750425, 0.6951267, 0.6631093, 1)
+volumetric_fog_albedo = Color(0.023564184, 0.11391363, 0.23015797, 1)
 volumetric_fog_emission_energy = 0.1
 volumetric_fog_gi_inject = 0.0
 volumetric_fog_anisotropy = 0.25
+volumetric_fog_sky_affect = 0.34
 adjustment_enabled = true

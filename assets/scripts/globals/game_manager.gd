@@ -24,6 +24,9 @@ var particles_manager : ParticlesManager
 var ai_visibility_manager : AiVisibilityManager
 var ai_hearing_manager : AiHearingManager
 
+var party_money = 0
+signal party_money_changed
+
 # Dungeon seed synchronization
 var dungeon_seed: int = 0
 var dungeon_seed_received: bool = false
@@ -811,3 +814,8 @@ func _sync_dungeon_seed(seed_value: int) -> void:
 	dungeon_seed_received = true
 	print("GameManager: Synced dungeon seed: ", dungeon_seed)
 	dungeon_seed_synced.emit(dungeon_seed)
+
+@rpc("authority", "call_local", "reliable")
+func rpc_add_money_to_party(money: int) -> void:
+	party_money += money
+	party_money_changed.emit()

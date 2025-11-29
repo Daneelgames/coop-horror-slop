@@ -62,7 +62,11 @@ window/stretch/mode="viewport"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_state_charts/plugin.cfg", "res://addons/linear_stairs/plugin.cfg", "res://addons/simplegrasstextured/plugin.cfg")
+enabled=PackedStringArray("res://addons/flowing-sky/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/linear_stairs/plugin.cfg", "res://addons/simplegrasstextured/plugin.cfg")
+
+[gui]
+
+theme/custom_font="uid://dbbujn45ddyb7"
 
 [input]
 

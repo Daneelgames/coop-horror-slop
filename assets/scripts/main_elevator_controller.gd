@@ -36,7 +36,33 @@ func _ready() -> void:
 	sync_position = global_position
 	print("[ELEVATOR] _ready: Initialized position to %s, sync_position=%s, authority=%s, is_server=%s" % [
 		global_position, sync_position, get_multiplayer_authority(), multiplayer.is_server()])
+@export var moving_audio : AudioStreamPlayer3D
+@export var gpu_moving_down : Array[GPUParticles3D]
+@export var gpu_moving_up : Array[GPUParticles3D]
 
+func _process(delta: float) -> void:
+	if is_elevator_moving_down:
+		if moving_audio.playing == false:
+			moving_audio.play()
+			for gpu in gpu_moving_up:
+				gpu.emitting = false
+			for gpu in gpu_moving_down:
+				gpu.emitting = true
+	elif is_elevator_moving:
+		if moving_audio.playing == false:
+			moving_audio.play()
+			for gpu in gpu_moving_up:
+				gpu.emitting = true
+			for gpu in gpu_moving_down:
+				gpu.emitting = false
+	else:
+		if moving_audio.playing:
+			moving_audio.stop()
+			for gpu in gpu_moving_up:
+				gpu.emitting = false
+			for gpu in gpu_moving_down:
+				gpu.emitting = false
+		
 func _physics_process(delta: float) -> void:
 	if is_elevator_moving:
 		# Все клиенты двигают лифт локально
@@ -74,7 +100,7 @@ func _physics_process(delta: float) -> void:
 			# Двигать тела внутри лифта
 			_move_bodies_inside(movement_distance)
 
-func on_elevator_button_interacted():
+func on_elevator_button_interacted(player_id):
 	# Только сервер обрабатывает нажатие кнопки и синхронизирует состояние
 	if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
 		return

@@ -1,4 +1,4 @@
-[gd_scene load_steps=53 format=4 uid="uid://d1fhekbr7wjf3"]
+[gd_scene load_steps=60 format=4 uid="uid://d1fhekbr7wjf3"]
 
 [ext_resource type="Texture2D" uid="uid://x5ctr86ri1dx" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_AlbedoTransparency.png" id="1_e4udu"]
 [ext_resource type="Script" uid="uid://cepasvg8pm00v" path="res://assets/scripts/main_elevator_controller.gd" id="1_hvhng"]
@@ -8,8 +8,10 @@
 [ext_resource type="Texture2D" uid="uid://ngrwblupu04x" path="res://assets/meshes/Elevator/Elevator/Elevator/Textures/elevator_all_elevator_Normal.png" id="5_5iafp"]
 [ext_resource type="Material" uid="uid://buxkri7ewck05" path="res://assets/meshes/wire_material.tres" id="7_2rv35"]
 [ext_resource type="AudioStream" uid="uid://k0tgy3dqh7mk" path="res://assets/audio/breakLight.wav" id="7_btkhg"]
+[ext_resource type="AudioStream" uid="uid://dn1ecnuc20sg" path="res://assets/audio/elevator_descend.wav" id="9_3lv7n"]
 [ext_resource type="Script" uid="uid://becxrvqo1r2mv" path="res://assets/scripts/interactive_button.gd" id="9_iktdn"]
 [ext_resource type="Material" uid="uid://dl0ctdhmj41te" path="res://assets/meshes/emissive_gold.tres" id="10_3lv7n"]
+[ext_resource type="Texture2D" uid="uid://b5fhcqr8k4xsc" path="res://assets/dust_particle.png" id="10_v07g7"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iktdn"]
 transparency = 2
@@ -680,6 +682,42 @@ random_pitch = 1.1
 streams_count = 1
 stream_0/stream = ExtResource("7_btkhg")
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r2k82"]
+transparency = 3
+alpha_hash_scale = 1.0
+alpha_antialiasing_mode = 0
+albedo_color = Color(1, 0.76862746, 0, 1)
+albedo_texture = ExtResource("10_v07g7")
+emission_enabled = true
+emission = Color(1, 0.6784314, 0, 1)
+billboard_mode = 3
+billboard_keep_scale = true
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="Curve" id="Curve_hwi10"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.056179762), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_p0tqt"]
+curve = SubResource("Curve_hwi10")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_25ld4"]
+emission_shape = 3
+emission_box_extents = Vector3(0.1, 0.1, 1.2)
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, 1, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 5.0
+gravity = Vector3(0, -1, 0)
+scale_min = 0.01
+scale_max = 0.099999994
+scale_curve = SubResource("CurveTexture_p0tqt")
+
+[sub_resource type="QuadMesh" id="QuadMesh_yorw8"]
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_v07g7"]
 radius = 0.34716797
 height = 0.84851074
@@ -689,10 +727,13 @@ properties/0/path = NodePath(".:position:y")
 properties/0/spawn = true
 properties/0/replication_mode = 2
 
-[node name="Elevator" type="StaticBody3D" node_paths=PackedStringArray("elevator_button")]
+[node name="Elevator" type="StaticBody3D" node_paths=PackedStringArray("elevator_button", "moving_audio", "gpu_moving_down", "gpu_moving_up")]
 script = ExtResource("1_hvhng")
 elevator_button = NodePath("ButonStaticBody3D")
 elevator_movement_speed = 30.0
+moving_audio = NodePath("ElevatorMovingAudio")
+gpu_moving_down = [NodePath("ElevatorMovingAudio/DOWNGPUParticles3D"), NodePath("ElevatorMovingAudio/DOWNGPUParticles3D2"), NodePath("ElevatorMovingAudio/DOWNGPUParticles3D3"), NodePath("ElevatorMovingAudio/DOWNGPUParticles3D4")]
+gpu_moving_up = [NodePath("ElevatorMovingAudio/UPGPUParticles3D5"), NodePath("ElevatorMovingAudio/UGPUParticles3D6"), NodePath("ElevatorMovingAudio/UPGPUParticles3D7"), NodePath("ElevatorMovingAudio/UPGPUParticles3D8")]
 
 [node name="Visual" type="Node3D" parent="."]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.14813232, 0)
@@ -890,6 +931,106 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3957763, 0)
 stream = SubResource("AudioStreamRandomizer_2rv35")
 pitch_scale = 0.7
 bus = &"SFX"
+
+[node name="ElevatorMovingAudio" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4518571, 0)
+stream = ExtResource("9_3lv7n")
+
+[node name="DOWNGPUParticles3D" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2256016, -1.4518571, 0)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
+
+[node name="DOWNGPUParticles3D2" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.180457, -1.4518571, 0)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
+
+[node name="DOWNGPUParticles3D3" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.022572227, -1.4518571, -1.2030293)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
+
+[node name="DOWNGPUParticles3D4" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.022572331, -1.4518571, 1.2030293)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
+
+[node name="UPGPUParticles3D5" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(1, 0, 0, 0, -1, -8.742278e-08, 0, 8.742278e-08, -1, 1.2256016, 1.489022, 0)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
+
+[node name="UGPUParticles3D6" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(1, 0, 0, 0, -1, -8.742278e-08, 0, 8.742278e-08, -1, -1.180457, 1.489022, 0)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
+
+[node name="UPGPUParticles3D7" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(-4.371139e-08, 0, 1, 8.742278e-08, -1, 3.821371e-15, 1, 8.742278e-08, 4.371139e-08, 0.022572227, 1.4890223, 1.2030293)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
+
+[node name="UPGPUParticles3D8" type="GPUParticles3D" parent="ElevatorMovingAudio"]
+transform = Transform3D(-4.371139e-08, 0, 1, 8.742278e-08, -1, 3.821371e-15, 1, 8.742278e-08, 4.371139e-08, 0.022572331, 1.4890218, -1.2030293)
+material_override = SubResource("StandardMaterial3D_r2k82")
+emitting = false
+amount = 64
+lifetime = 0.6
+speed_scale = 2.0
+randomness = 1.0
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_25ld4")
+draw_pass_1 = SubResource("QuadMesh_yorw8")
 
 [node name="ButonStaticBody3D" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5636587, 3.403225, 0)

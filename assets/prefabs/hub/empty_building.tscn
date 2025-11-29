@@ -1,0 +1,97 @@
+[gd_scene load_steps=10 format=3 uid="uid://ccq35biklgyjm"]
+
+[ext_resource type="PackedScene" uid="uid://drlxvyf6uhfmh" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Straight_L.gltf" id="1_b2ce0"]
+[ext_resource type="PackedScene" uid="uid://dl53mopabyjy7" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Straight_R.gltf" id="2_7l7rq"]
+[ext_resource type="PackedScene" uid="uid://bf6twf46h65ma" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Straight_Base.gltf" id="3_sl5v8"]
+[ext_resource type="PackedScene" uid="uid://bvu5r60qlou6v" path="res://assets/meshes/MedievalVillage/glTF/Roof_RoundTiles_6x6.gltf" id="4_ouay5"]
+[ext_resource type="PackedScene" uid="uid://c3obbqqwu3vl0" path="res://assets/meshes/MedievalVillage/glTF/Roof_Front_Brick6.gltf" id="5_4dulr"]
+[ext_resource type="PackedScene" uid="uid://bsx1nurqlmh42" path="res://assets/meshes/MedievalVillage/glTF/Floor_WoodDark.gltf" id="8_ae8ek"]
+[ext_resource type="PackedScene" uid="uid://b3dltihhojsiu" path="res://assets/meshes/MedievalVillage/glTF/Window_Thin_Round1.gltf" id="9_5saw7"]
+[ext_resource type="PackedScene" uid="uid://8b873xu6t5x0" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Window_Thin_Round.gltf" id="11_jj8gt"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3mulx"]
+size = Vector3(6.3376465, 3.0993652, 6.2871094)
+
+[node name="EmptyBuilding" type="StaticBody3D"]
+
+[node name="Wall_Plaster_Straight_L2" parent="." instance=ExtResource("1_b2ce0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 3)
+
+[node name="Wall_Plaster_Straight_R2" parent="." instance=ExtResource("2_7l7rq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 3)
+
+[node name="Wall_Plaster_Straight_Base2" parent="." instance=ExtResource("3_sl5v8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+
+[node name="Wall_Plaster_Straight_Base3" parent="." instance=ExtResource("3_sl5v8")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, -3)
+
+[node name="Wall_Plaster_Straight_L3" parent="." instance=ExtResource("1_b2ce0")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3, 0, -2)
+
+[node name="Wall_Plaster_Straight_R3" parent="." instance=ExtResource("2_7l7rq")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3, 0, 2)
+
+[node name="Wall_Plaster_Straight_L4" parent="." instance=ExtResource("1_b2ce0")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -2, 0, -3)
+
+[node name="Wall_Plaster_Straight_R4" parent="." instance=ExtResource("2_7l7rq")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 2, 0, -3)
+
+[node name="Wall_Plaster_Straight_L5" parent="." instance=ExtResource("1_b2ce0")]
+transform = Transform3D(1.3113416e-07, 0, -1, 0, 1, 0, 1, 0, 1.3113416e-07, -3, 0, 2)
+
+[node name="Wall_Plaster_Straight_R5" parent="." instance=ExtResource("2_7l7rq")]
+transform = Transform3D(1.3113416e-07, 0, -1, 0, 1, 0, 1, 0, 1.3113416e-07, -3, 0, -2)
+
+[node name="Roof_RoundTiles_6x62" parent="." instance=ExtResource("4_ouay5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="Roof_Front_Brick62" parent="." instance=ExtResource("5_4dulr")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 3, -3)
+
+[node name="Roof_Front_Brick63" parent="." instance=ExtResource("5_4dulr")]
+transform = Transform3D(1, 0, -1.7484555e-07, 0, 1, 0, 1.7484555e-07, 0, 1, 0, 3, 3)
+
+[node name="Floor_WoodDark2" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.1, 2)
+
+[node name="Floor_WoodDark3" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2)
+
+[node name="Window_Thin_Round12" parent="." instance=ExtResource("9_5saw7")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3, 0, 0)
+
+[node name="Floor_WoodDark4" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.1, 2)
+
+[node name="Floor_WoodDark5" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.1, 0)
+
+[node name="Floor_WoodDark6" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+
+[node name="Floor_WoodDark7" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.1, 0)
+
+[node name="Floor_WoodDark8" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.1, -2)
+
+[node name="Floor_WoodDark9" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -2)
+
+[node name="Floor_WoodDark10" parent="." instance=ExtResource("8_ae8ek")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.1, -2)
+
+[node name="Wall_Plaster_Window_Thin_Round2" parent="." instance=ExtResource("11_jj8gt")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3, 0, 0)
+
+[node name="Window_Thin_Round13" parent="." instance=ExtResource("9_5saw7")]
+transform = Transform3D(1.3113416e-07, 0, -1, 0, 1, 0, 1, 0, 1.3113416e-07, -3, 0, 0)
+
+[node name="Wall_Plaster_Window_Thin_Round3" parent="." instance=ExtResource("11_jj8gt")]
+transform = Transform3D(1.3113416e-07, 0, -1, 0, 1, 0, 1, 0, 1.3113416e-07, -3, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5308838, 0)
+shape = SubResource("BoxShape3D_3mulx")

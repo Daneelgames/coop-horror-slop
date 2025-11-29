@@ -288,10 +288,16 @@ func rpc_teleport_to_position(position: Vector3):
 		sender_id
 	])
 
+@export var head_default_local_position = Vector3(0.328, 1.5, 0.064)
 func _process(_delta):
 	if GameManager._game_level.is_game_level_ready == false:
 		return
 	cheat_codes()
+	if is_moving_by_elevator:
+		interaction_feedback_label_3d.hide()
+		HEAD.position = head_default_local_position + Vector3(randf_range(-0.1,0.1),randf_range(-0.1,0.1),randf_range(-0.1,0.1))
+	else:
+		HEAD.position = head_default_local_position
 	_ensure_authority_state()
 	if !_has_input_authority:
 		visual_node_3d.top_level = true
@@ -670,7 +676,7 @@ func handle_interaction():
 		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
 		
 		if Input.is_action_just_pressed(controls.INTERACTION):
-			col.rpc_request_interaction.rpc()
+			col.rpc_request_interaction.rpc(multiplayer.get_unique_id())
 	else:
 		interaction_feedback_label_3d.visible = false
 			
@@ -1759,3 +1765,30 @@ func cheat_codes():
 		#if _has_input_authority:
 			#enter_normal_state()
 	pass
+
+func try_selling_item_in_hands():
+	if !_has_input_authority:
+		return
+	if item_in_hands == null:
+		return
+	if item_in_hands.weapon_resource == null:
+		return
+	var sell_price = item_in_hands.weapon_resource.item_price
+
+	# Remove item from inventory
+	var item_keys = carrying_items.keys()
+	if item_keys.size() > current_selected_item_index and current_selected_item_index >= 0:
+		var item_key = item_keys[current_selected_item_index]
+		carrying_items.erase(item_key)
+
+		# Clamp selected index if needed
+		_clamp_selected_index()
+
+		# Update inventory UI
+		if inventory_slots_panel_container:
+			inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+
+	item_in_hands.queue_free()
+	item_in_hands = null
+
+	GameManager.rpc_add_money_to_party.rpc(sell_price)
