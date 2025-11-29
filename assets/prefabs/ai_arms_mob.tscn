@@ -1656,8 +1656,8 @@ navigation_agent_3d = NodePath("NavigationAgent3D")
 character_meshes = [NodePath("VisualParent/SafeRotation/arm_monster/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster4/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster2/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster3/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster5/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster6/FpsArms/Reference/Skeleton3D/FpsArms_2_2")]
 team = 1
 mesh_animation_player = NodePath("VisualParent/SafeRotation/AnimationPlayer")
-health_current = 200.0
-health_max = 200.0
+health_current = 150.0
+health_max = 150.0
 take_damage_anims = Array[StringName]([&"take_damage"])
 death_anims = Array[StringName]([&"death_0"])
 PLAYER_COLLIDER = NodePath("Collision")
@@ -2338,7 +2338,7 @@ libraries = {
 }
 
 [node name="arm_monster3" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.92669857, -0.06910368, -0.3693954, -0.22559799, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
+transform = Transform3D(0.9266985, -0.06910368, -0.3693954, -0.22559798, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster3"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
@@ -2766,7 +2766,7 @@ libraries = {
 }
 
 [node name="arm_monster6" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.92669857, -0.06910368, -0.3693954, -0.22559799, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
+transform = Transform3D(0.9266985, -0.06910368, -0.3693954, -0.22559798, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster6"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
