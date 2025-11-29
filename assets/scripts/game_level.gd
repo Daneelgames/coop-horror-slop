@@ -15,6 +15,7 @@ func _ready() -> void:
 	# Wait for a frame to ensure all child nodes are added to the scene tree
 	# This is especially important in exported builds where nodes might not be ready immediately
 	await get_tree().process_frame
+	set_light_environment()
 	
 	# Try to find level generator from the exported NodePath first
 	if level_generator_path != NodePath():
@@ -199,6 +200,29 @@ func _handle_elevator_spawn_and_player_teleport():
 	else:
 		# Single player: спавнить локально
 		_spawn_elevator_at_position(elevator_position)
+
+	# Найти только что созданный лифт и установить его в верхнюю позицию
+	var dungeon_tiles_node: Node3D = null
+	if is_multistory_building:
+		dungeon_tiles_node = get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+	else:
+		dungeon_tiles_node = get_node_or_null("ProceduralDungeon/DungeonTiles")
+
+	if dungeon_tiles_node == null:
+		# Fallback: попробовать найти по имени level_generator
+		var generator_name = level_generator.name
+		dungeon_tiles_node = get_node_or_null("%s/DungeonTiles" % generator_name)
+
+	if dungeon_tiles_node != null:
+		var elevator = dungeon_tiles_node.get_node_or_null("Elevator")
+		if elevator != null and elevator is MainElevatorController:
+			# Установить лифт в верхнюю позицию
+			var top_position = elevator.elevator_movement_top_position
+			if multiplayer.has_multiplayer_peer():
+				rpc_set_elevator_position.rpc(top_position)
+			else:
+				elevator.global_position = top_position
+			print("_handle_elevator_spawn_and_player_teleport: Set elevator to top position: %s" % top_position)
 	
 	# Подождать, пока все игроки зарегистрируются (только в мультиплеере)
 	if multiplayer.has_multiplayer_peer():
@@ -220,9 +244,10 @@ func _handle_elevator_spawn_and_player_teleport():
 		if not all_players_registered:
 			push_warning("_handle_elevator_spawn_and_player_teleport: Not all players registered after %.1fs" % max_wait_time)
 	
-	# Телепортировать всех игроков на тайл с лифтом
-	# Вычислить позицию спавна (центр тайла с небольшим смещением вверх)
-	var spawn_position = elevator_tile.position + Vector3(0, 0.25, 0)
+	# Телепортировать всех игроков в лифт наверху
+	# Вычислить позицию спавна (позиция лифта наверху с небольшим смещением вверх)
+	var teleport_elevator = dungeon_tiles_node.get_node_or_null("Elevator") if dungeon_tiles_node != null else null
+	var spawn_position = teleport_elevator.global_position + Vector3(0, 0.25, 0) if teleport_elevator != null else elevator_tile.position + Vector3(0, 0.25, 0)
 	
 	# Получить всех игроков
 	var all_players: Array = []
@@ -286,6 +311,33 @@ func rpc_spawn_elevator(elevator_pos: Vector3):
 	# Спавнить лифт на указанной позиции
 	# Эта функция вызывается сервером для всех клиентов через RPC
 	_spawn_elevator_at_position(elevator_pos)
+
+@rpc("authority", "call_local", "reliable")
+func rpc_set_elevator_position(target_position: Vector3):
+	# Установить позицию лифта
+	# Эта функция вызывается сервером для всех клиентов через RPC
+	var dungeon_tiles_node: Node3D = null
+	var script = level_generator.get_script()
+	if script:
+		var script_path = script.resource_path
+		var is_multistory_building = script_path.ends_with("multistory_building_dungeon.gd")
+		var _is_procedural_dungeon = script_path.ends_with("procedural_dungeon.gd")
+
+		if is_multistory_building:
+			dungeon_tiles_node = get_node_or_null("MultistoryBuildingDungeon/DungeonTiles")
+		else:
+			dungeon_tiles_node = get_node_or_null("ProceduralDungeon/DungeonTiles")
+
+	if dungeon_tiles_node == null:
+		# Fallback: попробовать найти по имени level_generator
+		var generator_name = level_generator.name
+		dungeon_tiles_node = get_node_or_null("%s/DungeonTiles" % generator_name)
+
+	if dungeon_tiles_node != null:
+		var spawned_elevator = dungeon_tiles_node.get_node_or_null("Elevator")
+		if spawned_elevator != null:
+			spawned_elevator.global_position = target_position
+			print("rpc_set_elevator_position: Set elevator position to %s" % target_position)
 
 func _spawn_elevator_at_position(elevator_pos: Vector3):
 	# Проверить, что level_generator имеет правильный скрипт
