@@ -65,7 +65,7 @@ metadata/_custom_type_script = "uid://b3uurm37r68ag"
 [sub_resource type="Resource" id="Resource_5vcca"]
 script = ExtResource("7_roc3w")
 mob_prefab_path = &"res://assets/prefabs/ai_hell_hound.tscn"
-mobs_to_spawn_amount = 2
+mobs_to_spawn_amount = 3
 metadata/_custom_type_script = "uid://b3uurm37r68ag"
 
 [sub_resource type="Resource" id="Resource_adyel"]
