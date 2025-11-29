@@ -276,10 +276,12 @@ func _move_bodies_inside(movement_distance: float):
 		elif body is RigidBody3D:
 			# Пикапы двигаются только на сервере
 			if is_server:
-				body.global_position.y += movement_distance
+				body.global_position.y = global_position.y
+				#body.global_position.y += movement_distance
 				# Также сбрасываем вертикальную скорость чтобы предотвратить падение
-				if body.linear_velocity.y < 0:
-					body.linear_velocity.y = 0
+				body.linear_velocity = Vector3.ZERO
+				#if body.linear_velocity.y < 0:
+					#body.linear_velocity.y = 0
 
 func _get_all_nodes_of_type(node: Node, type_name: String, result: Array):
 	# Рекурсивно найти все ноды определенного типа
