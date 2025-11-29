@@ -630,6 +630,7 @@ func try_respawning_on_all_players_are_dead():
 		await _handle_elevator_spawn_and_player_teleport()
 	for player : PlayerCharacter in GameManager._player_nodes.values():
 		player.resurrect()
+	set_light_environment()
 	is_respawning_players = false
 	print("GameLevel: Dungeon regeneration complete!")
 

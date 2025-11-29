@@ -112,7 +112,7 @@ func on_elevator_button_interacted():
 			if not is_instance_valid(body):
 				continue
 			if body is PlayerCharacter:
-				body.is_moving_by_elevator = true
+				body.is_moving_by_elevator = self
 				body.rpc_full_heal_and_resurrect()
 				print("[ELEVATOR] Set is_moving_by_elevator=true for player: ", body.name)
 			elif body is RigidBody3D:
@@ -186,7 +186,7 @@ func _stop_elevator_at_target():
 		if not is_instance_valid(body):
 			continue
 		if body is PlayerCharacter:
-			body.is_moving_by_elevator = false
+			body.is_moving_by_elevator = null
 		elif body is RigidBody3D:
 			# Разморозить RigidBody3D чтобы он мог нормально взаимодействовать с физикой
 			body.freeze = false
@@ -199,7 +199,7 @@ func _stop_elevator_at_target():
 		var players = get_tree().get_nodes_in_group("players")
 		for player in players:
 			if player is PlayerCharacter and is_instance_valid(player):
-				player.is_moving_by_elevator = false
+				player.is_moving_by_elevator = null
 
 	# Вернуть тела обратно в bodies_inside
 	bodies_inside = bodies_to_move_inside.duplicate()
@@ -292,7 +292,7 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 		var players = get_tree().get_nodes_in_group("players")
 		for player in players:
 			if player is PlayerCharacter and is_instance_valid(player):
-				player.is_moving_by_elevator = false
+				player.is_moving_by_elevator = null
 
 		# Разморозить RigidBody3D объекты
 		for body in bodies_to_move_inside:
@@ -322,7 +322,7 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 			if not is_instance_valid(body):
 				continue
 			if body is PlayerCharacter:
-				body.is_moving_by_elevator = true
+				body.is_moving_by_elevator = self
 				body.rpc_full_heal_and_resurrect()
 			elif body is RigidBody3D and is_server:
 				# Заморозить RigidBody3D объекты только на сервере

@@ -182,7 +182,7 @@ var _cached_local_peer_id: int = -1
 
 #endregion
 @onready var dust_gpu_particles_3d: GPUParticles3D = %DustGPUParticles3D
-@export var is_moving_by_elevator = false
+@export var is_moving_by_elevator : MainElevatorController
 
 #region Main Control Flow
 
@@ -305,7 +305,7 @@ func _process(_delta):
 	if pausing_enabled:
 		handle_pausing()
 	if is_moving_by_elevator and GameManager._game_level.level_generator.spawned_elevator and GameManager._game_level.level_generator.spawned_elevator.is_elevator_moving == false and GameManager._game_level.level_generator.spawned_elevator.is_elevator_moving_down == false:
-		is_moving_by_elevator = false
+		is_moving_by_elevator = null
 	update_debug_menu_per_frame()
 
 @export var input_dir = Vector2.ZERO
@@ -330,7 +330,7 @@ func _physics_process(delta): # Most things happen here.
 		gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 	if not is_grounded and gravity and gravity_enabled:
 		velocity.y -= gravity * delta
-	if is_moving_by_elevator == false and is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
+	if is_moving_by_elevator == null and is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
 	#if is_taking_damage == false and is_attacking == false and is_dead() == false and is_blocking == false and is_stun_lock == false and is_blocking_react == false:
 		handle_attacking()
 		handle_blocking()
@@ -342,7 +342,7 @@ func _physics_process(delta): # Most things happen here.
 
 	input_dir = Vector2.ZERO
 
-	if is_moving_by_elevator == false:
+	if is_moving_by_elevator == null:
 		if not immobile and is_dead() == false and is_stun_lock == false and is_blocking == false and is_blocking_react == false and is_attacking == false:
 			input_dir = Input.get_vector(controls.LEFT, controls.RIGHT, controls.FORWARD, controls.BACKWARD)
 
@@ -351,12 +351,13 @@ func _physics_process(delta): # Most things happen here.
 			
 	if is_vaulting:
 		process_vault_climb(delta)
-	elif is_moving_by_elevator == false:
+	elif is_moving_by_elevator == null:
 		handle_movement(delta, input_dir)
 	else:
 		# Когда лифт движется, сбросить горизонтальную скорость чтобы предотвратить движение
 		velocity.x = 0.0
 		velocity.z = 0.0
+		global_position.y = is_moving_by_elevator.global_position.y
 
 	handle_head_rotation()
 	apply_rotation_smoothing(delta)
