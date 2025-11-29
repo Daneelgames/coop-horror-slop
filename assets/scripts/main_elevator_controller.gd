@@ -272,7 +272,8 @@ func _move_bodies_inside(movement_distance: float):
 
 		if body is PlayerCharacter:
 			# Игроки двигаются локально на всех клиентах
-			body.global_position.y += movement_distance
+			#body.global_position.y += movement_distance
+			body.global_position.y = global_position.y
 		elif body is RigidBody3D:
 			# Пикапы двигаются только на сервере
 			if is_server:
