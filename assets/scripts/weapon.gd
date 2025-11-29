@@ -232,7 +232,8 @@ func attack_was_blocked(attack_target, hit_pos):
 		var attack_direction = (hit_pos - target_pos).normalized()
 		
 		# Target's forward direction (negative Z is forward in Godot)
-		var target_forward = -attack_target.basis.z.normalized()
+		# var target_forward = -attack_target.basis.z.normalized()
+		var target_forward = attack_target.basis.z.normalized()
 		
 		# Calculate angle between forward direction and attack direction
 		var angle_rad = target_forward.angle_to(attack_direction)

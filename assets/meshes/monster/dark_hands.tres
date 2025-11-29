@@ -24,6 +24,7 @@ in_3d_space = true
 transparency = 3
 alpha_hash_scale = 1.0
 alpha_antialiasing_mode = 0
+depth_draw_mode = 1
 albedo_color = Color(0.39179927, 0.44329584, 0.56251293, 1)
 albedo_texture = ExtResource("1_g10b0")
 metallic = 0.43

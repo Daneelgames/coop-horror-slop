@@ -78,9 +78,25 @@ func handle_attacking():
 		print("[AI_ATTACK] %s: Distance to enemy=%s, weapon_range=%s, effective_range=%s" % [ai_character.name, distance, ai_character.item_in_hands.weapon_active_distance, effective_attack_range])
 	
 	if distance <= effective_attack_range:
+		# Check angle to enemy
+		var to_enemy = (closest_enemy.global_position - ai_character.global_position).normalized()
+		# var forward = Vector3.BACK.rotated(Vector3.UP, ai_character.rotation.y)
+		var forward = ai_character.global_basis.z
+		var forward_flat = Vector3(forward.x, 0, forward.z).normalized()
+		var to_enemy_flat = Vector3(to_enemy.x, 0, to_enemy.z).normalized()
+		var dot = forward_flat.dot(to_enemy_flat)
+		var angle_to_enemy = rad_to_deg(acos(clamp(dot, -1.0, 1.0)))
+
 		if ai_character.debug_ai_combat:
-			print("[AI_ATTACK] %s: ATTACKING! Distance %s <= effective_range %s" % [ai_character.name, distance, effective_attack_range])
-		ai_character.rpc_start_attacking.rpc()
+			print("[AI_ATTACK] %s: Angle to enemy=%s, min_angle_for_attack=%s" % [ai_character.name, angle_to_enemy, ai_character.min_angle_to_enemy_for_attack])
+
+		if angle_to_enemy <= ai_character.min_angle_to_enemy_for_attack:
+			if ai_character.debug_ai_combat:
+				print("[AI_ATTACK] %s: ATTACKING! Distance %s <= effective_range %s, angle %s <= min_angle %s" % [ai_character.name, distance, effective_attack_range, angle_to_enemy, ai_character.min_angle_to_enemy_for_attack])
+			ai_character.rpc_start_attacking.rpc()
+		else:
+			if ai_character.debug_ai_combat:
+				print("[AI_ATTACK] %s: Angle too large - Angle %s > min_angle %s" % [ai_character.name, angle_to_enemy, ai_character.min_angle_to_enemy_for_attack])
 	else:
 		if ai_character.debug_ai_combat:
 			print("[AI_ATTACK] %s: Too far - Distance %s > effective_range %s" % [ai_character.name, distance, effective_attack_range])

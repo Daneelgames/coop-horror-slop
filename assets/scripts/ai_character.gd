@@ -20,6 +20,7 @@ class_name AiCharacter
 @export var combat_strafe_distance_max: float = 3.0 # Distance to maintain from enemy when circling in combat
 @export var navigation_agent_3d: NavigationAgent3D
 @export var character_meshes : Array[MeshInstance3D]
+@export var min_angle_to_enemy_for_attack : float = 15
 var target_visibility = false
 
 # Movement control
