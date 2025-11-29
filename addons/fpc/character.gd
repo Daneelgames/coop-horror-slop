@@ -228,7 +228,9 @@ func _ready():
 	if OS.get_name() == "Web":
 		Input.set_use_accumulated_input(false)
 	super._ready()
-	if _has_input_authority == false:
+	await get_tree().process_frame
+	#if _has_input_authority == false:
+	if is_multiplayer_authority() == false:
 		dust_gpu_particles_3d.emitting = false
 		dust_gpu_particles_3d.visible = false
 

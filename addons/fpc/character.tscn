@@ -694,7 +694,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3282684, 1.5, 0.064044535)
 material_override = SubResource("StandardMaterial3D_5d3cd")
 amount = 300
 lifetime = 5.0
-randomness = 0.5
+randomness = 1.0
 process_material = SubResource("ParticleProcessMaterial_d4f47")
 draw_pass_1 = SubResource("QuadMesh_g5ywq")
 
