@@ -36,6 +36,7 @@ top_level = true
 
 [node name="CSGTorus3D" type="CSGTorus3D" parent="VisualParent"]
 material_override = ExtResource("3_aqjrj")
+cast_shadow = 0
 inner_radius = 0.1
 outer_radius = 0.2
 

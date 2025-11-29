@@ -1,4 +1,4 @@
-[gd_scene load_steps=59 format=4 uid="uid://pki38aeumbly"]
+[gd_scene load_steps=58 format=4 uid="uid://pki38aeumbly"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_5bmql"]
 [ext_resource type="Material" uid="uid://dub4c7jcm6efa" path="res://assets/meshes/monster/dark_hands.tres" id="2_84kro"]
@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://b7yokovtxcvy5" path="res://assets/sprites/white_blob.png" id="3_5bmql"]
 [ext_resource type="Script" uid="uid://b0eohos8rbidu" path="res://assets/scripts/ai_state_machine.gd" id="3_l7hbx"]
 [ext_resource type="Resource" uid="uid://dnebdghxk0fne" path="res://assets/resources/rw_demon_fang.tres" id="3_tca32"]
-[ext_resource type="PackedScene" uid="uid://oxjxky0w2v4a" path="res://assets/prefabs/weapons/weapon_demon_fang_w.tscn" id="4_tca32"]
 [ext_resource type="Script" uid="uid://da5x2814yek6y" path="res://assets/scripts/ai_state_patrol.gd" id="5_84kro"]
 [ext_resource type="Script" uid="uid://jtkn6iklin45" path="res://assets/scripts/ai_state_combat.gd" id="6_l7hbx"]
 [ext_resource type="Script" uid="uid://cwvfv0f6chws0" path="res://assets/scripts/ai_state_investigate.gd" id="7_fasbq"]
@@ -1641,7 +1640,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("29_eb84n")
 
-[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
+[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 wall_min_slide_angle = 0.0
@@ -1654,6 +1653,7 @@ visual_node_3d = NodePath("VisualParent")
 random_weapons = Array[ExtResource("2_fasbq")]([ExtResource("3_tca32")])
 debug_ai_combat = false
 navigation_agent_3d = NodePath("NavigationAgent3D")
+character_meshes = [NodePath("VisualParent/SafeRotation/arm_monster/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster4/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster2/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster3/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster5/FpsArms/Reference/Skeleton3D/FpsArms_2_2"), NodePath("VisualParent/SafeRotation/arm_monster6/FpsArms/Reference/Skeleton3D/FpsArms_2_2")]
 team = 1
 mesh_animation_player = NodePath("VisualParent/SafeRotation/AnimationPlayer")
 health_current = 200.0
@@ -1664,10 +1664,8 @@ PLAYER_COLLIDER = NodePath("Collision")
 
 [node name="WeaponBoneAttachment3D" type="Node3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(-0.83619994, 0, 0.54842466, 0, 1, 0, -0.54842454, 0, -0.8362001, 0.14024407, 0.765161, 0.5736973)
-
-[node name="WeaponDemonFang" parent="WeaponBoneAttachment3D" instance=ExtResource("4_tca32")]
-transform = Transform3D(0.99999994, 0, 0, 0, 1.0000002, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(-0.8361999, 0, 0.54842466, 0, 1, 0, -0.54842454, 0, -0.8362001, 0.14024407, 0.765161, 0.5736973)
+visible = false
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
@@ -2340,7 +2338,7 @@ libraries = {
 }
 
 [node name="arm_monster3" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.9266987, -0.06910368, -0.3693954, -0.22559802, 0.6838359, -0.69388306, -0.30055556, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
+transform = Transform3D(0.92669857, -0.06910368, -0.3693954, -0.22559799, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster3"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
@@ -2768,7 +2766,7 @@ libraries = {
 }
 
 [node name="arm_monster6" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.9266987, -0.06910368, -0.3693954, -0.22559802, 0.6838359, -0.69388306, -0.30055556, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
+transform = Transform3D(0.92669857, -0.06910368, -0.3693954, -0.22559799, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster6"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)

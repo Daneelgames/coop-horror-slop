@@ -21,8 +21,6 @@ func unregister_ai_character(ai_char: AiCharacter) -> void:
 
 func _process(delta: float) -> void:
 	# Only run visibility checks on server
-	if not multiplayer.is_server():
-		return
 	
 	_time_since_last_check += delta
 	if _time_since_last_check >= _check_interval:
@@ -47,15 +45,20 @@ func _update_visibility() -> void:
 		var visible_enemies: Array[Unit] = []
 		
 		# Check visibility against each team 0 unit
-		for enemy in team_0_units:
+		var visible_locally = false
+		for enemy : Unit in team_0_units:
 			if not is_instance_valid(enemy) or enemy.is_dead():
 				continue
 			
 			if _is_visible(ai_char, enemy):
 				visible_enemies.append(enemy)
+				if enemy.is_multiplayer_authority():
+					visible_locally = true
 		
-		# Update the AI character's visible_enemies list
-		ai_char.visible_enemies = visible_enemies
+		ai_char.target_visibility = visible_locally
+		if multiplayer.is_server():
+			# Update the AI character's visible_enemies list
+			ai_char.visible_enemies = visible_enemies
 
 func _get_team_0_units() -> Array[Unit]:
 	var units: Array[Unit] = []

@@ -15,6 +15,7 @@ weapon_slot_position = Vector3(0.17316498, 8.294342, 3.78641)
 
 [node name="CSGTorus3D" type="CSGTorus3D" parent="VisualParent"]
 material_override = ExtResource("3_atga0")
+cast_shadow = 0
 inner_radius = 0.1
 outer_radius = 0.2
 

@@ -44,6 +44,9 @@ in_3d_space = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_03kup"]
 resource_name = "Cry Wolf Main"
+transparency = 3
+alpha_hash_scale = 1.0
+alpha_antialiasing_mode = 0
 cull_mode = 2
 vertex_color_use_as_albedo = true
 albedo_texture = ExtResource("4_n8adn")
@@ -41211,7 +41214,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("27_0bd7f")
 
-[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
+[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 wall_min_slide_angle = 0.0
@@ -41220,24 +41223,45 @@ platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_dlup7")
 attack_strings = Array[String](["attack_1", "attack_2"])
+weapon_in_hands_scaler = null
+override_weapon_pos_to_zero = null
 visual_node_3d = NodePath("VisualParent")
+input_dir = null
 random_weapons = Array[ExtResource("2_06rqj")]([ExtResource("3_ac633")])
+state = null
+rotation_speed = null
 debug_ai_combat = false
+attack_range_multiplier = null
+blocking_range_multiplier = null
+base_speed = null
+home_position = null
 patrol_from_home_distance_min_max = Vector2(5, 100)
 combat_from_home_distance_max = 600.0
 combat_strafe_distance_max = 10.0
 navigation_agent_3d = NodePath("NavigationAgent3D")
+character_meshes = [NodePath("VisualParent/Cry Wolf/rig/Skeleton3D/Cry Wolf_001")]
+resurrect_after_death_seconds = null
 team = 1
 mesh_animation_player = NodePath("VisualParent/Cry Wolf/AnimationPlayer")
 health_current = 500.0
 health_max = 500.0
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1"])
 death_anims = Array[StringName]([&"death_0"])
+is_attacking = null
+is_blocking = null
+is_blocking_react = null
+is_stun_lock = null
+is_taking_damage = null
 PLAYER_COLLIDER = NodePath("Collision")
+MAX_STEP_UP = null
+MAX_STEP_DOWN = null
+STEP_DOWN_DEBUG = null
+STEP_UP_DEBUG = null
 
 [node name="WeaponBoneAttachment3D" type="Node3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(-0.8660253, 0, -0.49999988, 0, 0.99999976, 0, 0.49999973, 0, -0.8660256, 0.47169602, 1.0345716, -0.45332503)
+visible = false
 
 [node name="VisualParent" type="Node3D" parent="."]
 top_level = true
@@ -43221,5 +43245,5 @@ path_postprocessing = 1
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6643362, 0)
 enabled = false
-target_position = Vector3(0, 0, -1.5)
+target_position = Vector3(0, 0, 1.5)
 collision_mask = 5

@@ -42,6 +42,9 @@
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mhkrq"]
 resource_name = "HOUND.001"
+transparency = 3
+alpha_hash_scale = 1.0
+alpha_antialiasing_mode = 0
 cull_mode = 2
 albedo_texture = ExtResource("2_7ewkr")
 roughness = 0.0
@@ -2504,30 +2507,6 @@ tracks/93/path = NodePath("Armature")
 tracks/93/interp = 1
 tracks/93/loop_wrap = true
 tracks/93/keys = PackedFloat32Array(0, 1, 0.01, 0.01, 0.01)
-tracks/94/type = "value"
-tracks/94/imported = false
-tracks/94/enabled = true
-tracks/94/path = NodePath("%WeaponBoneAttachment3D:rotation")
-tracks/94/interp = 1
-tracks/94/loop_wrap = true
-tracks/94/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 1.5707964, 0)]
-}
-tracks/95/type = "value"
-tracks/95/imported = false
-tracks/95/enabled = true
-tracks/95/path = NodePath("%WeaponBoneAttachment3D:position")
-tracks/95/interp = 1
-tracks/95/loop_wrap = true
-tracks/95/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 0.4449659, 0.061041594)]
-}
 
 [sub_resource type="Animation" id="Animation_ufhfl"]
 resource_name = "take_damage"
@@ -3928,7 +3907,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("27_mt358")
 
-[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
+[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 wall_min_slide_angle = 0.0
@@ -3937,22 +3916,45 @@ platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_7ewkr")
 attack_strings = Array[String](["attack"])
+weapon_in_hands_scaler = null
+override_weapon_pos_to_zero = null
 visual_node_3d = NodePath("VisualParent")
+input_dir = null
 random_weapons = Array[ExtResource("2_lqevu")]([ExtResource("3_ufhfl")])
+state = null
+rotation_speed = null
 debug_ai_combat = false
+attack_range_multiplier = null
+blocking_range_multiplier = null
+base_speed = null
+home_position = null
 patrol_from_home_distance_min_max = Vector2(5, 30)
 combat_from_home_distance_max = 600.0
 combat_strafe_distance_max = 1.0
 navigation_agent_3d = NodePath("NavigationAgent3D")
+character_meshes = [NodePath("VisualParent/hell_hound_rigged/Armature/Skeleton3D/default")]
+resurrect_after_death_seconds = null
 team = 1
 mesh_animation_player = NodePath("VisualParent/hell_hound_rigged/AnimationPlayer")
+health_current = null
+health_max = null
 take_damage_anims = Array[StringName]([&"take_damage"])
 death_anims = Array[StringName]([&"death"])
+is_attacking = null
+is_blocking = null
+is_blocking_react = null
+is_stun_lock = null
+is_taking_damage = null
 PLAYER_COLLIDER = NodePath("Collision")
+MAX_STEP_UP = null
+MAX_STEP_DOWN = null
+STEP_DOWN_DEBUG = null
+STEP_UP_DEBUG = null
 
 [node name="WeaponBoneAttachment3D" type="Node3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0.4449659, 0.061041594)
+visible = false
 
 [node name="VisualParent" type="Node3D" parent="."]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)

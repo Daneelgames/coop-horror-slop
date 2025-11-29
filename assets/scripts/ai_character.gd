@@ -19,6 +19,8 @@ class_name AiCharacter
 @export var combat_from_home_distance_max: float = 30
 @export var combat_strafe_distance_max: float = 3.0 # Distance to maintain from enemy when circling in combat
 @export var navigation_agent_3d: NavigationAgent3D
+@export var character_meshes : Array[MeshInstance3D]
+var target_visibility = false
 
 # Movement control
 var movement_target: Vector3 = Vector3.ZERO
@@ -54,6 +56,19 @@ func _ready():
 	combat_strafe_distance_max = randf_range(2.0,3.0)
 	interaction_raycast_coroutine()
 	GameManager._game_level.register_ai_character(self)
+	
+	local_visibility_coroutine()
+	
+func local_visibility_coroutine():
+	await get_tree().create_timer(0.1).timeout
+	if target_visibility:
+		for mesh : MeshInstance3D in character_meshes:
+			mesh.transparency = lerpf(mesh.transparency, 0, 0.25)
+	else:
+		for mesh : MeshInstance3D in character_meshes:
+			mesh.transparency = lerpf(mesh.transparency, 1, 0.25)
+			
+	local_visibility_coroutine()
 	
 func interaction_raycast_coroutine():
 	if interaction_ray_cast_3d == null:

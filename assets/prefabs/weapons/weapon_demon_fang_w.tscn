@@ -21,6 +21,7 @@ weapon_slot_position = Vector3(0.17316498, 8.294342, 3.78641)
 [node name="MeshInstance3D" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(-4.371139e-08, 1, -4.371139e-08, 0, -4.3711402e-08, -1, -1, -4.371139e-08, 1.9106855e-15, 0.81363714, -3.7758127e-08, -0.0045064692)
 material_override = ExtResource("3_02cuu")
+cast_shadow = 0
 mesh = SubResource("CylinderMesh_8k6dw")
 
 [node name="AttackPointNode3D" type="Node3D" parent="."]

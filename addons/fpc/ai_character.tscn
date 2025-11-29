@@ -1,4 +1,4 @@
-[gd_scene load_steps=54 format=4 uid="uid://b1wtst1i1aqdl"]
+[gd_scene load_steps=52 format=4 uid="uid://b1wtst1i1aqdl"]
 
 [ext_resource type="Script" uid="uid://ok5mqeoucqq1" path="res://assets/scripts/ai_character.gd" id="1_q1sc8"]
 [ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="2_cf55f"]
@@ -38,16 +38,11 @@
 [ext_resource type="AudioStream" uid="uid://cxsvcnhppd1sd" path="res://assets/audio/damage4.wav" id="27_qdvok"]
 [ext_resource type="AudioStream" uid="uid://bfq5h7sd4x2nv" path="res://assets/audio/BloodSfx.wav" id="28_rivgy"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kp17n"]
-albedo_color = Color(0.909804, 0.596078, 0, 1)
-clearcoat_enabled = true
-clearcoat_roughness = 0.2
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_jw1de"]
-material = SubResource("StandardMaterial3D_kp17n")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q34qd"]
 resource_name = "BattalionLeader_MAT"
+transparency = 3
+alpha_hash_scale = 0.28
+alpha_antialiasing_mode = 0
 cull_mode = 2
 albedo_texture = ExtResource("2_pjyar")
 roughness = 0.5527864
@@ -396,7 +391,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("28_rivgy")
 
-[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "mesh_animation_player", "PLAYER_COLLIDER")]
+[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 wall_min_slide_angle = 0.0
@@ -412,6 +407,7 @@ debug_ai_combat = false
 patrol_from_home_distance_min_max = Vector2(5, 20)
 combat_from_home_distance_max = 40.0
 navigation_agent_3d = NodePath("NavigationAgent3D")
+character_meshes = [NodePath("VisualParent/soldier_low_poly/Armature/Skeleton3D/Mesh")]
 team = 1
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 take_damage_anims = Array[StringName]([&"take_damage_0", &"take_damage_1", &"take_damage_2"])
@@ -420,13 +416,6 @@ PLAYER_COLLIDER = NodePath("Collision")
 
 [node name="VisualParent" type="Node3D" parent="."]
 top_level = true
-
-[node name="Mesh" type="MeshInstance3D" parent="VisualParent"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-visible = false
-cast_shadow = 0
-mesh = SubResource("CapsuleMesh_jw1de")
-skeleton = NodePath("../..")
 
 [node name="soldier_low_poly" type="Node3D" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.206)

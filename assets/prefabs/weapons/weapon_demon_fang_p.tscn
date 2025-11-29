@@ -41,6 +41,7 @@ top_level = true
 [node name="MeshInstance3D" type="MeshInstance3D" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, -3.7758113e-08, 0.86380494)
 material_override = ExtResource("3_mpmee")
+cast_shadow = 0
 mesh = SubResource("CylinderMesh_0xame")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
