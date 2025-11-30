@@ -1330,7 +1330,8 @@ replication_config = SubResource("SceneReplicationConfig_bupmj")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9604645e-08, 1.2850549, -0.26073307)
-visible = false
+light_energy = 0.5
+omni_range = 2.5
 omni_attenuation = 0.5
 
 [node name="ItemsBag" type="Node3D" parent="."]
