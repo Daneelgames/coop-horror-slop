@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://d2sevxdeotk1f"]
+
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="1_tnia3"]
+
+[resource]
+script = ExtResource("1_tnia3")
+weapon_name = &"Scroll of Life"
+weapon_type = 6
+pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_scroll_of_life_p.tscn"
+weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_scroll_of_life_w.tscn"
+damage_min_max = Vector2i(1, 10)
+weapon_blocking_angle = 10
+push_forward_on_attack_force = 1.0

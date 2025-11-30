@@ -2,6 +2,7 @@ extends StaticBody3D
 class_name ShopController
 @onready var selling_table_static_body_3d: InteractiveButton = %SellingTableStaticBody3D
 @onready var party_money_label_3d: Label3D = %PartyMoneyLabel3D
+@export var weapons_on_sell : Array[ResourceWeapon]
 
 func _ready() -> void:
 	GameManager.party_money_changed.connect(update_party_money)

@@ -1,7 +1,11 @@
 extends Resource
 class_name ResourceWeapon
 
-enum WEAPON_TYPE {TORCH, RUSTY_PIPE, MACHETE, GOLD, DEMON_FANG}
+enum WEAPON_TYPE {
+	TORCH, RUSTY_PIPE, MACHETE, 
+	GOLD, DEMON_FANG, 
+	HEALING_POTION, SCROLL_OF_LIFE, FLASH_BOMB, ROPE}
+	
 @export var item_price: int = 100
 @export var weapon_name: StringName = &'Weapon'
 @export var weapon_type: WEAPON_TYPE = WEAPON_TYPE.TORCH

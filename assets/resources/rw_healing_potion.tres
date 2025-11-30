@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://bkncvjv7y5nls"]
+
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="1_rcjlx"]
+
+[resource]
+script = ExtResource("1_rcjlx")
+weapon_name = &"Healing Potion"
+weapon_type = 5
+pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_healing_potion_p.tscn"
+weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_healing_potion_w.tscn"
+damage_min_max = Vector2i(1, 10)
+weapon_blocking_angle = 10
+push_forward_on_attack_force = 1.0

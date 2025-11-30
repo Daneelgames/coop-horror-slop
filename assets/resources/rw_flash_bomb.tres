@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ResourceWeapon" load_steps=2 format=3 uid="uid://befwti3d6qbn6"]
+
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="1_1fivp"]
+
+[resource]
+script = ExtResource("1_1fivp")
+weapon_name = &"Flash Bomb"
+weapon_type = 7
+pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_flash_bomb_p.tscn"
+weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_flash_bomb_w.tscn"
+damage_min_max = Vector2i(1, 10)
+weapon_blocking_angle = 10
+push_forward_on_attack_force = 1.0

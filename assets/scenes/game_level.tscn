@@ -1,4 +1,4 @@
-[gd_scene load_steps=75 format=4 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=77 format=4 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
 [ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" uid="uid://drlxvyf6uhfmh" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Straight_L.gltf" id="20_7vhqh"]
 [ext_resource type="Script" uid="uid://qw0ovsv282v2" path="res://assets/scripts/shop_controller.gd" id="20_ydpwt"]
 [ext_resource type="PackedScene" uid="uid://dl53mopabyjy7" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Straight_R.gltf" id="21_35qww"]
+[ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="21_lpqf3"]
+[ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="22_8v1el"]
 [ext_resource type="PackedScene" uid="uid://bf6twf46h65ma" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Straight_Base.gltf" id="22_mnu2g"]
 [ext_resource type="PackedScene" uid="uid://bvu5r60qlou6v" path="res://assets/meshes/MedievalVillage/glTF/Roof_RoundTiles_6x6.gltf" id="23_07yxu"]
 [ext_resource type="PackedScene" uid="uid://c3obbqqwu3vl0" path="res://assets/meshes/MedievalVillage/glTF/Roof_Front_Brick6.gltf" id="24_h5bm1"]
@@ -435,6 +437,7 @@ path_joined = false
 disable_mode = 1
 collision_mask = 0
 script = ExtResource("20_ydpwt")
+weapons_on_sell = Array[ExtResource("21_lpqf3")]([ExtResource("22_8v1el"), ExtResource("11_q5pb2"), null])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="HubField/Shop"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 9.751142, 0.53782654, -2.4813628)
