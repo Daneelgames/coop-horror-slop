@@ -23,3 +23,9 @@ enum WEAPON_TYPE {
 @export_category('TORCH DURABILITY BURNING')
 @export var reducing_durability_when_in_hands: bool = false
 @export var in_hands_reduce_durability_speed := 0.5
+
+@export_category('CONSUMABLES')
+@export var is_one_time_use : bool = false
+@export var is_throw_on_use : bool = false
+@export var thrown_projectile_prefab_path : StringName
+@export var self_heal_hp_amount : float = 0

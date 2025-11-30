@@ -75,8 +75,8 @@ shadow_enabled = true
 distance_fade_enabled = true
 distance_fade_begin = 20.0
 distance_fade_shadow = 30.0
-omni_range = 8.0
-omni_attenuation = 0.1
+omni_range = 11.0
+omni_attenuation = 0.0
 
 [node name="FireAudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="FireGPUParticles3D"]
 stream = ExtResource("6_sywq2")

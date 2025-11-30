@@ -11,3 +11,5 @@ weapon_prefab_path = &"res://assets/prefabs/weapons/weapon_flash_bomb_w.tscn"
 damage_min_max = Vector2i(1, 10)
 weapon_blocking_angle = 10
 push_forward_on_attack_force = 1.0
+is_one_time_use = true
+is_throw_on_use = true
