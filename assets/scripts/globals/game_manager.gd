@@ -819,3 +819,8 @@ func _sync_dungeon_seed(seed_value: int) -> void:
 func rpc_add_money_to_party(money: int) -> void:
 	party_money += money
 	party_money_changed.emit()
+	
+@rpc("authority", "call_local", "reliable")
+func rpc_remove_money_from_party(money: int) -> void:
+	party_money -= money
+	party_money_changed.emit()

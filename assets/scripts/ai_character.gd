@@ -22,7 +22,7 @@ class_name AiCharacter
 @export var character_meshes : Array[MeshInstance3D]
 @export var min_angle_to_enemy_for_attack : float = 15
 var target_visibility = false
-
+@export var can_block : bool = false
 # Movement control
 var movement_target: Vector3 = Vector3.ZERO
 var should_move: bool = false

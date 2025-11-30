@@ -34,7 +34,8 @@ func _physics_process(_delta):
 	if ai_character.is_dead() == false and ai_character.is_attacking == false and ai_character.is_taking_damage == false and ai_character.is_stun_lock == false and ai_character.is_blocking_react == false and ai_character.is_blocking == false:
 		handle_movement_target(_delta)
 		handle_attacking()
-		handle_blocking()
+		if ai_character.can_block:
+			handle_blocking()
 		handle_rotation_towards_enemy(_delta)
 
 func handle_attacking():

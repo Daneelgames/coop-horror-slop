@@ -1,4 +1,4 @@
-[gd_scene load_steps=77 format=4 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=81 format=4 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
 [ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
@@ -25,9 +25,13 @@
 [ext_resource type="Script" uid="uid://cfj1ofhergbsi" path="res://assets/scripts/resources/resource_weapon.gd" id="21_lpqf3"]
 [ext_resource type="Resource" uid="uid://duqoopnatiw2q" path="res://assets/resources/rw_torch.tres" id="22_8v1el"]
 [ext_resource type="PackedScene" uid="uid://bf6twf46h65ma" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Straight_Base.gltf" id="22_mnu2g"]
+[ext_resource type="Resource" uid="uid://bkncvjv7y5nls" path="res://assets/resources/rw_healing_potion.tres" id="23_6gtd6"]
 [ext_resource type="PackedScene" uid="uid://bvu5r60qlou6v" path="res://assets/meshes/MedievalVillage/glTF/Roof_RoundTiles_6x6.gltf" id="23_07yxu"]
 [ext_resource type="PackedScene" uid="uid://c3obbqqwu3vl0" path="res://assets/meshes/MedievalVillage/glTF/Roof_Front_Brick6.gltf" id="24_h5bm1"]
+[ext_resource type="Resource" uid="uid://befwti3d6qbn6" path="res://assets/resources/rw_flash_bomb.tres" id="24_w652b"]
 [ext_resource type="PackedScene" uid="uid://b6owlvg4xrcfa" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Door_Flat.gltf" id="25_fxelo"]
+[ext_resource type="Resource" uid="uid://d2sevxdeotk1f" path="res://assets/resources/rw_scroll_of_life.tres" id="25_rne8n"]
+[ext_resource type="Resource" uid="uid://b8x8elsnxpykw" path="res://assets/resources/rw_rope.tres" id="26_27dsw"]
 [ext_resource type="PackedScene" uid="uid://de8nihw3btoaf" path="res://assets/meshes/MedievalVillage/glTF/DoorFrame_Flat_Brick.gltf" id="26_ytnbg"]
 [ext_resource type="PackedScene" uid="uid://bsx1nurqlmh42" path="res://assets/meshes/MedievalVillage/glTF/Floor_WoodDark.gltf" id="27_23tqm"]
 [ext_resource type="PackedScene" uid="uid://b3dltihhojsiu" path="res://assets/meshes/MedievalVillage/glTF/Window_Thin_Round1.gltf" id="28_vx76h"]
@@ -346,10 +350,10 @@ mobs_spawns = Array[ExtResource("7_roc3w")]([SubResource("Resource_s1m6h"), SubR
 torches_on_walls_amount = 10
 items_to_spawn_amount = 20
 item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_l2gu8"), SubResource("Resource_o6wii")])
-props_amount_to_spawn = 50
+props_amount_to_spawn = 100
 props_by_weight = Dictionary[StringName, float]({
-&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0,
-&"res://assets/prefabs/environment/dungeon_props/light_stand.tscn": 0.5
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 0.99,
+&"res://assets/prefabs/environment/dungeon_props/light_stand.tscn": 0.66
 })
 ceiling_props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/light_lantern_ceiling.tscn": 1.0
@@ -433,11 +437,12 @@ path_continuous_u = true
 path_u_distance = 1.0
 path_joined = false
 
-[node name="Shop" type="StaticBody3D" parent="HubField"]
+[node name="Shop" type="StaticBody3D" parent="HubField" node_paths=PackedStringArray("items_for_sale_parent")]
 disable_mode = 1
 collision_mask = 0
 script = ExtResource("20_ydpwt")
-weapons_on_sell = Array[ExtResource("21_lpqf3")]([ExtResource("22_8v1el"), ExtResource("11_q5pb2"), null])
+weapons_on_sell = Array[ExtResource("21_lpqf3")]([ExtResource("22_8v1el"), ExtResource("11_q5pb2"), ExtResource("23_6gtd6"), ExtResource("24_w652b"), ExtResource("25_rne8n"), ExtResource("26_27dsw")])
+items_for_sale_parent = NodePath("ItemsForSaleParent")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="HubField/Shop"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 9.751142, 0.53782654, -2.4813628)
@@ -450,6 +455,26 @@ shape = SubResource("BoxShape3D_6hxmy")
 [node name="CSGBakedCollisionShape3D" type="CollisionShape3D" parent="HubField/Shop"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 11.407843, 1.7749023, -0.28946805)
 shape = SubResource("ConcavePolygonShape3D_jaynq")
+
+[node name="ItemsForSaleParent" type="Node3D" parent="HubField/Shop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.105198, 1.0602062, -2.783269)
+
+[node name="Item01" type="Node3D" parent="HubField/Shop/ItemsForSaleParent"]
+
+[node name="Item02" type="Node3D" parent="HubField/Shop/ItemsForSaleParent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.4760759)
+
+[node name="Item03" type="Node3D" parent="HubField/Shop/ItemsForSaleParent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.0969391)
+
+[node name="Item04" type="Node3D" parent="HubField/Shop/ItemsForSaleParent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.7450347)
+
+[node name="Item05" type="Node3D" parent="HubField/Shop/ItemsForSaleParent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.3145885)
+
+[node name="Item06" type="Node3D" parent="HubField/Shop/ItemsForSaleParent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.772636)
 
 [node name="Walls" type="Node3D" parent="HubField/Shop"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 11.407843, 0, -0.28946805)

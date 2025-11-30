@@ -2338,7 +2338,7 @@ libraries = {
 }
 
 [node name="arm_monster3" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.92669845, -0.06910368, -0.3693954, -0.22559796, 0.6838359, -0.69388306, -0.3005555, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
+transform = Transform3D(0.9266983, -0.06910368, -0.3693954, -0.22559795, 0.6838359, -0.69388306, -0.30055547, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster3"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
@@ -2766,7 +2766,7 @@ libraries = {
 }
 
 [node name="arm_monster6" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.92669845, -0.06910368, -0.3693954, -0.22559796, 0.6838359, -0.69388306, -0.3005555, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
+transform = Transform3D(0.9266983, -0.06910368, -0.3693954, -0.22559795, 0.6838359, -0.69388306, -0.30055547, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster6"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)

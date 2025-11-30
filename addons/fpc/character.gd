@@ -629,6 +629,8 @@ func handle_interaction():
 			interaction_feedback_label_3d.text = col.weapon_resource.weapon_name
 		else:
 			interaction_feedback_label_3d.text = 'INTERACT'
+		if col.is_item_for_sale:
+			interaction_feedback_label_3d.text += " %s G"%col.weapon_resource.item_price
 		interaction_feedback_label_3d.visible = true
 		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
 			
@@ -639,6 +641,24 @@ func handle_interaction():
 			# Also pass pickup position as fallback for better matching
 			var pickup_name = col.name
 			var pickup_position = col.global_position
+			if col.is_item_for_sale and carrying_items.size() < inventory_slots_max:
+				if GameManager.party_money >= col.weapon_resource.item_price:
+					GameManager.rpc_remove_money_from_party(col.weapon_resource.item_price)
+					
+					# BUY ITEMS FOR SELL FROM SHOP
+					var final_name = col.weapon_resource.weapon_name
+					var counter = 1
+					while carrying_items.has(final_name):
+						final_name = StringName("%s %d" % [col.weapon_resource.weapon_name, counter+1])
+						counter += 1
+					
+					carrying_items[final_name] = col.weapon_resource.duplicate()
+					
+					# Clamp selected index if needed
+					_clamp_selected_index()
+					if inventory_slots_panel_container:
+						inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+				return 
 			if multiplayer.is_server():
 				# Server can call directly through GameManager
 				if is_instance_valid(GameManager):
@@ -681,7 +701,6 @@ func handle_interaction():
 		interaction_feedback_label_3d.visible = false
 			
 
-@onready var items_bag: Node3D = %ItemsBag
 	
 # Server tells all clients to destroy the weapon
 # This RPC can be called by the server from any character node

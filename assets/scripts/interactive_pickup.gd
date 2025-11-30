@@ -3,6 +3,7 @@ class_name InteractivePickup
 
 @export var weapon_resource : ResourceWeapon
 @onready var visual_parent: Node3D = %VisualParent
+var is_item_for_sale = false
 
 func _ready() -> void:
 	if weapon_resource:

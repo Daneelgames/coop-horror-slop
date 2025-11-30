@@ -30,6 +30,14 @@ func rpc_stun_lock_on_blocked_attack():
 	if is_stun_lock:
 		return
 	is_stun_lock = true
+	# Reverse current attack animation from current frame
+	
+	# reversed attack anim
+	#if is_attacking and mesh_animation_player.current_animation:
+		#var current_pos = mesh_animation_player.current_animation_position
+		#mesh_animation_player.play(mesh_animation_player.current_animation, 0.1, -1.0, false)
+		#mesh_animation_player.seek(current_pos, true)
+		
 	# Zero out horizontal attack-push velocity when attack is blocked (only on server)
 	if multiplayer.is_server():
 		velocity.x = 0
@@ -113,7 +121,6 @@ func play_attack_woosh():
 @onready var hit_solid_audio_stream_player_3d: AudioStreamPlayer3D = %HitSolidAudioStreamPlayer3D
 func play_hit_solid():
 	hit_solid_audio_stream_player_3d.play()
-	pass
 
 @rpc("any_peer", "call_local", "reliable")
 func rpc_play_hit_solid():

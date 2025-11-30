@@ -3,11 +3,21 @@ class_name ShopController
 @onready var selling_table_static_body_3d: InteractiveButton = %SellingTableStaticBody3D
 @onready var party_money_label_3d: Label3D = %PartyMoneyLabel3D
 @export var weapons_on_sell : Array[ResourceWeapon]
-
+@export var items_for_sale_parent : Node3D
 func _ready() -> void:
 	GameManager.party_money_changed.connect(update_party_money)
 	selling_table_static_body_3d.button_interacted.connect(on_selling_table_button_interacted)
 	update_party_money()
+	spawn_items_for_sell()
+func spawn_items_for_sell():
+	for index in weapons_on_sell.size():
+		var rw : ResourceWeapon = weapons_on_sell[index]
+		var new_pickup : InteractivePickup = load(rw.pickup_prefab_path).instantiate()
+		items_for_sale_parent.get_child(index).add_child(new_pickup)
+		new_pickup.weapon_resource = rw.duplicate()
+		new_pickup.is_item_for_sale = true
+		new_pickup.position = Vector3.ZERO
+		new_pickup.rotation_degrees = Vector3.ZERO
 
 func on_selling_table_button_interacted(_player_id: int):
 	# Handle selling table interaction for specific player

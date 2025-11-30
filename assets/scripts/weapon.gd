@@ -193,6 +193,7 @@ func _handle_melee_hit(hit_result: Dictionary, prev_point, point):
 			weapon_owner.rpc_stun_lock_on_blocked_attack.rpc()
 			GameManager.particles_manager.spawn_solid_hit_particle.rpc(hit_position + hit_position.direction_to(owner_position) * 0.2)
 			weapon_owner.rpc_play_hit_solid.rpc()
+			set_dangerous(false, weapon_owner)
 	else:
 		# Hit a solid object
 		print("[MELEE HIT] Hit solid object: ", collider.name, " at position: ", hit_result.get("position"))
