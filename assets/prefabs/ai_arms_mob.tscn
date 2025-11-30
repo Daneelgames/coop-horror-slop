@@ -1683,7 +1683,7 @@ draw_pass_1 = SubResource("SphereMesh_84kro")
 
 [node name="Eyes" type="Node3D" parent="VisualParent"]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14221597, 0.5, -0.05874127)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3662728, 0)
 
 [node name="ShadowDecal" type="Decal" parent="VisualParent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.11157805)
@@ -2338,7 +2338,7 @@ libraries = {
 }
 
 [node name="arm_monster3" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.9266985, -0.06910368, -0.3693954, -0.22559798, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
+transform = Transform3D(0.92669845, -0.06910368, -0.3693954, -0.22559796, 0.6838359, -0.69388306, -0.3005555, -0.72635585, -0.6181206, 0.21959847, 0.34819517, 0.1561033)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster3"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
@@ -2766,7 +2766,7 @@ libraries = {
 }
 
 [node name="arm_monster6" type="Node3D" parent="VisualParent/SafeRotation"]
-transform = Transform3D(0.9266985, -0.06910368, -0.3693954, -0.22559798, 0.6838359, -0.69388306, -0.30055553, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
+transform = Transform3D(0.92669845, -0.06910368, -0.3693954, -0.22559796, 0.6838359, -0.69388306, -0.3005555, -0.72635585, -0.6181206, 0.21439758, 0.27950752, 0.26067507)
 
 [node name="FpsArms" type="Node3D" parent="VisualParent/SafeRotation/arm_monster6"]
 transform = Transform3D(0.01, 0, 0, 0, -3.5762788e-09, -0.01, 0, 0.01, -3.5762788e-09, 0, 0, 0)
@@ -2990,7 +2990,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5209159, 0)
 shape = SubResource("CapsuleShape3D_xkaag")
 
 [node name="Head" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.50551975, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.59069955, 0)
 
 [node name="AiStateMachine" type="Node3D" parent="."]
 unique_name_in_owner = true
