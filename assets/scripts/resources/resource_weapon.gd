@@ -29,3 +29,8 @@ enum WEAPON_TYPE {
 @export var is_throw_on_use : bool = false
 @export var thrown_projectile_prefab_path : StringName
 @export var self_heal_hp_amount : float = 0
+
+func is_consumable():
+	if weapon_type == WEAPON_TYPE.HEALING_POTION or weapon_type == WEAPON_TYPE.SCROLL_OF_LIFE or weapon_type == WEAPON_TYPE.ROPE or weapon_type == WEAPON_TYPE.FLASH_BOMB:
+		return true
+	return false

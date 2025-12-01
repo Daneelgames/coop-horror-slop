@@ -10,7 +10,7 @@ class_name PlayerVoiceChatManager
 const MAX_VOICE_DISTANCE: float = 60.0  # Максимальная дистанция слышимости
 const VOICE_UPDATE_RATE: float = 0.01  # Проверка каждые 10ms (100 раз в секунду) - уменьшено для меньшей задержки
 
-@export var disable_own_voice_playback: bool = false  # Если true - не воспроизводить свой собственный голос локально
+@export var disable_own_voice_playback: bool = true  # Если true - не воспроизводить свой собственный голос локально
 
 # Состояние
 var is_recording: bool = false
@@ -143,34 +143,32 @@ func _voice_capture_loop():
 		# Проверяем доступность Opus пакетов
 		var chunks_available = opus_chunked_effect.chunk_available()
 		if chunks_available:
-			var packets_sent = 0
+			var _packets_sent = 0
 			while opus_chunked_effect.chunk_available():
 				# Читаем Opus пакет (без префикса)
 				var prepend = PackedByteArray()
 				var opus_data: PackedByteArray = opus_chunked_effect.read_opus_packet(prepend)
 				opus_chunked_effect.drop_chunk()
-				
+
 				if opus_data.size() > 0:
 					# Отправляем всем пирам (без call_local, чтобы не воспроизводить свой голос локально)
 					# Используем rpc_id для отправки только другим пирам, не себе
 					var local_id = multiplayer.get_unique_id()
 					var peers = multiplayer.get_peers()
-					
+
 					if peers.size() > 0:
 						# Отправляем каждому пиру отдельно
 						for peer_id in peers:
 							if peer_id != local_id:
 								_send_voice_chunk_rpc.rpc_id(peer_id, opus_data)
-					
-					# Если отключена блокировка своего голоса или нет других пиров (соло режим)
-					# воспроизводим свой голос локально
-					if not disable_own_voice_playback or peers.size() == 0:
-						# Воспроизводим свой голос локально
-						var own_distance = 0.0  # Расстояние до себя = 0
+
+					# В соло режиме воспроизводим свой голос локально для тестирования
+					if peers.size() == 0 and not disable_own_voice_playback:
+						var own_distance = 0.0
 						_play_voice_chunk(local_id, opus_data, own_distance)
-					
-					packets_sent += 1
-					#if packets_sent == 1:  # Логируем только первый пакет в цикле
+
+					_packets_sent += 1
+					#if _packets_sent == 1:  # Логируем только первый пакет в цикле
 						#print("VoiceChat: Sent Opus packet, size: %d bytes to %d peers" % [opus_data.size(), peers.size()])
 		#elif loop_count % 50 == 0:  # Логируем каждые 50 итераций если нет чанков
 			#print("VoiceChat: No Opus chunks available (is_recording: %s, microphone_player.playing: %s)" % [is_recording, microphone_player.playing])
@@ -217,56 +215,76 @@ func _get_player_distance(peer_id: int) -> float:
 func _play_voice_chunk(peer_id: int, opus_data: PackedByteArray, distance: float):
 	# Создаем или получаем AudioStreamPlayer3D и AudioStreamOpusChunked для этого игрока
 	var opus_stream: AudioStreamOpusChunked
-	
+	var player_voice_player: AudioStreamPlayer3D
+
 	if not player_voice_players.has(peer_id):
 		var player_node = GameManager._player_nodes.get(peer_id)
 		if player_node == null:
 			return
-		
-		# Ищем существующий AudioStreamPlayer3D в ноде Head игрока
-		var head_node = player_node.get_node_or_null("Head")
-		if head_node == null:
-			push_error("VoiceChat: Head node not found for peer %d" % peer_id)
-			return
-		
-		
+
 		# Создаем AudioStreamOpusChunked для декодирования
 		opus_stream = AudioStreamOpusChunked.new()
 		player_opus_streams[peer_id] = opus_stream
-		
-		# Настраиваем существующий AudioStreamPlayer3D
-		voice_player.stream = opus_stream
-		# Настройки уже заданы в character.tscn, но убедимся что они правильные
-		voice_player.max_distance = MAX_VOICE_DISTANCE
-		voice_player.bus = "VoicePlayback"
-		
-		player_voice_players[peer_id] = voice_player
-		
+
+		# Определяем, использовать ли существующий VoicePlayer3D или создать новый
+		var local_id = multiplayer.get_unique_id()
+		if peer_id == local_id:
+			# Для локального игрока используем экспортированный voice_player
+			player_voice_player = voice_player
+			player_voice_player.stream = opus_stream
+			player_voice_player.max_distance = MAX_VOICE_DISTANCE
+			player_voice_player.bus = "VoicePlayback"
+		else:
+			# Для других игроков ищем или создаем AudioStreamPlayer3D в их Head ноде
+			var head_node = player_node.get_node_or_null("Head")
+			if head_node == null:
+				push_error("VoiceChat: Head node not found for peer %d" % peer_id)
+				return
+
+			# Ищем существующий VoicePlayer3D или создаем новый
+			player_voice_player = head_node.get_node_or_null("VoicePlayer3D")
+			if player_voice_player == null:
+				# Создаем новый AudioStreamPlayer3D для удаленного игрока
+				player_voice_player = AudioStreamPlayer3D.new()
+				player_voice_player.name = "VoicePlayer3D"
+				head_node.add_child(player_voice_player)
+
+				# Настраиваем новый плеер
+				player_voice_player.max_distance = MAX_VOICE_DISTANCE
+				player_voice_player.bus = "VoicePlayback"
+				player_voice_player.volume_db = -15
+				player_voice_player.max_db = -5
+				player_voice_player.unit_size = 2
+
+			player_voice_player.stream = opus_stream
+
+		player_voice_players[peer_id] = player_voice_player
+
 		# Запускаем воспроизведение
-		voice_player.play()
-		print("VoiceChat: Using existing VoicePlayer3D for peer %d at position %s, bus: %s, playing: %s" % [
-			peer_id, 
-			str(voice_player.global_position), 
-			voice_player.bus,
-			voice_player.playing
+		player_voice_player.play()
+		print("VoiceChat: Using VoicePlayer3D for peer %d at position %s, bus: %s, playing: %s" % [
+			peer_id,
+			str(player_voice_player.global_position),
+			player_voice_player.bus,
+			player_voice_player.playing
 		])
 	else:
-		voice_player = player_voice_players[peer_id]
+		player_voice_player = player_voice_players[peer_id]
 		opus_stream = player_opus_streams[peer_id]
 	
-	if voice_player == null or opus_stream == null:
+	if player_voice_player == null or opus_stream == null:
 		return
-	
+
 	# Убеждаемся что AudioStreamPlayer3D играет (должен играть постоянно для Opus потока)
-	if not voice_player.playing:
-		voice_player.play()
+	if not player_voice_player.playing:
+		player_voice_player.play()
 		print("VoiceChat: Restarted playback for peer %d (was stopped)" % peer_id)
-	
+
 	# Настраиваем громкость по расстоянию (proximity effect)
 	var volume_factor = 1.0 - (distance / MAX_VOICE_DISTANCE)
 	volume_factor = clamp(volume_factor, 0.0, 1.0)
-	voice_player.volume_db = linear_to_db(volume_factor * 0.7)  # Немного тише для комфорта
-	
+	player_voice_player.volume_db = linear_to_db(volume_factor * 0.7)  # Немного тише для комфорта
+
 	# Добавляем Opus пакет в поток для декодирования
 	if opus_stream.chunk_space_available():
 		# FEC (Forward Error Correction) = 0, так как мы не знаем о потерях пакетов
@@ -296,12 +314,22 @@ func _on_peer_connected(peer_id: int):
 	print("VoiceChat: Peer %d connected" % peer_id)
 
 func _on_peer_disconnected(peer_id: int):
+	var local_id = multiplayer.get_unique_id()
 	if player_voice_players.has(peer_id):
 		var player = player_voice_players[peer_id]
 		if player:
-			# Останавливаем воспроизведение, но НЕ удаляем нод (он часть character.tscn)
+			# Останавливаем воспроизведение
 			player.stop()
 			player.stream = null  # Очищаем stream
+
+			# Удаляем созданный динамически AudioStreamPlayer3D только для удаленных игроков
+			if peer_id != local_id:
+				var player_node = GameManager._player_nodes.get(peer_id)
+				if player_node:
+					var head_node = player_node.get_node_or_null("Head")
+					if head_node and head_node.has_node("VoicePlayer3D"):
+						head_node.remove_child(player)
+
 		player_voice_players.erase(peer_id)
 	
 	if player_opus_streams.has(peer_id):

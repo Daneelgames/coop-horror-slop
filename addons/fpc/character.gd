@@ -813,12 +813,20 @@ func rpc_melee_attack(attack_string: String):
 	mesh_animation_player.play(attack_string, 0.1)
 
 	is_attacking = true
+	if item_in_hands.weapon_resource.is_consumable():
+		item_in_hands.set_dangerous(false, self)
+		await mesh_animation_player.animation_finished
+		use_consumable_item_in_hands()
+		is_attacking = false
+		return
+		
 	if item_in_hands:
 		item_in_hands.set_dangerous(true, self)
 	await mesh_animation_player.animation_finished
 	if item_in_hands:
 		item_in_hands.set_dangerous(false, self)
 	is_attacking = false
+	
 @onready var camera: Camera3D = %Camera
 
 func handle_crouching():
@@ -1814,3 +1822,13 @@ func try_selling_item_in_hands():
 	item_in_hands = null
 
 	GameManager.rpc_add_money_to_party.rpc(sell_price)
+
+func use_consumable_item_in_hands():
+	# choose item effect: 
+	# healing potion should restore own character's health
+	# scroll of life should resurrect all units: players and monsters 
+	
+	# destroy current item in hands, remove from carrying items
+	
+	# we will implement rest items types later
+	pass
