@@ -650,21 +650,12 @@ func handle_interaction():
 			var pickup_position = col.global_position
 			if col.is_item_for_sale and carrying_items.size() < inventory_slots_max:
 				if GameManager.party_money >= col.weapon_resource.item_price:
-					GameManager.rpc_remove_money_from_party(col.weapon_resource.item_price)
-					
-					# BUY ITEMS FOR SELL FROM SHOP
-					var final_name = col.weapon_resource.weapon_name
-					var counter = 1
-					while carrying_items.has(final_name):
-						final_name = StringName("%s %d" % [col.weapon_resource.weapon_name, counter+1])
-						counter += 1
-					
-					carrying_items[final_name] = col.weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
-					
-					# Clamp selected index if needed
-					_clamp_selected_index()
-					if inventory_slots_panel_container:
-						inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+					# Request server to process the purchase
+					var weapon_data = GameManager.serialize_weapon_resource(col.weapon_resource)
+					if multiplayer.is_server():
+						GameManager._process_buy_item_request(multiplayer.get_unique_id(), col.weapon_resource.item_price, weapon_data)
+					else:
+						GameManager.rpc_request_buy_item.rpc(multiplayer.get_unique_id(), col.weapon_resource.item_price, weapon_data)
 				return 
 			if multiplayer.is_server():
 				# Server can call directly through GameManager
@@ -1784,51 +1775,152 @@ func _debug_clear_block_reason(source: String) -> void:
 
 func death():
 	super.death()
+	drop_all_carrying_items()
+
+	# Clear carrying_items and item_in_hands on client side too (server handles item dropping, client handles inventory clearing)
+	if not multiplayer.is_server():
+		carrying_items.clear()
+		current_selected_item_index = 0
+		if item_in_hands:
+			item_in_hands.queue_free()
+			item_in_hands = null
+		if inventory_slots_panel_container:
+			inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+
 	if _has_input_authority:
 		await get_tree().create_timer(5).timeout
 		#rpc_full_heal_and_resurrect.rpc()
 		#enter_normal_state()
 
+@rpc("authority", "call_local")
+func rpc_full_heal_and_resurrect():
+	super.rpc_full_heal_and_resurrect()
+
+	# Clear carrying_items and item_in_hands when resurrecting (player should start with empty inventory)
+	carrying_items.clear()
+	current_selected_item_index = 0
+	if item_in_hands:
+		item_in_hands.queue_free()
+		item_in_hands = null
+	if inventory_slots_panel_container:
+		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+
+	print("[PLAYER RESURRECTION] ", name, " resurrected with cleared inventory")
+
+func drop_all_carrying_items():
+	# Only server can spawn pickups
+	if not multiplayer.is_server():
+		return
+
+	# Get all item keys
+	var item_keys = carrying_items.keys()
+	if item_keys.is_empty():
+		return
+
+	# Calculate drop position base (character's position + slight offset)
+	var base_drop_position = global_position + Vector3(0, 0.5, 0)
+
+	# Drop each item in carrying_items
+	for i in range(item_keys.size()):
+		var item_key = item_keys[i]
+		var weapon_resource = carrying_items[item_key]
+
+		if weapon_resource == null or weapon_resource.pickup_prefab_path == null or weapon_resource.pickup_prefab_path == "":
+			continue
+
+		# Calculate drop position with some spread around the character
+		var angle = (float(i) / float(item_keys.size())) * TAU  # Distribute items in a circle
+		var radius = 1.0  # Distance from character
+		var drop_position = base_drop_position + Vector3(cos(angle) * radius, 0, sin(angle) * radius)
+
+		# Check if drop position is inside a wall (layer 1 - solids)
+		var space_state = get_world_3d().direct_space_state
+		var query = PhysicsRayQueryParameters3D.create(global_position, drop_position)
+		query.collision_mask = (1 << 0)  # layer 1 only
+		var result = space_state.intersect_ray(query)
+		if result:
+			# If collision detected, drop at character's feet instead
+			drop_position = global_position + Vector3(0, 0.1, 0)
+
+		# Serialize weapon resource for RPC
+		var weapon_data = GameManager.serialize_weapon_resource(weapon_resource)
+
+		# Spawn the pickup
+		rpc_spawn_dropped_pickup(drop_position, weapon_data)
+
+	# Clear carrying_items and item_in_hands after dropping all items
+	carrying_items.clear()
+	if item_in_hands:
+		item_in_hands.queue_free()
+		item_in_hands = null
+
+	# Reset selected item index
+	current_selected_item_index = 0
+
+	# Update inventory UI for all clients
+	if inventory_slots_panel_container:
+		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+
+	# Update item in hands for all clients (no item selected)
+	rpc_update_item_in_hands(-1, {})
+
 func resurrect():
 	rpc_full_heal_and_resurrect.rpc()
 	enter_normal_state()
 
+@rpc("authority", "call_local")
+func rpc_cheat_take_damage():
+	take_damage(10)
+
 func cheat_codes():
+	if !_has_input_authority:
+		return
 	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):
 		rpc_full_heal_and_resurrect.rpc()
 		if _has_input_authority:
 			enter_normal_state()
 	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_K):
 		# Take 10 damage to self
-		take_damage(10)
+		rpc_cheat_take_damage.rpc()
 	pass
 
 func try_selling_item_in_hands():
-	if !_has_input_authority:
+	# On server, allow selling for any player (server processes sales for all)
+	# On client, only allow if this client controls the character
+	if !multiplayer.is_server() and !_has_input_authority:
+		print("[SELL] Client has no input authority, skipping")
 		return
 	if item_in_hands == null:
+		print("[SELL] No item in hands, skipping")
 		return
 	if item_in_hands.weapon_resource == null:
+		print("[SELL] Item in hands has no weapon_resource, skipping")
 		return
 	var sell_price = item_in_hands.weapon_resource.item_price
 
-	# Remove item from inventory
+	# Get the item key to sell - should correspond to the currently selected item
 	var item_keys = carrying_items.keys()
 	if item_keys.size() > current_selected_item_index and current_selected_item_index >= 0:
 		var item_key = item_keys[current_selected_item_index]
-		carrying_items.erase(item_key)
 
-		# Clamp selected index if needed
-		_clamp_selected_index()
+		var player_id = _cached_peer_id  # Use cached peer ID instead of multiplayer.get_unique_id()
+		print("[SELL] Attempting to sell item %s for %d gold (player %d, cached_peer_id: %d, is_server: %s)" % [item_key, sell_price, player_id, _cached_peer_id, multiplayer.is_server()])
 
-		# Update inventory UI
-		if inventory_slots_panel_container:
-			inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+		# Verify that the item in hands matches the selected item
+		var selected_resource = carrying_items[item_key]
+		if selected_resource != item_in_hands.weapon_resource:
+			print("[SELL] Warning: Item in hands doesn't match selected inventory item")
+			# Still proceed with sale of the selected item
 
-	item_in_hands.queue_free()
-	item_in_hands = null
-
-	GameManager.rpc_add_money_to_party.rpc(sell_price)
+		# Process sale through GameManager
+		if multiplayer.is_server():
+			# On server, process directly
+			GameManager._process_sell_item_request(player_id, item_key, sell_price)
+		else:
+			# On client, request server to process
+			GameManager.rpc_request_sell_item.rpc(player_id, item_key, sell_price)
+	else:
+		print("[SELL] Invalid selected item index %d (total items: %d)" % [current_selected_item_index, item_keys.size()])
 
 func use_consumable_item_in_hands():
 	if item_in_hands == null or item_in_hands.weapon_resource == null:
@@ -1850,10 +1942,13 @@ func use_consumable_item_in_hands():
 
 	elif weapon_type == ResourceWeapon.WEAPON_TYPE.SCROLL_OF_LIFE:
 		# Scroll of life resurrects units in line of sight (no solid obstacles)
+		print("[SCROLL_OF_LIFE] Using Scroll of Life weapon")
 		var all_units: Array[Unit] = []
 
 		# Get all players
 		var players = get_tree().get_nodes_in_group("players")
+		players = GameManager._player_nodes.values()
+		print("[SCROLL_OF_LIFE] Found ", players.size(), " players in group")
 		for player in players:
 			if player is Unit:
 				all_units.append(player)
@@ -1861,6 +1956,7 @@ func use_consumable_item_in_hands():
 		# Get all AI characters (monsters) from GameManager's game level
 		if GameManager._game_level and GameManager._game_level.has_method("get_ai_characters"):
 			var ai_characters = GameManager._game_level.ai_characters
+			print("[SCROLL_OF_LIFE] Found ", ai_characters.size(), " AI characters in GameManager")
 			for ai_char in ai_characters:
 				if ai_char is Unit:
 					all_units.append(ai_char)
@@ -1868,15 +1964,23 @@ func use_consumable_item_in_hands():
 			# Fallback: search scene tree for AiCharacter instances
 			var root = get_tree().root
 			var ai_characters = _find_all_ai_characters(root)
+			print("[SCROLL_OF_LIFE] Using fallback search, found ", ai_characters.size(), " AI characters in scene tree")
 			for ai_char in ai_characters:
 				if ai_char is Unit:
 					all_units.append(ai_char)
 
+		print("[SCROLL_OF_LIFE] Total units found: ", all_units.size())
+
 		# Resurrect units that are in line of sight (raycast from caster's HEAD to target's HEAD)
-		var caster_head_pos = HEAD.global_position if HEAD else global_position + Vector3(0, 1.5, 0)
+		var caster_head_pos = HEAD.global_position if HEAD else global_position + Vector3(0, 1, 0)
 		var space_state = get_world_3d().direct_space_state
+		print("[SCROLL_OF_LIFE] Caster head position: ", caster_head_pos)
 
 		for unit in all_units:
+			var unit_name = unit.name if unit else "null"
+			var is_dead = unit.is_dead() if unit else false
+			print("[SCROLL_OF_LIFE] Checking unit: ", unit_name, " - is_dead: ", is_dead, " health: ", unit.health_current if unit else "N/A", "/", unit.health_max if unit else "N/A")
+
 			if unit.is_dead():
 				# Get target's head position
 				var target_head_pos = Vector3.ZERO
@@ -1886,7 +1990,9 @@ func use_consumable_item_in_hands():
 					target_head_pos = unit.head.global_position
 				else:
 					# Fallback for other unit types or if head node is not set
-					target_head_pos = unit.global_position + Vector3(0, 1.5, 0)
+					target_head_pos = unit.global_position + Vector3(0, 1, 0)
+
+				print("[SCROLL_OF_LIFE] Target head position for ", unit_name, ": ", target_head_pos)
 
 				# Perform raycast from caster's head to target's head
 				var query = PhysicsRayQueryParameters3D.create(caster_head_pos, target_head_pos)
@@ -1894,10 +2000,18 @@ func use_consumable_item_in_hands():
 				query.exclude = [self]  # Exclude caster from raycast
 
 				var result = space_state.intersect_ray(query)
+				print("[SCROLL_OF_LIFE] Raycast from ", caster_head_pos, " to ", target_head_pos, " - result empty: ", result.is_empty())
+
+				if not result.is_empty():
+					var collider = result.get("collider", "unknown")
+					print("[SCROLL_OF_LIFE] Raycast blocked by: ", collider)
 
 				# If raycast is empty (no obstacles), resurrect the unit
 				if result.is_empty():
+					print("[SCROLL_OF_LIFE] RESURRECTING unit: ", unit_name)
 					unit.rpc_full_heal_and_resurrect.rpc()
+				else:
+					print("[SCROLL_OF_LIFE] CANNOT resurrect ", unit_name, " - line of sight blocked")
 
 	# Destroy current item in hands and remove from carrying items
 	var item_keys = carrying_items.keys()

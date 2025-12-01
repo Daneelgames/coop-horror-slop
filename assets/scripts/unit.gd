@@ -173,4 +173,13 @@ func play_mesh_animation(moving_vector, auth, state):
 			
 @rpc("authority", "call_local")
 func rpc_full_heal_and_resurrect():
+	var old_health = health_current
 	health_current = health_max
+	print("[RESURRECTION] Unit ", name, " resurrected! Health: ", old_health, " -> ", health_current)
+
+	# Reset states
+	is_attacking = false
+	is_blocking = false
+	is_blocking_react = false
+	is_stun_lock = false
+	is_taking_damage = false

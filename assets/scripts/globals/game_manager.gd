@@ -827,8 +827,139 @@ func _sync_dungeon_seed(seed_value: int) -> void:
 func rpc_add_money_to_party(money: int) -> void:
 	party_money += money
 	party_money_changed.emit()
+	rpc_sync_party_money.rpc(party_money)
 	
 @rpc("authority", "call_local", "reliable")
 func rpc_remove_money_from_party(money: int) -> void:
 	party_money -= money
 	party_money_changed.emit()
+	rpc_sync_party_money.rpc(party_money)
+
+@rpc("any_peer", "call_local", "reliable")
+func rpc_sync_party_money(new_amount: int) -> void:
+	party_money = new_amount
+	party_money_changed.emit()
+
+# Internal function to process buy item request (used both by RPC and direct calls)
+func _process_buy_item_request(player_id: int, item_price: int, weapon_data: Dictionary) -> void:
+	# Find the player
+	if !_player_nodes.has(player_id):
+		print("[SHOP] Player %d not found for buy request" % player_id)
+		return
+
+	var player = _player_nodes[player_id]
+
+	# Check if player has enough money
+	if party_money < item_price:
+		print("[SHOP] Not enough money to buy item. Need %d, have %d" % [item_price, party_money])
+		return
+
+	# Check if player has inventory space
+	if player.carrying_items.size() >= player.inventory_slots_max:
+		print("[SHOP] Player inventory is full")
+		return
+
+	# Remove money from party
+	rpc_remove_money_from_party(item_price)
+
+	# Add item to player's inventory
+	var weapon_resource = deserialize_weapon_resource(weapon_data)
+	var final_name = weapon_resource.weapon_name
+	var counter = 1
+	while player.carrying_items.has(final_name):
+		final_name = StringName("%s %d" % [weapon_resource.weapon_name, counter+1])
+		counter += 1
+
+	player.carrying_items[final_name] = weapon_resource.duplicate(true)
+
+	# Update player's inventory UI
+	player._clamp_selected_index()
+	var serialized_inventory: Dictionary = {}
+	for key in player.carrying_items.keys():
+		serialized_inventory[key] = serialize_weapon_resource(player.carrying_items[key])
+
+	if player_id == 1:
+		# Server player - update directly
+		if player.inventory_slots_panel_container:
+			player.inventory_slots_panel_container.update_inventory_items_ui(player.carrying_items, player.current_selected_item_index)
+	else:
+		# Client player - send RPC
+		player.rpc_update_inventory.rpc_id(player_id, serialized_inventory)
+
+	# Update item in hands if needed
+	var item_keys = player.carrying_items.keys()
+	if item_keys.size() > player.current_selected_item_index and player.current_selected_item_index >= 0:
+		var selected_item_resource = player.carrying_items[item_keys[player.current_selected_item_index]]
+		var selected_weapon_data = serialize_weapon_resource(selected_item_resource)
+		player.rpc_update_item_in_hands.rpc(player.current_selected_item_index, selected_weapon_data)
+	else:
+		player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
+
+# RPC for clients to request buying an item from shop
+@rpc("any_peer", "reliable")
+func rpc_request_buy_item(player_id: int, item_price: int, weapon_data: Dictionary) -> void:
+	# Only server processes this
+	if !multiplayer.is_server():
+		return
+
+	_process_buy_item_request(player_id, item_price, weapon_data)
+
+# Internal function to process sell item request (used both by RPC and direct calls)
+func _process_sell_item_request(player_id: int, item_key: String, sell_price: int) -> void:
+	print("[SHOP] Processing sell request: player %d, item %s, price %d" % [player_id, item_key, sell_price])
+
+	# Find the player
+	if !_player_nodes.has(player_id):
+		print("[SHOP] Player %d not found for sell request" % player_id)
+		return
+
+	var player = _player_nodes[player_id]
+
+	# Check if player has the item
+	if !player.carrying_items.has(item_key):
+		print("[SHOP] Player doesn't have item %s to sell" % item_key)
+		return
+
+	print("[SHOP] Removing item %s from player %d's inventory (had %d items)" % [item_key, player_id, player.carrying_items.size()])
+
+	# Remove item from inventory
+	player.carrying_items.erase(item_key)
+
+	print("[SHOP] Added %d gold to party (total now: %d)" % [sell_price, party_money + sell_price])
+
+	# Add money to party
+	party_money += sell_price
+	party_money_changed.emit()
+	rpc_sync_party_money.rpc(party_money)
+
+	# Update player's inventory UI
+	player._clamp_selected_index()
+	var serialized_inventory: Dictionary = {}
+	for key in player.carrying_items.keys():
+		serialized_inventory[key] = serialize_weapon_resource(player.carrying_items[key])
+
+	if player_id == 1:
+		# Server player - update directly
+		if player.inventory_slots_panel_container:
+			player.inventory_slots_panel_container.update_inventory_items_ui(player.carrying_items, player.current_selected_item_index)
+	else:
+		# Client player - send RPC
+		player.rpc_update_inventory.rpc_id(player_id, serialized_inventory)
+
+	# Update item in hands if needed
+	var item_keys = player.carrying_items.keys()
+	if item_keys.size() > player.current_selected_item_index and player.current_selected_item_index >= 0:
+		var selected_item_resource = player.carrying_items[item_keys[player.current_selected_item_index]]
+		var selected_weapon_data = serialize_weapon_resource(selected_item_resource)
+		player.rpc_update_item_in_hands.rpc(player.current_selected_item_index, selected_weapon_data)
+	else:
+		player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
+
+# RPC for clients to request selling an item
+@rpc("any_peer", "reliable")
+func rpc_request_sell_item(player_id: int, item_key: String, sell_price: int) -> void:
+	# Only server processes this
+	if !multiplayer.is_server():
+		return
+
+	_process_sell_item_request(player_id, item_key, sell_price)

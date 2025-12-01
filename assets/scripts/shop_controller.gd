@@ -24,9 +24,15 @@ func on_selling_table_button_interacted(_player_id: int):
 	rpc_local_player_tries_selling_item_in_hands.rpc(_player_id)
 	pass
 
-@rpc("any_peer", "call_local")
+@rpc("any_peer")
 func rpc_local_player_tries_selling_item_in_hands(player_id: int):
 	# Handle selling table interaction for specific player
+	# Only server should process this
+	if !multiplayer.is_server():
+		return
+
+	print("[SHOP] Server processing sell request for player %d" % player_id)
+
 	# найди игрока по id игрока и вызови функцию try_selling_item_in_hands
 	if GameManager._player_nodes.has(player_id):
 		var player = GameManager._player_nodes[player_id]

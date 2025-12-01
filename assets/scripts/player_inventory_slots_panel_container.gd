@@ -16,6 +16,7 @@ func update_inventory_items_ui(items, selected_index = null):
 	for key_name in items.keys():
 		var weapon_resource = items[key_name] as ResourceWeapon
 		var new_label = Label.new()
+		new_label.add_theme_font_size_override('font_size', 32)
 		if index == selected_index:
 			new_label.modulate = Color.YELLOW
 		else:
