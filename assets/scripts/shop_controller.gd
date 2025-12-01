@@ -21,14 +21,23 @@ func spawn_items_for_sell():
 
 func on_selling_table_button_interacted(_player_id: int):
 	# Handle selling table interaction for specific player
-	rpc_local_player_tries_selling_item_in_hands.rpc(_player_id)
+	print("[SHOP] Selling table interacted by player %d" % _player_id)
+
+	if multiplayer.is_server():
+		print("[SHOP] Server processing directly")
+		_process_sell_request(_player_id)
+	else:
+		print("[SHOP] Calling RPC for selling...")
+		rpc_local_player_tries_selling_item_in_hands.rpc(_player_id)
+		print("[SHOP] RPC call completed")
 	pass
 
-@rpc("any_peer")
-func rpc_local_player_tries_selling_item_in_hands(player_id: int):
+func _process_sell_request(player_id: int):
 	# Handle selling table interaction for specific player
 	# Only server should process this
+	print("[SHOP] Processing sell request for player %d, is_server: %s" % [player_id, multiplayer.is_server()])
 	if !multiplayer.is_server():
+		print("[SHOP] Not server, ignoring")
 		return
 
 	print("[SHOP] Server processing sell request for player %d" % player_id)
@@ -36,7 +45,15 @@ func rpc_local_player_tries_selling_item_in_hands(player_id: int):
 	# найди игрока по id игрока и вызови функцию try_selling_item_in_hands
 	if GameManager._player_nodes.has(player_id):
 		var player = GameManager._player_nodes[player_id]
+		print("[SHOP] Found player %d, calling try_selling_item_in_hands" % player_id)
 		player.try_selling_item_in_hands()
+	else:
+		print("[SHOP] Player %d not found in _player_nodes" % player_id)
+
+@rpc("any_peer")
+func rpc_local_player_tries_selling_item_in_hands(player_id: int):
+	# Handle selling table interaction for specific player
+	_process_sell_request(player_id)
 		
 @onready var money_audio_stream_player_3d: AudioStreamPlayer3D = %MoneyAudioStreamPlayer3D
 

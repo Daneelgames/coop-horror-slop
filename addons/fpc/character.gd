@@ -694,6 +694,7 @@ func handle_interaction():
 		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
 		
 		if Input.is_action_just_pressed(controls.INTERACTION):
+			print("[PLAYER] Interacting with button, calling rpc_request_interaction with player_id: %d" % multiplayer.get_unique_id())
 			col.rpc_request_interaction.rpc(multiplayer.get_unique_id())
 	else:
 		interaction_feedback_label_3d.visible = false
@@ -808,7 +809,7 @@ func rpc_melee_attack(attack_string: String):
 	mesh_animation_player.play(attack_string, 0.1)
 
 	is_attacking = true
-	if item_in_hands.weapon_resource.is_consumable():
+	if item_in_hands and item_in_hands.weapon_resource.is_consumable():
 		item_in_hands.set_dangerous(false, self)
 		await mesh_animation_player.animation_finished
 		use_consumable_item_in_hands()
@@ -1659,15 +1660,24 @@ func _has_local_control() -> bool:
 	if _cached_peer_id >= 0:
 		if _cached_local_peer_id < 0:
 			_cached_local_peer_id = multiplayer.get_unique_id()
-		return _cached_peer_id == _cached_local_peer_id
+		var result = _cached_peer_id == _cached_local_peer_id
+		if debug_authority:
+			_debug_print("_has_local_control: cached_peer_id=%d, cached_local_peer_id=%d, result=%s" % [_cached_peer_id, _cached_local_peer_id, result])
+		return result
 	# Fallback: parse name if cache not set (shouldn't happen normally)
 	var name_parts = name.split("_")
 	if name_parts.size() >= 2:
 		_cached_peer_id = name_parts[1].to_int()
 		if _cached_local_peer_id < 0:
 			_cached_local_peer_id = multiplayer.get_unique_id()
-		return _cached_peer_id == _cached_local_peer_id
-	return is_multiplayer_authority()
+		var result = _cached_peer_id == _cached_local_peer_id
+		if debug_authority:
+			_debug_print("_has_local_control fallback: parsed_peer_id=%d, local_peer_id=%d, result=%s" % [_cached_peer_id, _cached_local_peer_id, result])
+		return result
+	var result = is_multiplayer_authority()
+	if debug_authority:
+		_debug_print("_has_local_control final fallback: is_multiplayer_authority=%s" % result)
+	return result
 
 
 func _refresh_authority_state(force: bool = false):
@@ -1887,9 +1897,11 @@ func cheat_codes():
 func try_selling_item_in_hands():
 	# On server, allow selling for any player (server processes sales for all)
 	# On client, only allow if this client controls the character
-	if !multiplayer.is_server() and !_has_input_authority:
-		print("[SELL] Client has no input authority, skipping")
-		return
+	print("[SELL DEBUG] is_server: %s, has_input_authority: %s, cached_peer_id: %d, unique_id: %d" % [multiplayer.is_server(), _has_input_authority, _cached_peer_id, multiplayer.get_unique_id()])
+	# Note: Authority check removed - server already validates requests
+	# if !multiplayer.is_server() and !_has_input_authority:
+	#	print("[SELL] Client has no input authority, skipping")
+	#	return
 	if item_in_hands == null:
 		print("[SELL] No item in hands, skipping")
 		return

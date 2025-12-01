@@ -1,4 +1,4 @@
-[gd_scene load_steps=79 format=4 uid="uid://cjdhevlku23cr"]
+[gd_scene load_steps=80 format=4 uid="uid://cjdhevlku23cr"]
 
 [ext_resource type="Script" uid="uid://cqlbu6b0kql3i" path="res://assets/scripts/game_level.gd" id="1_nbe18"]
 [ext_resource type="Script" uid="uid://qodej8ougn1i" path="res://assets/scripts/particles_manager.gd" id="2_slvmx"]
@@ -28,6 +28,7 @@
 [ext_resource type="Resource" uid="uid://bkncvjv7y5nls" path="res://assets/resources/rw_healing_potion.tres" id="23_6gtd6"]
 [ext_resource type="PackedScene" uid="uid://bvu5r60qlou6v" path="res://assets/meshes/MedievalVillage/glTF/Roof_RoundTiles_6x6.gltf" id="23_07yxu"]
 [ext_resource type="PackedScene" uid="uid://c3obbqqwu3vl0" path="res://assets/meshes/MedievalVillage/glTF/Roof_Front_Brick6.gltf" id="24_h5bm1"]
+[ext_resource type="Resource" uid="uid://befwti3d6qbn6" path="res://assets/resources/rw_flash_bomb.tres" id="24_w652b"]
 [ext_resource type="PackedScene" uid="uid://b6owlvg4xrcfa" path="res://assets/meshes/MedievalVillage/glTF/Wall_Plaster_Door_Flat.gltf" id="25_fxelo"]
 [ext_resource type="Resource" uid="uid://d2sevxdeotk1f" path="res://assets/resources/rw_scroll_of_life.tres" id="25_rne8n"]
 [ext_resource type="PackedScene" uid="uid://de8nihw3btoaf" path="res://assets/meshes/MedievalVillage/glTF/DoorFrame_Flat_Brick.gltf" id="26_ytnbg"]
@@ -439,7 +440,7 @@ path_joined = false
 disable_mode = 1
 collision_mask = 0
 script = ExtResource("20_ydpwt")
-weapons_on_sell = Array[ExtResource("21_lpqf3")]([ExtResource("22_8v1el"), ExtResource("11_q5pb2"), ExtResource("23_6gtd6"), ExtResource("25_rne8n")])
+weapons_on_sell = Array[ExtResource("21_lpqf3")]([ExtResource("22_8v1el"), ExtResource("11_q5pb2"), ExtResource("23_6gtd6"), ExtResource("25_rne8n"), ExtResource("24_w652b")])
 items_for_sale_parent = NodePath("ItemsForSaleParent")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="HubField/Shop"]
