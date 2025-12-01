@@ -53,6 +53,9 @@ var seed_received: bool = false
 @export var room_connections: Dictionary[ResourceDungeonRoom, Array] = {} # room -> Array[connected_room]
 @export var tunnel_room: ResourceDungeonRoom = null # Special room for all tunnel tiles
 var spawned_elevator : MainElevatorController = null
+@export_range(0, 1) var rooms_with_light_stands_percent = 0.5
+const LIGHT_STAND = preload("uid://bc73sgn7yj34n")
+
 func _ready() -> void:
 	print("MultistoryBuildingDungeon ready - node: ", name, ", path: ", get_path(), ", is_inside_tree: ", is_inside_tree())
 
@@ -2859,6 +2862,88 @@ func spawn_props():
 			await _await_frame()
 
 	print("spawn_props: Total ceiling props spawned: ", ceiling_props_to_spawn)
+
+	# Spawn LIGHT_STAND torcheres in selected rooms
+	_spawn_light_stands_in_rooms()
+
+func _spawn_light_stands_in_rooms():
+	# Don't spawn light stands in editor
+	if Engine.is_editor_hint():
+		return
+
+	# Get all rooms from all floors
+	var all_rooms: Array[ResourceDungeonRoom] = []
+	for floor_rooms in apartment_rooms_by_floor.values():
+		all_rooms.append_array(floor_rooms)
+
+	if all_rooms.is_empty():
+		print("spawn_props: No rooms found for light stands")
+		return
+
+	# Calculate how many rooms should get light stands
+	var rooms_with_light_stands_count = int(all_rooms.size() * rooms_with_light_stands_percent)
+	if rooms_with_light_stands_count < 1 and rooms_with_light_stands_percent > 0:
+		rooms_with_light_stands_count = 1  # At least 1 room if percentage > 0
+
+	print("spawn_props: Spawning light stands in ", rooms_with_light_stands_count, " out of ", all_rooms.size(), " rooms")
+
+	# Shuffle rooms to randomize selection
+	var shuffled_rooms = all_rooms.duplicate()
+	shuffled_rooms.shuffle()
+
+	# Select rooms for light stands
+	var selected_rooms = shuffled_rooms.slice(0, rooms_with_light_stands_count)
+
+	for room in selected_rooms:
+		_spawn_light_stand_in_room(room)
+
+func _spawn_light_stand_in_room(room: ResourceDungeonRoom):
+	# Find all floor tiles that belong to this room
+	var room_floor_tiles: Array[DungeonTile] = []
+	for tile in all_spawned_tiles.keys():
+		if all_spawned_tiles[tile] == room and is_instance_valid(tile.floor):
+			room_floor_tiles.append(tile)
+
+	if room_floor_tiles.is_empty():
+		return
+
+	# Find corner tiles (tiles with floor and exactly 2 adjacent walls)
+	var corner_tiles: Array[DungeonTile] = []
+	for tile in room_floor_tiles:
+		var wall_count = 0
+		if is_instance_valid(tile.wall_f): wall_count += 1
+		if is_instance_valid(tile.wall_r): wall_count += 1
+		if is_instance_valid(tile.wall_b): wall_count += 1
+		if is_instance_valid(tile.wall_l): wall_count += 1
+
+		if wall_count == 2:
+			corner_tiles.append(tile)
+
+	# Choose tile: prefer corner tiles, fallback to any floor tile
+	var selected_tile: DungeonTile = null
+	if not corner_tiles.is_empty():
+		selected_tile = corner_tiles[rng.randi() % corner_tiles.size()]
+	else:
+		selected_tile = room_floor_tiles[rng.randi() % room_floor_tiles.size()]
+
+	if selected_tile == null:
+		return
+
+	# Calculate spawn position (same as regular props)
+	var random_offset_x: float = rng.randf_range(-TILE_SIZE.x / 2.5, TILE_SIZE.x / 2.5)
+	var random_offset_z: float = rng.randf_range(-TILE_SIZE.z / 2.5, TILE_SIZE.z / 2.5)
+	var light_stand_position = selected_tile.position + Vector3(random_offset_x, 0.1, random_offset_z)
+
+	# Spawn LIGHT_STAND through MultiplayerSpawner for synchronization
+	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
+		var spawn_data = {"type": "prop", "path": str(LIGHT_STAND)}
+		var light_stand = GameManager._game_spawner.spawn(spawn_data)
+		if light_stand != null:
+			# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
+			light_stand.position = light_stand_position
+			light_stand.owner = _get_edited_scene_root()
+			# Set multiplayer authority to server
+			light_stand.set_multiplayer_authority(1)
 
 func _choose_weighted_prop(props_dict: Dictionary[StringName, float]) -> StringName:
 	# Weighted random selection from props dictionary

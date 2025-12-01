@@ -351,8 +351,7 @@ items_to_spawn_amount = 20
 item_spawns = Array[ExtResource("7_dc4xw")]([SubResource("Resource_roc3w"), SubResource("Resource_l2gu8"), SubResource("Resource_o6wii")])
 props_amount_to_spawn = 100
 props_by_weight = Dictionary[StringName, float]({
-&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 0.99,
-&"res://assets/prefabs/environment/dungeon_props/light_stand.tscn": 0.66
+&"res://assets/prefabs/environment/dungeon_props/barrel_03.tscn": 1.0
 })
 ceiling_props_by_weight = Dictionary[StringName, float]({
 &"res://assets/prefabs/environment/dungeon_props/light_lantern_ceiling.tscn": 1.0
@@ -363,6 +362,7 @@ apartment_side_size_min_max = Vector2i(2, 3)
 min_stairs_per_floor = 2
 max_stairs_per_floor = 2
 dungeon_seed = 1764350751
+rooms_with_light_stands_percent = 0.75
 mobs_ignore_each_other_collisions = null
 
 [node name="DungeonTiles" type="Node3D" parent="MultistoryBuildingDungeon"]

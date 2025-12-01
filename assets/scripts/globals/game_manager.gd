@@ -938,22 +938,23 @@ func _process_sell_item_request(player_id: int, item_key: String, sell_price: in
 	for key in player.carrying_items.keys():
 		serialized_inventory[key] = serialize_weapon_resource(player.carrying_items[key])
 
+	# Always send inventory update to the player who sold the item
+	player.rpc_update_inventory.rpc_id(player_id, serialized_inventory)
+
+	# Also update UI directly for server player
 	if player_id == 1:
 		# Server player - update directly
 		if player.inventory_slots_panel_container:
 			player.inventory_slots_panel_container.update_inventory_items_ui(player.carrying_items, player.current_selected_item_index)
-	else:
-		# Client player - send RPC
-		player.rpc_update_inventory.rpc_id(player_id, serialized_inventory)
 
 	# Update item in hands if needed
 	var item_keys = player.carrying_items.keys()
 	if item_keys.size() > player.current_selected_item_index and player.current_selected_item_index >= 0:
 		var selected_item_resource = player.carrying_items[item_keys[player.current_selected_item_index]]
 		var selected_weapon_data = serialize_weapon_resource(selected_item_resource)
-		player.rpc_update_item_in_hands.rpc(player.current_selected_item_index, selected_weapon_data)
+		player.rpc_update_item_in_hands.rpc_id(player_id, player.current_selected_item_index, selected_weapon_data)
 	else:
-		player.rpc_update_item_in_hands.rpc(-1, {})  # No item selected
+		player.rpc_update_item_in_hands.rpc_id(player_id, -1, {})  # No item selected
 
 # RPC for clients to request selling an item
 @rpc("any_peer", "reliable")

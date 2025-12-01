@@ -172,7 +172,7 @@ func play_mesh_animation(moving_vector, auth, state):
 				mesh_animation_player.play("idle", 0.2)
 			
 @rpc("any_peer", "call_local", "reliable")
-func rpc_full_heal_and_resurrect():
+func rpc_full_heal_and_resurrect(clear_items = false):
 	# Only allow server to call this RPC
 	var sender_id = multiplayer.get_remote_sender_id()
 	if !multiplayer.is_server():

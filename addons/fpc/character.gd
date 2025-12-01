@@ -692,10 +692,15 @@ func handle_interaction():
 		interaction_feedback_label_3d.text = 'INTERACT'
 		interaction_feedback_label_3d.visible = true
 		interaction_feedback_label_3d.global_position = interaction_ray_cast_3d.get_collision_point()
-		
+
 		if Input.is_action_just_pressed(controls.INTERACTION):
-			print("[PLAYER] Interacting with button, calling rpc_request_interaction with player_id: %d" % multiplayer.get_unique_id())
-			col.rpc_request_interaction.rpc(multiplayer.get_unique_id())
+			print("[PLAYER] Interacting with button, player_id: %d, is_server: %s" % [multiplayer.get_unique_id(), multiplayer.is_server()])
+			if multiplayer.is_server():
+				# Server can directly emit the signal
+				col.button_interacted.emit(multiplayer.get_unique_id())
+			else:
+				# Client sends RPC to server
+				col.rpc_request_interaction.rpc_id(1, multiplayer.get_unique_id())
 	else:
 		interaction_feedback_label_3d.visible = false
 			
@@ -1803,17 +1808,18 @@ func death():
 		#enter_normal_state()
 
 @rpc("any_peer", "call_local", "reliable")
-func rpc_full_heal_and_resurrect():
-	super.rpc_full_heal_and_resurrect()
+func rpc_full_heal_and_resurrect(clear_items = false):
+	super.rpc_full_heal_and_resurrect(clear_items)
 
-	# Clear carrying_items and item_in_hands when resurrecting (player should start with empty inventory)
-	carrying_items.clear()
-	current_selected_item_index = 0
-	if item_in_hands:
-		item_in_hands.queue_free()
-		item_in_hands = null
-	if inventory_slots_panel_container:
-		inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+	if clear_items:
+		# Clear carrying_items and item_in_hands when resurrecting (player should start with empty inventory)
+		carrying_items.clear()
+		current_selected_item_index = 0
+		if item_in_hands:
+			item_in_hands.queue_free()
+			item_in_hands = null
+		if inventory_slots_panel_container:
+			inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
 
 	print("[PLAYER RESURRECTION] ", name, " resurrected with cleared inventory")
 

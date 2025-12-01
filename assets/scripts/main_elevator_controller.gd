@@ -139,7 +139,7 @@ func on_elevator_button_interacted(player_id):
 				continue
 			if body is PlayerCharacter:
 				body.is_moving_by_elevator = self
-				body.rpc_full_heal_and_resurrect()
+				body.rpc_full_heal_and_resurrect(false)
 				print("[ELEVATOR] Set is_moving_by_elevator=true for player: ", body.name)
 			elif body is RigidBody3D:
 				# Заморозить RigidBody3D чтобы он двигался вместе с лифтом
@@ -352,7 +352,7 @@ func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 				continue
 			if body is PlayerCharacter:
 				body.is_moving_by_elevator = self
-				body.rpc_full_heal_and_resurrect()
+				body.rpc_full_heal_and_resurrect(false)
 			elif body is RigidBody3D and is_server:
 				# Заморозить RigidBody3D объекты только на сервере
 				body.freeze = true
