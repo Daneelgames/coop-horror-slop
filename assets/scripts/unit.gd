@@ -171,8 +171,16 @@ func play_mesh_animation(moving_vector, auth, state):
 			if mesh_animation_player.current_animation != "idle":
 				mesh_animation_player.play("idle", 0.2)
 			
-@rpc("authority", "call_local")
+@rpc("any_peer", "call_local", "reliable")
 func rpc_full_heal_and_resurrect():
+	# Only allow server to call this RPC
+	var sender_id = multiplayer.get_remote_sender_id()
+	if !multiplayer.is_server():
+		# On clients, only accept from server (peer ID 1)
+		if sender_id != 1:
+			return
+	# On server, sender_id will be 0 (local call) which is fine
+
 	var old_health = health_current
 	health_current = health_max
 	print("[RESURRECTION] Unit ", name, " resurrected! Health: ", old_health, " -> ", health_current)

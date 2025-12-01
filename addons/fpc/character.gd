@@ -1792,7 +1792,7 @@ func death():
 		#rpc_full_heal_and_resurrect.rpc()
 		#enter_normal_state()
 
-@rpc("authority", "call_local")
+@rpc("any_peer", "call_local", "reliable")
 func rpc_full_heal_and_resurrect():
 	super.rpc_full_heal_and_resurrect()
 
