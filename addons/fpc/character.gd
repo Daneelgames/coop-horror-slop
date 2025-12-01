@@ -289,6 +289,7 @@ func rpc_teleport_to_position(position: Vector3):
 	])
 
 @export var head_default_local_position = Vector3(0.328, 1.5, 0.064)
+@export var head_crouch_local_position = Vector3(0.328, 1.5, 0.064)
 func _process(_delta):
 	if GameManager._game_level.is_game_level_ready == false:
 		return
@@ -296,6 +297,8 @@ func _process(_delta):
 	if is_moving_by_elevator:
 		interaction_feedback_label_3d.hide()
 		HEAD.position = head_default_local_position + Vector3(randf_range(-0.1,0.1),randf_range(-0.1,0.1),randf_range(-0.1,0.1))
+	elif is_crouching:
+		HEAD.position = head_crouch_local_position
 	else:
 		HEAD.position = head_default_local_position
 	_ensure_authority_state()

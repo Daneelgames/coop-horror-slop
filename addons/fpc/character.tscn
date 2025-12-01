@@ -683,6 +683,7 @@ visual_node_3d = NodePath("VisualParent")
 skeleton_3d = NodePath("VisualParent/soldier_low_poly/Armature/Skeleton3D")
 crouch_mode = 1
 debug_authority = false
+head_crouch_local_position = Vector3(0.328, 1, 0.064)
 mesh_animation_player = NodePath("VisualParent/soldier_low_poly/MeshAnimationPlayer")
 health_current = 150.0
 health_max = 150.0
