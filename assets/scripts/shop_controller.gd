@@ -14,7 +14,7 @@ func spawn_items_for_sell():
 		var rw : ResourceWeapon = weapons_on_sell[index]
 		var new_pickup : InteractivePickup = load(rw.pickup_prefab_path).instantiate()
 		items_for_sale_parent.get_child(index).add_child(new_pickup)
-		new_pickup.weapon_resource = rw.duplicate()
+		new_pickup.weapon_resource = rw.duplicate(true)  # Deep duplicate to preserve all properties
 		new_pickup.is_item_for_sale = true
 		new_pickup.position = Vector3.ZERO
 		new_pickup.rotation_degrees = Vector3.ZERO

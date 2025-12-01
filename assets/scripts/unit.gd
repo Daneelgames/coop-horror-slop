@@ -7,6 +7,8 @@ var item_in_hands: Weapon = null
 @export var mesh_animation_player: AnimationPlayer
 @export var health_current: float = 100
 @export var health_max: float = 100
+@export var stamina_current : float = 100
+@export var stamina_max : float = 100
 
 @export var take_damage_anims: Array[StringName] = []
 @export var death_anims: Array[StringName] = []

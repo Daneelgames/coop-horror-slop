@@ -183,6 +183,8 @@ var _cached_local_peer_id: int = -1
 #endregion
 @onready var dust_gpu_particles_3d: GPUParticles3D = %DustGPUParticles3D
 @export var is_moving_by_elevator : MainElevatorController
+@onready var hp_progress_bar: ProgressBar = %HpProgressBar
+@onready var stamina_progress_bar: ProgressBar = %StaminaProgressBar
 
 #region Main Control Flow
 
@@ -316,7 +318,9 @@ func _process(_delta):
 	if is_moving_by_elevator and GameManager._game_level.level_generator.spawned_elevator and GameManager._game_level.level_generator.spawned_elevator.is_elevator_moving == false and GameManager._game_level.level_generator.spawned_elevator.is_elevator_moving_down == false:
 		is_moving_by_elevator = null
 	update_debug_menu_per_frame()
-
+	hp_progress_bar.value = health_current / (health_max * 1.0)
+	stamina_progress_bar.value = stamina_current / (stamina_max * 1.0)
+	
 @export var input_dir = Vector2.ZERO
 
 func _physics_process(delta): # Most things happen here.
@@ -604,7 +608,7 @@ func rpc_spawn_dropped_pickup(drop_position: Vector3, weapon_data: Dictionary):
 	var pickup = pickup_instance as InteractivePickup
 	
 	# Configure pickup properties
-	pickup.weapon_resource = weapon_resource.duplicate()
+	pickup.weapon_resource = weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 	pickup.global_position = drop_position
 	pickup.set_multiplayer_authority(1)
 	pickup.snap_visual()
@@ -655,7 +659,7 @@ func handle_interaction():
 						final_name = StringName("%s %d" % [col.weapon_resource.weapon_name, counter+1])
 						counter += 1
 					
-					carrying_items[final_name] = col.weapon_resource.duplicate()
+					carrying_items[final_name] = col.weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 					
 					# Clamp selected index if needed
 					_clamp_selected_index()
@@ -1557,7 +1561,7 @@ func rpc_update_item_in_hands(item_index: int, weapon_data: Dictionary):
 		return
 	
 	weapon_bone_attachment_3d.add_child(item_in_hands)
-	item_in_hands.weapon_resource = weapon_resource.duplicate()
+	item_in_hands.weapon_resource = weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 	print("item_in_hands.weapon_resource.reducing_durability_when_in_hands %s"%item_in_hands.weapon_resource.reducing_durability_when_in_hands)
 	item_in_hands.position = item_in_hands.weapon_slot_position
 	item_in_hands.scale = Vector3.ONE * 100
@@ -1790,10 +1794,13 @@ func resurrect():
 	enter_normal_state()
 
 func cheat_codes():
-	#if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):
-		#rpc_full_heal_and_resurrect.rpc()
-		#if _has_input_authority:
-			#enter_normal_state()
+	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_H):
+		rpc_full_heal_and_resurrect.rpc()
+		if _has_input_authority:
+			enter_normal_state()
+	if Input.is_key_label_pressed(KEY_G) and Input.is_key_label_pressed(KEY_Z) and Input.is_key_label_pressed(KEY_K):
+		# Take 10 damage to self
+		take_damage(10)
 	pass
 
 func try_selling_item_in_hands():
@@ -1824,11 +1831,98 @@ func try_selling_item_in_hands():
 	GameManager.rpc_add_money_to_party.rpc(sell_price)
 
 func use_consumable_item_in_hands():
-	# choose item effect: 
-	# healing potion should restore own character's health
-	# scroll of life should resurrect all units: players and monsters 
-	
-	# destroy current item in hands, remove from carrying items
-	
-	# we will implement rest items types later
-	pass
+	if item_in_hands == null or item_in_hands.weapon_resource == null:
+		return
+
+	var weapon_type = item_in_hands.weapon_resource.weapon_type
+	var resource_weapon = item_in_hands.weapon_resource
+
+	# Choose item effect based on type
+	if weapon_type == ResourceWeapon.WEAPON_TYPE.HEALING_POTION:
+		# Healing potion restores own character's health
+		print("[CONSUMABLE] Applying healing potion - self_heal_hp_amount: ", resource_weapon.self_heal_hp_amount, " current HP: ", health_current, "/", health_max)
+		if resource_weapon.self_heal_hp_amount > 0:
+			var old_hp = health_current
+			health_current = min(health_current + resource_weapon.self_heal_hp_amount, health_max)
+			print("[CONSUMABLE] Healed from ", old_hp, " to ", health_current)
+		else:
+			print("[CONSUMABLE] self_heal_hp_amount is 0 or negative, no healing applied")
+
+	elif weapon_type == ResourceWeapon.WEAPON_TYPE.SCROLL_OF_LIFE:
+		# Scroll of life resurrects units in line of sight (no solid obstacles)
+		var all_units: Array[Unit] = []
+
+		# Get all players
+		var players = get_tree().get_nodes_in_group("players")
+		for player in players:
+			if player is Unit:
+				all_units.append(player)
+
+		# Get all AI characters (monsters) from GameManager's game level
+		if GameManager._game_level and GameManager._game_level.has_method("get_ai_characters"):
+			var ai_characters = GameManager._game_level.ai_characters
+			for ai_char in ai_characters:
+				if ai_char is Unit:
+					all_units.append(ai_char)
+		else:
+			# Fallback: search scene tree for AiCharacter instances
+			var root = get_tree().root
+			var ai_characters = _find_all_ai_characters(root)
+			for ai_char in ai_characters:
+				if ai_char is Unit:
+					all_units.append(ai_char)
+
+		# Resurrect units that are in line of sight (raycast from caster's HEAD to target's HEAD)
+		var caster_head_pos = HEAD.global_position if HEAD else global_position + Vector3(0, 1.5, 0)
+		var space_state = get_world_3d().direct_space_state
+
+		for unit in all_units:
+			if unit.is_dead():
+				# Get target's head position
+				var target_head_pos = Vector3.ZERO
+				if unit is PlayerCharacter and unit.HEAD:
+					target_head_pos = unit.HEAD.global_position
+				elif unit is AiCharacter and unit.head:
+					target_head_pos = unit.head.global_position
+				else:
+					# Fallback for other unit types or if head node is not set
+					target_head_pos = unit.global_position + Vector3(0, 1.5, 0)
+
+				# Perform raycast from caster's head to target's head
+				var query = PhysicsRayQueryParameters3D.create(caster_head_pos, target_head_pos)
+				query.collision_mask = 1  # Layer 1 (solids)
+				query.exclude = [self]  # Exclude caster from raycast
+
+				var result = space_state.intersect_ray(query)
+
+				# If raycast is empty (no obstacles), resurrect the unit
+				if result.is_empty():
+					unit.rpc_full_heal_and_resurrect.rpc()
+
+	# Destroy current item in hands and remove from carrying items
+	var item_keys = carrying_items.keys()
+	if item_keys.size() > current_selected_item_index and current_selected_item_index >= 0:
+		var item_key = item_keys[current_selected_item_index]
+		carrying_items.erase(item_key)
+
+		# Clamp selected index if needed
+		_clamp_selected_index()
+
+		# Update inventory UI
+		if inventory_slots_panel_container:
+			inventory_slots_panel_container.update_inventory_items_ui(carrying_items, current_selected_item_index)
+
+	item_in_hands.queue_free()
+	item_in_hands = null
+
+	# We will implement rest item types later
+
+func _find_all_ai_characters(node: Node) -> Array:
+	var result: Array[AiCharacter] = []
+	if node is AiCharacter:
+		result.append(node)
+
+	for child in node.get_children():
+		result.append_array(_find_all_ai_characters(child))
+
+	return result

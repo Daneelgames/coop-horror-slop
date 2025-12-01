@@ -7,7 +7,7 @@ var is_item_for_sale = false
 
 func _ready() -> void:
 	if weapon_resource:
-		weapon_resource = weapon_resource.duplicate()
+		weapon_resource = weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 	snap_visual()
 
 func _process(delta: float) -> void:
@@ -97,7 +97,7 @@ func _process_pickup_request():
 		final_name = StringName("%s %d" % [weapon_resource.weapon_name, counter+1])
 		counter += 1
 	
-	requesting_player.carrying_items[final_name] = weapon_resource.duplicate()
+	requesting_player.carrying_items[final_name] = weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 	
 	# Clamp selected index if needed
 	requesting_player._clamp_selected_index()

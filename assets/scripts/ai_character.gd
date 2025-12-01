@@ -1,6 +1,7 @@
 extends Unit
 class_name AiCharacter
 
+@export var head : Node3D
 @export var attack_strings : Array[String] = ['attack_vertical', 'attack_horizontal']
 @export var weapon_in_hands_scaler : float = 1
 @export var override_weapon_pos_to_zero : bool = true
@@ -240,10 +241,10 @@ func _spawn_weapon(weapon_resource: ResourceWeapon):
 	
 	if item_in_hands.weapon_resource == null:
 		print("[AI_WEAPON_SPAWN] %s: WARNING - weapon.weapon_resource is null, setting from parameter" % name)
-		item_in_hands.weapon_resource = weapon_resource.duplicate()
+		item_in_hands.weapon_resource = weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 	else:
 		print("[AI_WEAPON_SPAWN] %s: Duplicating existing weapon_resource..." % name)
-		item_in_hands.weapon_resource = item_in_hands.weapon_resource.duplicate()
+		item_in_hands.weapon_resource = item_in_hands.weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 	if override_weapon_pos_to_zero:
 		item_in_hands.position = Vector3.ZERO
 	else:

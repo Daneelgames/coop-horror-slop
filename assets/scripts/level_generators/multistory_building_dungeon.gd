@@ -2302,7 +2302,7 @@ func spawn_pickups():
 			if pickup != null:
 				# Set weapon_resource on the pickup (InteractivePickup class)
 				if pickup is InteractivePickup:
-					pickup.weapon_resource = weapon_resource.duplicate()
+					pickup.weapon_resource = weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 				
 				# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
 				pickup.position = pickup_position
@@ -2424,7 +2424,7 @@ func spawn_pickups():
 			if pickup != null:
 				# Set weapon_resource on the pickup (InteractivePickup class)
 				if pickup is InteractivePickup:
-					pickup.weapon_resource = weapon_resource.duplicate()
+					pickup.weapon_resource = weapon_resource.duplicate(true)  # Deep duplicate to preserve all properties
 				
 				# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
 				pickup.position = pickup_position

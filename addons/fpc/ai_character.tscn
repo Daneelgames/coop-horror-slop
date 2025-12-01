@@ -393,7 +393,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("28_rivgy")
 
-[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
+[node name="AiCharacter" type="CharacterBody3D" node_paths=PackedStringArray("head", "visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 wall_min_slide_angle = 0.0
@@ -401,6 +401,7 @@ floor_snap_length = 0.5
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_q1sc8")
+head = NodePath("Head")
 weapon_in_hands_scaler = 100.0
 override_weapon_pos_to_zero = false
 visual_node_3d = NodePath("VisualParent")

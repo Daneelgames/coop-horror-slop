@@ -3860,7 +3860,7 @@ random_pitch = 1.2
 streams_count = 1
 stream_0/stream = ExtResource("27_mt358")
 
-[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
+[node name="ArmsMob" type="CharacterBody3D" node_paths=PackedStringArray("head", "visual_node_3d", "navigation_agent_3d", "character_meshes", "mesh_animation_player", "PLAYER_COLLIDER")]
 collision_layer = 2
 collision_mask = 7
 wall_min_slide_angle = 0.0
@@ -3868,6 +3868,7 @@ floor_snap_length = 0.5
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_7ewkr")
+head = NodePath("Head")
 attack_strings = Array[String](["attack"])
 visual_node_3d = NodePath("VisualParent")
 random_weapons = Array[ExtResource("2_lqevu")]([ExtResource("3_ufhfl")])

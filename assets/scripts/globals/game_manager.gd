@@ -551,7 +551,11 @@ func serialize_weapon_resource(weapon_resource: ResourceWeapon) -> Dictionary:
 		"weapon_durability_current": weapon_resource.weapon_durability_current,
 		"weapon_durability_max": weapon_resource.weapon_durability_max,
 		"reducing_durability_when_in_hands": weapon_resource.reducing_durability_when_in_hands,
-		"in_hands_reduce_durability_speed": weapon_resource.in_hands_reduce_durability_speed
+		"in_hands_reduce_durability_speed": weapon_resource.in_hands_reduce_durability_speed,
+		"is_one_time_use": weapon_resource.is_one_time_use,
+		"is_throw_on_use": weapon_resource.is_throw_on_use,
+		"thrown_projectile_prefab_path": weapon_resource.thrown_projectile_prefab_path,
+		"self_heal_hp_amount": weapon_resource.self_heal_hp_amount
 	}
 
 func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
@@ -570,6 +574,10 @@ func deserialize_weapon_resource(data: Dictionary) -> ResourceWeapon:
 	weapon_resource.weapon_durability_max = data.get("weapon_durability_max", 100.0)
 	weapon_resource.reducing_durability_when_in_hands = data.get("reducing_durability_when_in_hands", false)
 	weapon_resource.in_hands_reduce_durability_speed = data.get("in_hands_reduce_durability_speed", 0.5)
+	weapon_resource.is_one_time_use = data.get("is_one_time_use", false)
+	weapon_resource.is_throw_on_use = data.get("is_throw_on_use", false)
+	weapon_resource.thrown_projectile_prefab_path = data.get("thrown_projectile_prefab_path", "")
+	weapon_resource.self_heal_hp_amount = data.get("self_heal_hp_amount", 0.0)
 	return weapon_resource
 
 # RPC function to handle pickup requests from clients (backward compatibility)

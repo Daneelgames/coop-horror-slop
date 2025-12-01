@@ -1,4 +1,4 @@
-[gd_scene load_steps=69 format=4 uid="uid://cc1m2a1obsyn4"]
+[gd_scene load_steps=71 format=4 uid="uid://cc1m2a1obsyn4"]
 
 [ext_resource type="Script" uid="uid://hutuis63hgev" path="res://addons/fpc/character.gd" id="1_0t4e8"]
 [ext_resource type="Texture2D" uid="uid://c5xkhei4fs55a" path="res://assets/meshes/soldier/soldier_low_poly_battalion-leader-heraklios-body_diffuse.png" id="2_gv6je"]
@@ -572,6 +572,17 @@ MarginContainer/constants/margin_bottom = 10
 MarginContainer/constants/margin_left = 10
 MarginContainer/constants/margin_right = 10
 MarginContainer/constants/margin_top = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xo647"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6pqx7"]
+bg_color = Color(0.69965345, 0.6996535, 0.6996533, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.26293263, 0.26293242, 0.2629323, 1)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_k4wwl"]
 radius = 0.37
@@ -1318,6 +1329,42 @@ layout_mode = 2
 layout_mode = 1
 voice_player = NodePath("../../Head/VoicePlayer3D")
 character_node = NodePath("../..")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UserInterface"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -128.0
+offset_top = -56.0
+offset_right = 128.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HpProgressBar" type="ProgressBar" parent="UserInterface/VBoxContainer"]
+unique_name_in_owner = true
+modulate = Color(1, 0, 0, 1)
+custom_minimum_size = Vector2(256, 16)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_xo647")
+theme_override_styles/fill = SubResource("StyleBoxFlat_6pqx7")
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="StaminaProgressBar" type="ProgressBar" parent="UserInterface/VBoxContainer"]
+unique_name_in_owner = true
+self_modulate = Color(0.3529412, 1, 0.45882353, 1)
+custom_minimum_size = Vector2(256, 16)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_xo647")
+theme_override_styles/fill = SubResource("StyleBoxFlat_6pqx7")
+max_value = 1.0
+value = 1.0
+show_percentage = false
 
 [node name="CrouchCeilingDetection" type="ShapeCast3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7366564, 0)
