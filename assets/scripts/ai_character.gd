@@ -15,6 +15,7 @@ class_name AiCharacter
 @export var attack_range_multiplier: float = 2.5 # Multiplier for weapon_active_distance to account for character reach
 @export var blocking_range_multiplier: float = 3.5 # Multiplier for enemy weapon range when checking if should block (larger than attack range)
 @export var base_speed: float = 3.0 # Base movement speed for AI
+@export var base_speed_patrol: float = 1.0 # Base movement speed for patrol (when not in combat)
 @export var home_position: Vector3 # Home/spawn position for patrol
 @export var patrol_from_home_distance_min_max: Vector2 = Vector2(5.0, 15.0) # Min and max distance from home for patrol points
 @export var combat_from_home_distance_max: float = 30
@@ -366,9 +367,10 @@ func _handle_movement(delta: float):
 		velocity.z = 0
 		input_dir = Vector2(0, 0)
 	else:
-		# Set velocity for movement
-		velocity.x = direction.x * base_speed
-		velocity.z = direction.z * base_speed
+		# Set velocity for movement - use patrol speed when not in combat
+		var current_speed = base_speed_patrol if visible_enemies.size() < 1 else base_speed
+		velocity.x = direction.x * current_speed
+		velocity.z = direction.z * current_speed
 	
 	# Apply physics (gravity and move_and_slide)
 	_handle_physics(delta)
