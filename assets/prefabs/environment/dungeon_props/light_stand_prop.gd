@@ -22,7 +22,7 @@ func _ready() -> void:
 		# This prevents "Failed to get path from RPC" errors when clients receive RPC
 		# before the prop node is fully added to the scene tree
 		call_deferred("_initialize_lights")
-	await get_tree().process_frame
+	await get_tree().create_timer(1).timeout
 	floor_ray_cast_3d.force_raycast_update()
 	if floor_ray_cast_3d.is_colliding():
 		global_position = floor_ray_cast_3d.get_collision_point()

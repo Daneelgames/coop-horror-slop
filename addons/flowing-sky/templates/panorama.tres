@@ -5,13 +5,13 @@
 
 [resource]
 shader = ExtResource("1_jniug")
-shader_parameter/sky_color = Color(0.4508987, 0.2867479, 0.517562, 1)
+shader_parameter/sky_color = Color(0.3819653, 0.3468148, 0.41825724, 1)
 shader_parameter/sky_texture = ExtResource("2_alo5a")
 shader_parameter/wind_direction = Vector2(-1, 1)
 shader_parameter/wind_intensity = 0.05
 shader_parameter/wind_speed = 0.15
 shader_parameter/ground_enabled = false
-shader_parameter/ground_threshold = -0.020000021904959975
+shader_parameter/ground_threshold = -0.02000002190495997
 shader_parameter/ground_blend = 0.0
 shader_parameter/sun_enabled = true
 shader_parameter/sun_rotation = Vector2(89.085, 23.28)

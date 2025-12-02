@@ -1423,34 +1423,34 @@ bus = &"SFX"
 [node name="RayCast3D" type="RayCast3D" parent="VaultingRaycasts"]
 transform = Transform3D(1, 0, 0, 0, 0.8184306, -0.5746053, 0, 0.5746053, 0.8184306, 0, 0.37723246, 0)
 target_position = Vector3(0, 0, -1)
-collision_mask = 5
+collision_mask = 23
 
 [node name="RayCast3D2" type="RayCast3D" parent="VaultingRaycasts"]
 transform = Transform3D(1, 0, 0, 0, 0.8184306, -0.5746053, 0, 0.5746053, 0.8184306, 0, 0.52723247, 0)
 target_position = Vector3(0, 0, -1)
-collision_mask = 5
+collision_mask = 23
 
 [node name="RayCast3D3" type="RayCast3D" parent="VaultingRaycasts"]
 transform = Transform3D(1, 0, 0, 0, 0.8184306, -0.5746053, 0, 0.5746053, 0.8184306, 0, 0.67723244, 0)
 target_position = Vector3(0, 0, -1)
-collision_mask = 5
+collision_mask = 23
 
 [node name="RayCast3D4" type="RayCast3D" parent="VaultingRaycasts"]
 transform = Transform3D(1, 0, 0, 0, 0.8184306, -0.5746053, 0, 0.5746053, 0.8184306, 0, 0.8272325, 0)
 target_position = Vector3(0, 0, -1)
-collision_mask = 5
+collision_mask = 23
 
 [node name="RayCast3D5" type="RayCast3D" parent="VaultingRaycasts"]
 transform = Transform3D(1, 0, 0, 0, 0.8184306, -0.5746053, 0, 0.5746053, 0.8184306, 0, 0.97723246, 0)
 target_position = Vector3(0, 0, -1)
-collision_mask = 5
+collision_mask = 23
 
 [node name="RayCast3D6" type="RayCast3D" parent="VaultingRaycasts"]
 transform = Transform3D(1, 0, 0, 0, 0.8184306, -0.5746053, 0, 0.5746053, 0.8184306, 0, 1.1272324, 0)
 target_position = Vector3(0, 0, -1)
-collision_mask = 5
+collision_mask = 23
 
 [node name="RayCast3D7" type="RayCast3D" parent="VaultingRaycasts"]
 transform = Transform3D(1, 0, 0, 0, 0.8184306, -0.5746053, 0, 0.5746053, 0.8184306, 0, 1.2772324, 0)
 target_position = Vector3(0, 0, -1)
-collision_mask = 5
+collision_mask = 23

@@ -199,7 +199,6 @@ func generate_dungeon():
 	await _await_frame()
 
 	await spawn_debug_spheres_on_stairs_ends()
-	await spawn_props()
 	await spawn_wall_torches()
 	print("DEBUG: Final dungeon generation summary:")
 	print("  Total spawned stairs: ", spawned_stairs_coords.size())
@@ -212,6 +211,7 @@ func generate_dungeon():
 
 	while spawned_elevator == null:
 		await _await_frame()
+	await spawn_props()
 	await spawn_pickups()
 	await spawn_mobs()
 
@@ -2211,11 +2211,11 @@ func spawn_pickups():
 		push_warning("spawn_pickups: No valid items with positive weight in item_spawns")
 		return
 	
-	# Determine spawn point (elevator position for distance calculations)
+	# Determine spawn point (elevator bottom position for distance calculations)
 	var spawn_point: Vector3 = Vector3(0, 0, 0)
 	if spawned_elevator != null:
-		spawn_point = spawned_elevator.global_position
-	
+		spawn_point = spawned_elevator.elevator_movement_bottom_position
+
 	# Collect all tiles with floors (exclude stairs)
 	var available_tiles: Array[DungeonTile] = []
 	var dead_end_tiles: Array[DungeonTile] = []
@@ -2497,11 +2497,11 @@ func spawn_mobs():
 	if spawned_elevator == null:
 		print('NO SPAWNED ELEVATOR CANT SPAWN MOBS')
 		return
-	# Determine spawn point (elevator position for distance calculations)
+	# Determine spawn point (elevator bottom position for distance calculations)
 	var spawn_point: Vector3 = Vector3(0, 0, 0)
 	if spawned_elevator != null:
-		spawn_point = spawned_elevator.global_position
-		print("spawn_mobs: Using elevator position as spawn point: ", spawn_point)
+		spawn_point = spawned_elevator.elevator_movement_bottom_position
+		print("spawn_mobs: Using elevator bottom position as spawn point: ", spawn_point)
 
 	# Determine the first floor Y value (should be 0, but let's get it from floors_heights)
 	var first_floor_y: int = 0
@@ -2691,7 +2691,12 @@ func spawn_props():
 	# Check if we have props to spawn
 	if props_by_weight.is_empty() or props_amount_to_spawn <= 0:
 		return
-	
+
+	# Determine spawn point (elevator bottom position for distance calculations)
+	var spawn_point: Vector3 = Vector3(0, 0, 0)
+	if spawned_elevator != null:
+		spawn_point = spawned_elevator.elevator_movement_bottom_position
+
 	# Get all tiles with floors (excluding tiles with stairs)
 	var tiles_with_floors: Array[DungeonTile] = []
 	for tile in all_spawned_tiles.keys():
@@ -2701,7 +2706,16 @@ func spawn_props():
 		if spawned_stairs_coords.has(tile.coord):
 			continue
 		tiles_with_floors.append(tile)
-	
+
+	# Filter out tiles that are too close to elevator (less than 12 units)
+	if spawned_elevator != null:
+		var filtered_tiles: Array[DungeonTile] = []
+		for tile in tiles_with_floors:
+			var distance_to_elevator = _get_tile_distance_from_spawn_point(tile, spawn_point)
+			if distance_to_elevator >= 12.0:
+				filtered_tiles.append(tile)
+		tiles_with_floors = filtered_tiles
+
 	# Sort tiles to ensure deterministic order before random selection
 	tiles_with_floors.sort_custom(_sort_tiles_by_coord)
 	
@@ -2894,14 +2908,17 @@ func _spawn_light_stands_in_rooms():
 	# Select rooms for light stands
 	var selected_rooms = shuffled_rooms.slice(0, rooms_with_light_stands_count)
 
-	for room in selected_rooms:
-		_spawn_light_stand_in_room(room)
+	for i in range(selected_rooms.size()):
+		var room = selected_rooms[i]
+		_spawn_light_stand_in_room(room, i)
 
-func _spawn_light_stand_in_room(room: ResourceDungeonRoom):
+func _spawn_light_stand_in_room(room: ResourceDungeonRoom, room_index: int):
 	# Find all floor tiles that belong to this room
 	var room_floor_tiles: Array[DungeonTile] = []
 	for tile in all_spawned_tiles.keys():
-		if all_spawned_tiles[tile] == room and is_instance_valid(tile.floor):
+		var spawn_point = spawned_elevator.elevator_movement_bottom_position
+		var distance_to_elevator = _get_tile_distance_from_spawn_point(tile, spawn_point)
+		if all_spawned_tiles[tile] == room and is_instance_valid(tile.floor) and distance_to_elevator > 12:
 			room_floor_tiles.append(tile)
 
 	if room_floor_tiles.is_empty():
@@ -2919,12 +2936,14 @@ func _spawn_light_stand_in_room(room: ResourceDungeonRoom):
 		if wall_count == 2:
 			corner_tiles.append(tile)
 
-	# Choose tile: prefer corner tiles, fallback to any floor tile
+	# Choose tile: prefer corner tiles, fallback to any floor tile (no distance filtering for light stands)
 	var selected_tile: DungeonTile = null
 	if not corner_tiles.is_empty():
 		selected_tile = corner_tiles[rng.randi() % corner_tiles.size()]
-	else:
+	elif not room_floor_tiles.is_empty():
 		selected_tile = room_floor_tiles[rng.randi() % room_floor_tiles.size()]
+
+	print("spawn_props: Room ", room_index, " has ", corner_tiles.size(), " corner tiles, ", room_floor_tiles.size(), " total floor tiles, selected tile: ", selected_tile.coord if selected_tile else "null")
 
 	if selected_tile == null:
 		return
@@ -2936,7 +2955,7 @@ func _spawn_light_stand_in_room(room: ResourceDungeonRoom):
 
 	# Spawn LIGHT_STAND through MultiplayerSpawner for synchronization
 	if multiplayer.is_server() and is_instance_valid(GameManager) and is_instance_valid(GameManager._game_spawner):
-		var spawn_data = {"type": "prop", "path": str(LIGHT_STAND)}
+		var spawn_data = {"type": "prop", "path": "res://assets/prefabs/environment/dungeon_props/light_stand.tscn"}
 		var light_stand = GameManager._game_spawner.spawn(spawn_data)
 		if light_stand != null:
 			# MultiplayerSpawner adds to spawn_path automatically, but we need to set position
@@ -2944,6 +2963,9 @@ func _spawn_light_stand_in_room(room: ResourceDungeonRoom):
 			light_stand.owner = _get_edited_scene_root()
 			# Set multiplayer authority to server
 			light_stand.set_multiplayer_authority(1)
+			print("spawn_props: Spawned LIGHT_STAND at position: ", light_stand_position, ", tile_coord: ", selected_tile.coord)
+		else:
+			print("spawn_props: Failed to spawn LIGHT_STAND at position: ", light_stand_position, ", tile_coord: ", selected_tile.coord)
 
 func _choose_weighted_prop(props_dict: Dictionary[StringName, float]) -> StringName:
 	# Weighted random selection from props dictionary

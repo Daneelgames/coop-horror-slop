@@ -28,6 +28,7 @@ var target_visibility = false
 # Movement control
 var movement_target: Vector3 = Vector3.ZERO
 var should_move: bool = false
+var attack_push_velocity: Vector3 = Vector3.ZERO # Store push velocity from attacks
 
 @onready var weapon_bone_attachment_3d: Node3D = %WeaponBoneAttachment3D
 @onready var ai_state_machine: AiStateMachine = %AiStateMachine
@@ -269,6 +270,7 @@ func rpc_start_attacking():
 	is_attacking = true
 	
 	# Apply forward push when attacking (only on server)
+	# Store push velocity to apply it after movement handling (so it doesn't get dampened)
 	if multiplayer.is_server() and item_in_hands != null:
 		var push_force = item_in_hands.weapon_resource.push_forward_on_attack_force
 		if push_force > 0:
@@ -279,11 +281,11 @@ func rpc_start_attacking():
 				# Ignore Y component for horizontal push
 				direction_to_enemy.y = 0
 				direction_to_enemy = direction_to_enemy.normalized()
-				velocity += direction_to_enemy * push_force
+				attack_push_velocity = direction_to_enemy * push_force
 			else:
 				# Fallback to forward direction if no enemy
 				var forward_direction = - transform.basis.z.normalized()
-				velocity += forward_direction * push_force
+				attack_push_velocity = forward_direction * push_force
 	
 	# Choose attack animation similar to character.gd
 	var attack_string = ''
@@ -344,6 +346,15 @@ func _handle_movement(delta: float):
 	# But still apply physics (gravity, move_and_slide) to preserve push velocity
 	#if is_attacking or is_blocking or is_taking_damage or is_stun_lock or is_blocking_react:
 	if is_attacking or is_taking_damage or is_stun_lock or is_blocking_react:
+		# Apply attack push velocity first (only once per attack, before dampening)
+		if attack_push_velocity.length() > 0:
+			velocity += attack_push_velocity
+			# Clear it after applying so it's only applied once
+			attack_push_velocity = Vector3.ZERO
+		# Dampen velocity (this will reduce the push velocity naturally over time)
+		velocity.x = lerpf(velocity.x, velocity.x * 0.1, 10 * delta)
+		velocity.z = lerpf(velocity.z, velocity.z * 0.1, 10 * delta)
+
 		_handle_physics(delta)
 		return
 	
