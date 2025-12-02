@@ -3807,7 +3807,7 @@ _data = {
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xkaag"]
 radius = 0.23583984
-height = 0.85546875
+height = 1.0488281
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_i4cim"]
 properties/0/path = NodePath(".:position")
@@ -4632,7 +4632,7 @@ modulate = Color(0, 0, 0, 1)
 cull_mask = 29
 
 [node name="Collision" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4343974, 0.06567383)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5310771, 0.06567383)
 shape = SubResource("CapsuleShape3D_xkaag")
 
 [node name="Head" type="Node3D" parent="."]
