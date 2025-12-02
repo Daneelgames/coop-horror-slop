@@ -2,6 +2,7 @@ extends Unit
 class_name AiCharacter
 
 @export var hide_when_dead = false
+@export var particle_nodes_to_hide_when_dead : Array[Node3D]
 @export var head : Node3D
 @export var attack_strings : Array[String] = ['attack_vertical', 'attack_horizontal']
 @export var weapon_in_hands_scaler : float = 1

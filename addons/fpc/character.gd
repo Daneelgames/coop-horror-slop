@@ -46,6 +46,7 @@ class_name PlayerCharacter
 #endregion
 
 #region Nodes Export Group
+@onready var omni_light_3d: OmniLight3D = %OmniLight3D
 
 @export_group("Nodes")
 ## A reference to the camera for use in the character script. This is the parent node to the camera and is rotated instead of the camera for mouse input.
@@ -305,11 +306,13 @@ func _process(_delta):
 		HEAD.position = head_default_local_position
 	_ensure_authority_state()
 	if !_has_input_authority:
+		omni_light_3d.visible = false
 		visual_node_3d.top_level = true
 		visual_node_3d.global_position = visual_node_3d.global_position.lerp(global_position, 10 * _delta)
 		visual_node_3d.global_rotation.y = lerp_angle(visual_node_3d.global_rotation.y, global_rotation.y, 10 * _delta)
 		_debug_report_input_block("_process")
 		return
+	omni_light_3d.visible = true
 	visual_node_3d.top_level = false
 	visual_node_3d.global_position = global_position
 	_debug_clear_block_reason("_process")
