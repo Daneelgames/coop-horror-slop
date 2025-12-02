@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_1fivp")
+item_price = 150
 weapon_name = &"Flash Bomb"
 weapon_type = 7
 pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_flash_bomb_p.tscn"

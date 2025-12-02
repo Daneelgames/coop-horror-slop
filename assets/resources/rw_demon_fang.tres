@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_ixt6x")
+item_price = 500
 weapon_name = &"Demon Fang"
 weapon_type = 4
 pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_demon_fang_p.tscn"

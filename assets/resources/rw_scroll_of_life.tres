@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_tnia3")
+item_price = 300
 weapon_name = &"Scroll of Life"
 weapon_type = 6
 pickup_prefab_path = &"res://assets/prefabs/weapons/weapon_scroll_of_life_p.tscn"
