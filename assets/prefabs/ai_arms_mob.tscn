@@ -1648,6 +1648,7 @@ floor_snap_length = 0.5
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_5bmql")
+hide_when_dead = true
 head = NodePath("Head")
 attack_strings = Array[String](["attack"])
 visual_node_3d = NodePath("VisualParent")

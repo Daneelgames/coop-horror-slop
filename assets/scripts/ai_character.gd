@@ -1,6 +1,7 @@
 extends Unit
 class_name AiCharacter
 
+@export var hide_when_dead = false
 @export var head : Node3D
 @export var attack_strings : Array[String] = ['attack_vertical', 'attack_horizontal']
 @export var weapon_in_hands_scaler : float = 1
@@ -65,7 +66,10 @@ func _ready():
 	
 func local_visibility_coroutine():
 	await get_tree().create_timer(0.1).timeout
-	if target_visibility:
+	if is_dead() and hide_when_dead:
+		for mesh : MeshInstance3D in character_meshes:
+			mesh.transparency = lerpf(mesh.transparency, 1, 0.25)
+	elif target_visibility:
 		for mesh : MeshInstance3D in character_meshes:
 			mesh.transparency = lerpf(mesh.transparency, 0, 0.25)
 	else:

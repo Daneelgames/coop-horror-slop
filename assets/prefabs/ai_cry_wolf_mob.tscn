@@ -41223,6 +41223,7 @@ floor_snap_length = 0.5
 platform_on_leave = 2
 platform_floor_layers = 4294965247
 script = ExtResource("1_dlup7")
+hide_when_dead = true
 head = NodePath("Head")
 attack_strings = Array[String](["attack_1", "attack_2"])
 visual_node_3d = NodePath("VisualParent")
