@@ -1012,9 +1012,9 @@ func apply_rotation_smoothing(delta):
 	if rotation_smoothing_speed > 0.0:
 		# Smooth head rotation X (pitch)
 		HEAD.rotation.x = lerp(HEAD.rotation.x, target_head_rotation_x, rotation_smoothing_speed * delta)
-		if is_dead() == false:
+		#if is_dead() == false:
 			# Smooth character rotation Y (yaw) - use lerp_angle for proper wrapping
-			rotation.y = lerp_angle(rotation.y, target_character_rotation_y, rotation_smoothing_speed * delta)
+		rotation.y = lerp_angle(rotation.y, target_character_rotation_y, rotation_smoothing_speed * delta)
 	else:
 		# No smoothing - apply directly
 		HEAD.rotation.x = target_head_rotation_x

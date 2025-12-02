@@ -191,3 +191,7 @@ func rpc_full_heal_and_resurrect(clear_items = false):
 	is_blocking_react = false
 	is_stun_lock = false
 	is_taking_damage = false
+	set_collision_layer_value(4, false)
+	set_collision_layer_value(2, true)
+	set_collision_mask_value(2, true)
+	set_collision_mask_value(3, true)
