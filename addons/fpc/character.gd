@@ -1917,7 +1917,8 @@ func try_selling_item_in_hands():
 	if item_in_hands.weapon_resource == null:
 		print("[SELL] Item in hands has no weapon_resource, skipping")
 		return
-	var sell_price = item_in_hands.weapon_resource.item_price
+	# var sell_price = item_in_hands.weapon_resource.item_price
+	var sell_price = item_in_hands.weapon_resource.item_sell_price
 
 	# Get the item key to sell - should correspond to the currently selected item
 	var item_keys = carrying_items.keys()

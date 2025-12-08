@@ -4,6 +4,7 @@ class_name ShopController
 @onready var party_money_label_3d: Label3D = %PartyMoneyLabel3D
 @export var weapons_on_sell : Array[ResourceWeapon]
 @export var items_for_sale_parent : Node3D
+
 func _ready() -> void:
 	GameManager.party_money_changed.connect(update_party_money)
 	selling_table_static_body_3d.button_interacted.connect(on_selling_table_button_interacted)

@@ -7,6 +7,7 @@ enum WEAPON_TYPE {
 	HEALING_POTION, SCROLL_OF_LIFE, FLASH_BOMB, ROPE}
 	
 @export var item_price: int = 100
+@export var item_sell_price: int = 50
 @export var weapon_name: StringName = &'Weapon'
 @export var weapon_type: WEAPON_TYPE = WEAPON_TYPE.TORCH
 @export var pickup_prefab_path: StringName
