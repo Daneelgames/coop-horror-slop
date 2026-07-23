@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cj41egl7lxoqt"
-path.s3tc="res://.godot/imported/texture_candle_BaseMap.png-2932bebeda57c466f8d0300d405f7903.s3tc.ctex"
+path.s3tc="res://.godot/imported/texture_candle_BaseMap.png-1a8f5bbf70e26f21244acbaf095c3d4e.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/meshes/dungeonProps3D/textures/texture_candle_BaseMap.png"
-dest_files=["res://.godot/imported/texture_candle_BaseMap.png-2932bebeda57c466f8d0300d405f7903.s3tc.ctex"]
+source_file="res://assets/meshes/dungeonProps3D/Textures/texture_candle_BaseMap.png"
+dest_files=["res://.godot/imported/texture_candle_BaseMap.png-1a8f5bbf70e26f21244acbaf095c3d4e.s3tc.ctex"]
 
 [params]
 

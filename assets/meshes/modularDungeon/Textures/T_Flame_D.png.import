@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c544ue0hixahl"
-path.s3tc="res://.godot/imported/T_Flame_D.png-63b74f84ca307f0132c58f43bdc3e683.s3tc.ctex"
+path.s3tc="res://.godot/imported/T_Flame_D.png-d4c9afc74c641010e66b78ed4c32de22.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/meshes/modularDungeon/textures/T_Flame_D.png"
-dest_files=["res://.godot/imported/T_Flame_D.png-63b74f84ca307f0132c58f43bdc3e683.s3tc.ctex"]
+source_file="res://assets/meshes/modularDungeon/Textures/T_Flame_D.png"
+dest_files=["res://.godot/imported/T_Flame_D.png-d4c9afc74c641010e66b78ed4c32de22.s3tc.ctex"]
 
 [params]
 

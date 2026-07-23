@@ -2645,11 +2645,11 @@ func spawn_mobs():
 				else:
 					print("spawn_mobs: Failed to instantiate mob")
 
-			# Yield every 10 mobs to avoid frame drops
-			if total_mobs_spawned % 10 == 0:
-				await _await_frame()
-
 			total_mobs_spawned += 1
+			# Mob scenes have expensive _ready() initialization (weapons, AI, etc.).
+			# Let the frame finish after every mob instead of spawning a batch of 10
+			# in the same frame.
+			await _await_frame()
 
 		mob_spawn_index += 1
 	
@@ -2756,9 +2756,9 @@ func spawn_props():
 				# Set multiplayer authority to server
 				prop.set_multiplayer_authority(1)
 		
-		# Yield every 10 props to avoid frame drops
-		if i % 10 == 0:
-			await _await_frame()
+		# Instantiation and _ready() happen synchronously inside spawn().
+		# Keep at most one prop initialization in a frame.
+		await _await_frame()
 	
 	print("spawn_props: Total props spawned: ", props_to_spawn)
 
@@ -2871,14 +2871,13 @@ func spawn_props():
 				spawned_ceiling_positions.append(ceiling_prop_position)
 				ceiling_props_remaining -= 1
 
-		# Yield every 10 ceiling props to avoid frame drops
-		if ceiling_props_to_spawn - ceiling_props_remaining >= 10:
-			await _await_frame()
+		# Keep at most one ceiling prop initialization in a frame.
+		await _await_frame()
 
 	print("spawn_props: Total ceiling props spawned: ", ceiling_props_to_spawn)
 
 	# Spawn LIGHT_STAND torcheres in selected rooms
-	_spawn_light_stands_in_rooms()
+	await _spawn_light_stands_in_rooms()
 
 func _spawn_light_stands_in_rooms():
 	# Don't spawn light stands in editor
@@ -2911,6 +2910,8 @@ func _spawn_light_stands_in_rooms():
 	for i in range(selected_rooms.size()):
 		var room = selected_rooms[i]
 		_spawn_light_stand_in_room(room, i)
+		# Light stands are props too and can have expensive synchronous _ready().
+		await _await_frame()
 
 func _spawn_light_stand_in_room(room: ResourceDungeonRoom, room_index: int):
 	# Find all floor tiles that belong to this room

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d0rppjnfiqrl2"
-path.s3tc="res://.godot/imported/texture_lamp_BaseMap.png-18ccb18e7b2913eb071b0fc7b4b3ef96.s3tc.ctex"
+path.s3tc="res://.godot/imported/texture_lamp_BaseMap.png-df3104c6f3d8001fd2f84a5956f723ba.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/meshes/dungeonProps3D/textures/texture_lamp_BaseMap.png"
-dest_files=["res://.godot/imported/texture_lamp_BaseMap.png-18ccb18e7b2913eb071b0fc7b4b3ef96.s3tc.ctex"]
+source_file="res://assets/meshes/dungeonProps3D/Textures/texture_lamp_BaseMap.png"
+dest_files=["res://.godot/imported/texture_lamp_BaseMap.png-df3104c6f3d8001fd2f84a5956f723ba.s3tc.ctex"]
 
 [params]
 

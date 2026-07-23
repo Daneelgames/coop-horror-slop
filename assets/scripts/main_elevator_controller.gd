@@ -9,6 +9,7 @@ var bodies_to_move_inside: Array = []
 var is_open = false
 var is_elevator_moving = false
 var is_elevator_moving_down = false
+var is_reconciling_bodies_after_stop = false
 @export var elevator_movement_speed : float = 20
 var elevator_movement_top_position: Vector3
 var elevator_movement_bottom_position: Vector3
@@ -31,6 +32,12 @@ var elevator_movement_bottom_position: Vector3
 
 func _ready() -> void:
 	elevator_button.button_interacted.connect(on_elevator_button_interacted)
+	print("[ELEVATOR_DEBUG] READY peer=%s server=%s monitoring=%s position=%s" % [
+		multiplayer.has_multiplayer_peer(),
+		multiplayer.is_server(),
+		elevator_area_3d.monitoring,
+		global_position
+	])
 
 	# Инициализировать sync_position текущей позицией
 	sync_position = global_position
@@ -101,6 +108,18 @@ func _physics_process(delta: float) -> void:
 			_move_bodies_inside(movement_distance)
 
 func on_elevator_button_interacted(player_id):
+	print("[ELEVATOR_DEBUG] BUTTON player_id=%s peer=%s server=%s moving=%s down=%s position_y=%.3f top_y=%.3f bottom_y=%.3f inside=%s carried=%s" % [
+		player_id,
+		multiplayer.has_multiplayer_peer(),
+		multiplayer.is_server(),
+		is_elevator_moving,
+		is_elevator_moving_down,
+		global_position.y,
+		elevator_movement_top_position.y,
+		elevator_movement_bottom_position.y,
+		_debug_body_names(bodies_inside),
+		_debug_body_names(bodies_to_move_inside)
+	])
 	# Только сервер обрабатывает нажатие кнопки и синхронизирует состояние
 	if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
 		return
@@ -156,6 +175,10 @@ func on_elevator_button_interacted(player_id):
 	
 	# Синхронизировать состояние с клиентами через RPC
 	if multiplayer.has_multiplayer_peer():
+		# Apply once on the authority; the RPC below is remote-only.
+		is_elevator_moving = new_moving_state
+		update_door_anim()
+		elevator_area_3d.monitoring = not new_moving_state
 		rpc_set_elevator_moving.rpc(new_moving_state, is_elevator_moving_down)
 	else:
 		# Single player: установить состояние локально
@@ -163,6 +186,13 @@ func on_elevator_button_interacted(player_id):
 		update_door_anim()
 
 func _on_elevator_area_3d_body_entered(body: Node3D) -> void:
+	print("[ELEVATOR_DEBUG] AREA_ENTER body=%s type=%s moving=%s reconciling=%s inside_before=%s" % [
+		body.name,
+		body.get_class(),
+		is_elevator_moving,
+		is_reconciling_bodies_after_stop,
+		_debug_body_names(bodies_inside)
+	])
 	if is_elevator_moving:
 		return
 	if body is AiCharacter:
@@ -177,7 +207,15 @@ func _on_elevator_area_3d_body_entered(body: Node3D) -> void:
 
 
 func _on_elevator_area_3d_body_exited(body: Node3D) -> void:
-	if is_elevator_moving:
+	print("[ELEVATOR_DEBUG] AREA_EXIT body=%s type=%s moving=%s reconciling=%s ignored=%s inside_before=%s" % [
+		body.name,
+		body.get_class(),
+		is_elevator_moving,
+		is_reconciling_bodies_after_stop,
+		is_elevator_moving or is_reconciling_bodies_after_stop,
+		_debug_body_names(bodies_inside)
+	])
+	if is_elevator_moving or is_reconciling_bodies_after_stop:
 		return
 	if body is AiCharacter:
 		return
@@ -187,8 +225,15 @@ func _on_elevator_area_3d_body_exited(body: Node3D) -> void:
 	update_door_anim()
 	
 func _stop_elevator_at_target():
+	print("[ELEVATOR_DEBUG] STOP_BEGIN position=%s inside=%s carried=%s area_monitoring=%s" % [
+		global_position,
+		_debug_body_names(bodies_inside),
+		_debug_body_names(bodies_to_move_inside),
+		elevator_area_3d.monitoring
+	])
 	print("[ELEVATOR] _stop_elevator_at_target: Starting stop sequence")
 	print("[ELEVATOR] _stop_elevator_at_target: bodies_to_move_inside before stop: ", bodies_to_move_inside.map(func(b): return b.name if is_instance_valid(b) else "invalid"))
+	is_reconciling_bodies_after_stop = true
 
 	# Остановить движение лифта
 	is_elevator_moving = false
@@ -238,8 +283,13 @@ func _stop_elevator_at_target():
 	if is_instance_valid(elevator_area_3d):
 		# Временно включить monitoring чтобы получить overlapping bodies
 		elevator_area_3d.monitoring = true
-		await get_tree().process_frame  # Подождать чтобы physics обновил overlapping
+		await get_tree().physics_frame
 		var overlapping_bodies = elevator_area_3d.get_overlapping_bodies()
+		print("[ELEVATOR_DEBUG] STOP_OVERLAPS position=%s overlaps=%s inside_before_merge=%s" % [
+			global_position,
+			_debug_body_names(overlapping_bodies),
+			_debug_body_names(bodies_inside)
+		])
 		print("[ELEVATOR] _stop_elevator_at_target: overlapping_bodies: ", overlapping_bodies.map(func(b): return b.name if is_instance_valid(b) else "invalid"))
 		for body in overlapping_bodies:
 			if not is_instance_valid(body):
@@ -252,6 +302,12 @@ func _stop_elevator_at_target():
 					print("[ELEVATOR] Added body to bodies_inside after stop: ", body.name)
 
 	print("[ELEVATOR] _stop_elevator_at_target: final bodies_inside: ", bodies_inside.map(func(b): return b.name if is_instance_valid(b) else "invalid"))
+	is_reconciling_bodies_after_stop = false
+	print("[ELEVATOR_DEBUG] STOP_FINAL inside=%s carried=%s animation_current=%s" % [
+		_debug_body_names(bodies_inside),
+		_debug_body_names(bodies_to_move_inside),
+		animation_player.current_animation
+	])
 
 	# Обновить анимацию дверей
 	update_door_anim()
@@ -293,22 +349,49 @@ func _get_all_nodes_of_type(node: Node, type_name: String, result: Array):
 		_get_all_nodes_of_type(child, type_name, result)
 
 func update_door_anim():
+	print("[ELEVATOR_DEBUG] DOOR_UPDATE_QUEUED moving=%s open_flag=%s inside=%s animation_current=%s" % [
+		is_elevator_moving,
+		is_open,
+		_debug_body_names(bodies_inside),
+		animation_player.current_animation
+	])
 	await get_tree().process_frame
+	print("[ELEVATOR_DEBUG] DOOR_UPDATE_RUN moving=%s open_flag=%s inside=%s animation_current=%s animation_playing=%s" % [
+		is_elevator_moving,
+		is_open,
+		_debug_body_names(bodies_inside),
+		animation_player.current_animation,
+		animation_player.is_playing()
+	])
 	print("[ELEVATOR] update_door_anim: bodies_inside.size() = ", bodies_inside.size(), ", is_open = ", is_open)
 	if bodies_inside.size() > 0:
 		print("[ELEVATOR] update_door_anim: Opening doors")
 		animation_player.play('open', 0.2)
+		print("[ELEVATOR_DEBUG] DOOR_PLAY_OPEN assigned_animation=%s" % animation_player.current_animation)
 		if is_open == false:
 			door_audio_stream_player_3d.play()
 		is_open = true
 	else:
 		print("[ELEVATOR] update_door_anim: Closing doors")
 		animation_player.play('close', 0.2)
+		print("[ELEVATOR_DEBUG] DOOR_PLAY_CLOSE assigned_animation=%s" % animation_player.current_animation)
 		if is_open:
 			door_audio_stream_player_3d.play()
 		is_open = false
 
-@rpc("authority", "call_local", "reliable")
+func _debug_body_names(bodies) -> String:
+	var result: Array[String] = []
+	for body in bodies:
+		if is_instance_valid(body):
+			result.append("%s(%s)@y=%.3f" % [body.name, body.get_class(), body.global_position.y])
+		else:
+			result.append("<invalid>")
+	return str(result)
+
+# The authority already applies the elevator state in
+# on_elevator_button_interacted() and _stop_elevator_at_target().
+# Running this RPC locally a second time clears the host's passenger arrays.
+@rpc("authority", "call_remote", "reliable")
 func rpc_set_elevator_moving(moving: bool, moving_down: bool = false):
 	# Синхронизация состояния движения лифта с клиентами
 	is_elevator_moving = moving
